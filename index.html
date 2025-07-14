@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interest & Penalty Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .result { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Interest & Penalty Calculator</h2>
+        <label for="type">Type:</label>
+        <select id="type" onchange="toggleFields()">
+            <option value="contribution">Contribution</option>
+            <option value="loan">Loan</option>
+        </select><br><br>
+
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" min="0" step="100" placeholder="Enter amount" required><br><br>
+
+        <label for="dueDate">Due Date (Last Day of Month or up to 10th Next Month):</label>
+        <input type="date" id="dueDate" required><br><br>
+
+        <div id="loanFields" style="display:none;">
+            <label for="loanType">Loan Type:</label>
+            <select id="loanType">
+                <option value="short">Short Term (30 days, 5%)</option>
+                <option value="medium">Medium Term (90 days, 10%)</option>
+            </select><br><br>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function toggleFields() {
+            const type = document.getElementById('type').value;
+            const loanFields = document.getElementById('loanFields');
+            loanFields.style.display = type === 'loan' ? 'block' : 'none';
+            calculate();
+        }
+
+        function calculate() {
+            const type = document.getElementById('type').value;
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const dueDate = new Date(document.getElementById('dueDate').value);
+            const currentDate = new Date('2025-07-14'); // Current date
+            const resultDiv = document.getElementById('result');
+
+            if (!amount || isNaN(dueDate.getTime())) {
+                resultDiv.innerHTML = "Please enter valid amount and due date.";
+                return;
+            }
+
+            // Adjust due date to the 10th of the next month if after the last day
+            const dueDateMonthEnd = new Date(dueDate);
+            dueDateMonthEnd.setMonth(dueDate.getMonth() + 1, 0); // Last day of due month
+            const deadline = new Date(dueDateMonthEnd);
+            deadline.setDate(10); // 10th of the following month
+            const daysDelayed = Math.max(0, Math.ceil((currentDate - deadline) / (1000 * 60 * 60 * 24)));
+            let penalty = 0;
+            let interest = 0;
+            let totalOwed = amount;
+
+            if (type === 'contribution') {
+                if (daysDelayed <= 0) {
+                    penalty = 0;
+                } else if (daysDelayed <= 7) {
+                    penalty = amount * 0.30; // 30% penalty for first 7 days
+                } else {
+                    penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7)); // 1% daily after 7 days
+                }
+                totalOwed += penalty;
+            } else if (type === 'loan') {
+                const loanType = document.getElementById('loanType').value;
+                const interestRate = loanType === 'short' ? 0.05 : 0.10;
+                const loanTerm = loanType === 'short' ? 30 : 90;
+
+                interest = amount * interestRate;
+                if (daysDelayed > 7 && daysDelayed <= 37) {
+                    penalty = amount * 0.005 * (daysDelayed - 7); // 0.5% daily after 7 days
+                } else if (daysDelayed > 37) {
+                    penalty = "Loan deducted from shares (consult credit committee)";
+                }
+                totalOwed += interest + (typeof penalty === 'number' ? penalty : 0);
+            }
+
+            resultDiv.innerHTML = `
+                Days Delayed: ${daysDelayed} days<br>
+                ${type === 'loan' ? `Interest: ${interest.toFixed(2)}<br>` : ''}
+                Penalty: ${typeof penalty === 'number' ? penalty.toFixed(2) : penalty}<br>
+                Total Amount Owed: ${typeof totalOwed === 'number' ? totalOwed.toFixed(2) : totalOwed}
+            `;
+        }
+
+        // Initial call and event listeners
+        toggleFields();
+        document.getElementById('amount').addEventListener('input', calculate);
+        document.getElementById('dueDate').addEventListener('change', calculate);
+        document.getElementById('loanType').addEventListener('change', calculate);
+    </script>
+</body>
+</html>
