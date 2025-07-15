@@ -157,7 +157,7 @@
             if (type === 'contribution' && monthSelect.style.display !== 'none') {
                 const selectedMonth = document.getElementById('month').value.split('-');
                 const year = parseInt(selectedMonth[0]);
-                const month = parseInt(selectedMonth[1]) - 1; // 0-based month
+                const month = parseInt(selectedMonth[1])  -1; // 0-based month
                 let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0)); // Start of next month in UTC
                 dueDate.setUTCDate(10); // Explicitly set to 10th in UTC
                 console.log('Initial dueDate:', new Date(dueDate).toISOString().split('T')[0]); // Debug initial
