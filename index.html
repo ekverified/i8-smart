@@ -37,8 +37,9 @@
         }
         .title-container .sub-title {
             font-size: 0.9em;
-            color: #34495e;
-            font-weight: 500;
+            color: #2980b9;
+            font-weight: bold;
+            text-transform: lowercase;
             margin: 0;
         }
         label {
@@ -132,7 +133,7 @@
     <div class="container">
         <div class="title-container">
             <div class="main-title">i-8 SMART</div>
-            <div class="sub-title">BOT</div>
+            <div class="sub-title">bot</div>
         </div>
         <label for="type">Type:</label>
         <select id="type" onchange="toggleFields()">
@@ -156,6 +157,7 @@
             <label for="loanType">Loan Type:</label>
             <select id="loanType">
                 <option value="short">Short Term (30 days)</option>
+                <option value="medium">Medium Term (90 days)</option>
             </select><br><br>
         </div>
 
@@ -262,7 +264,7 @@
                     return;
                 }
 
-                // Calculate days delayed accurately (due date is end of 30-day term)
+                // Calculate days delayed accurately (due date is end of term)
                 const oneDay = 24 * 60 * 60 * 1000;
                 let daysDelayed = Math.floor((checkDate - dueDate) / oneDay);
                 if (daysDelayed < 0) daysDelayed = 0;
@@ -281,16 +283,15 @@
                         penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7));
                     }
                     totalOwed += penalty;
-                } else if (type === 'loan' && document.getElementById('loanType').value === 'short') {
-                    // Mirror contribution structure
-                    if (daysDelayed === 0) {
-                        interest = amount * 0.05; // 5% initial interest on due date
-                    } else if (daysDelayed <= 7) {
-                        interest = amount * 0.05; // 5% initial interest within grace
+                } else if (type === 'loan' && document.getElementById('loanType').value) {
+                    const loanType = document.getElementById('loanType').value;
+                    if (daysDelayed <= 7) {
+                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10; // 5% for short, 10% for medium
+                        totalOwed = amount + interest; // Total owed is principal + interest during grace
                     } else {
-                        interest = amount * 0.05; // 5% initial interest
+                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10; // 5% for short, 10% for medium
                         const rolledAmount = amount + interest;
-                        const rollOverInterest = rolledAmount * 0.05; // 5% roll-over
+                        const rollOverInterest = rolledAmount * 0.05; // 5% roll-over for both
                         penalty = rolledAmount * 0.005 * (daysDelayed - 7); // 0.5% per day beyond 7 days
                         totalOwed = amount + interest + rollOverInterest + penalty;
                     }
