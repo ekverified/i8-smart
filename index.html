@@ -1,274 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>i-8 Calculator</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #e6f0fa;
-            color: #333;
-        }
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            color: #1e90ff;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            color: #1e90ff;
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #1e90ff;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        #loanFields {
-            margin-top: 10px;
-            display: none; /* Disabled for now */
-        }
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f0f8ff;
-            border-radius: 5px;
-            color: #333;
-            font-size: 16px;
-        }
-        button {
-            background: #1e90ff;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #104e8b;
-        }
-        button:disabled {
-            background: #87ceeb;
-            cursor: not-allowed;
-        }
-        .loading {
-            opacity: 0.7;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            border: 2px solid #fff;
-            border-top: 2px solid #1e90ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>i-8 Calculator</h2>
-        <label for="type">Type:</label>
-        <select id="type" onchange="toggleFields()">
-            <option value="contribution">Contribution</option>
-            <option value="loan" disabled>Loan (On Hold)</option>
-        </select><br><br>
+function calculate() {
+    const button = document.getElementById('calcButton');
+    if (isCalculating || !document.getElementById('amount').value || !document.getElementById('dueDate').value || !document.getElementById('checkDate').value) return;
 
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" min="0" step="100" placeholder="Enter amount" required><br><br>
+    isCalculating = true;
+    button.classList.add('loading');
+    button.disabled = true;
 
-        <label for="month">Contribution Month:</label>
-        <select id="month" onchange="updateDueDate()"></select><br><br>
+    setTimeout(() => {
+        const type = document.getElementById('type').value;
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const dueDateInput = document.getElementById('dueDate').value;
+        const checkDateInput = document.getElementById('checkDate').value;
+        const dueDate = new Date(dueDateInput + 'T23:59:59+03:00'); // End of due date in EAT
+        const checkDate = new Date(checkDateInput + 'T00:00:00+03:00'); // Start of check date in EAT
+        const resultDiv = document.getElementById('result');
 
-        <label for="dueDate">Due Date:</label>
-        <input type="date" id="dueDate" required onchange="updateButtonState()" disabled><br><br>
-
-        <label for="checkDate">Check Date:</label>
-        <input type="date" id="checkDate" required onchange="updateButtonState()"><br><br>
-
-        <div id="loanFields" style="display:none;">
-            <label for="loanType">Loan Type:</label>
-            <select id="loanType">
-                <option value="short">Short Term (30 days)</option>
-                <option value="medium">Medium Term (90 days)</option>
-            </select><br><br>
-        </div>
-
-        <button onclick="calculate()" id="calcButton">Calculate</button>
-        <div id="result" class="result"></div>
-    </div>
-
-    <script>
-        let isCalculating = false;
-
-        function toggleFields() {
-            const type = document.getElementById('type').value;
-            const loanFields = document.getElementById('loanFields');
-            const monthSelect = document.getElementById('month');
-            const dueDateInput = document.getElementById('dueDate');
-            loanFields.style.display = type === 'loan' ? 'block' : 'none';
-            monthSelect.style.display = type === 'contribution' ? 'block' : 'none';
-            dueDateInput.disabled = type === 'contribution';
-            populateMonths();
-            updateDueDate();
-            updateButtonState();
+        if (!amount || isNaN(dueDate.getTime()) || isNaN(checkDate.getTime())) {
+            resultDiv.innerHTML = "Please enter valid amount, due date, and check date.";
+            resetButton(button);
+            return;
         }
 
-        function populateMonths() {
-            const monthSelect = document.getElementById('month');
-            if (!monthSelect) {
-                console.error('Month select element not found!');
-                return;
-            }
-            monthSelect.innerHTML = ''; // Clear existing options
-            const currentDate = new Date(); // Use system date, e.g., July 15, 2025, 11:02 AM EAT
-            const currentMonth = currentDate.getMonth(); // Should be 6 (0-based, July)
-            const currentYear = currentDate.getFullYear(); // Should be 2025
-            console.log('Debug - Current Month:', currentMonth, 'Current Year:', currentYear);
+        // Calculate days delayed starting from 10th as day 1 after due time
+        const timeDiff = checkDate - dueDate;
+        let totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Total days from due date end
+        let daysDelayed = totalDays >= 0 ? (totalDays > 0 ? totalDays + 1 : 1) : 0; // Start 10th as 1 after due time, 11th as 2, etc.
+        console.log('Debug - Due Date:', dueDate.toISOString());
+        console.log('Debug - Check Date:', checkDate.toISOString());
+        console.log('Debug - Time Diff (ms):', timeDiff);
+        console.log('Debug - Total Days:', totalDays);
+        console.log('Debug - Days Delayed:', daysDelayed); // Final delay value
 
-            for (let month = 0; month < currentMonth; month++) {
-                const monthName = new Date(currentYear, month, 1).toLocaleString('default', { month: 'long' });
-                const optionValue = `${currentYear}-${(month + 1).toString().padStart(2, '0')}`; // e.g., 2025-01
-                const option = document.createElement('option');
-                option.value = optionValue;
-                option.text = `${monthName} ${currentYear}`;
-                monthSelect.appendChild(option);
-                console.log('Debug - Added Option:', optionValue, option.text);
-            }
-            if (monthSelect.children.length === 0) {
-                console.warn('No months populated!');
-            }
-        }
+        let penalty = 0;
+        let interest = 0;
+        let totalOwed = amount;
 
-        function updateDueDate() {
-            const type = document.getElementById('type').value;
-            const dueDateInput = document.getElementById('dueDate');
-            const monthSelect = document.getElementById('month');
-            if (type === 'contribution' && monthSelect.style.display !== 'none') {
-                const selectedMonth = document.getElementById('month').value.split('-');
-                const year = parseInt(selectedMonth[0]);
-                const month = parseInt(selectedMonth[1]) - 1; // 0-based month
-                let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0)); // Start of next month in UTC
-                dueDate.setUTCDate(10); // Explicitly set to 10th in UTC
-                console.log('Debug - Selected Month:', selectedMonth, 'Calculated Due Date:', dueDate);
-                if (isNaN(dueDate.getTime())) {
-                    dueDateInput.value = new Date().toISOString().split('T')[0]; // Fallback to today
-                } else {
-                    dueDateInput.value = new Date(dueDate).toISOString().split('T')[0]; // Convert back to local time
-                }
-                console.log('Debug - Final Due Date:', dueDateInput.value);
+        if (type === 'contribution') {
+            const penaltyStartDay = 1; // 10th as day 1 after due time
+            if (daysDelayed < penaltyStartDay) {
+                penalty = 0;
+            } else if (daysDelayed <= 7) { // 7 days total (10th–16th)
+                penalty = amount * 0.30;
             } else {
-                dueDateInput.disabled = false; // Enable for manual input on loans
+                penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7)); // 1% daily after 7 days
             }
-            updateButtonState();
+            totalOwed += penalty;
+        } else if (type === 'loan') {
+            // Loan calculation disabled for now
+            resultDiv.innerHTML = "Loan calculations are on hold.";
+            resetButton(button);
+            return;
         }
 
-        function updateButtonState() {
-            const button = document.getElementById('calcButton');
-            const amount = document.getElementById('amount').value;
-            const dueDate = document.getElementById('dueDate').value;
-            const checkDate = document.getElementById('checkDate').value;
-            button.disabled = isCalculating || !amount || !dueDate || !checkDate;
-        }
+        resultDiv.innerHTML = `
+            Days Delayed: ${daysDelayed} days<br>
+            ${type === 'loan' ? `Interest: ${interest.toFixed(2)}<br>` : ''}
+            Penalty: ${typeof penalty === 'number' ? penalty.toFixed(2) : penalty}<br>
+            Total Amount Owed: ${typeof totalOwed === 'number' ? totalOwed.toFixed(2) : totalOwed}
+        `;
 
-        function calculate() {
-            const button = document.getElementById('calcButton');
-            if (isCalculating || !document.getElementById('amount').value || !document.getElementById('dueDate').value || !document.getElementById('checkDate').value) return;
-
-            isCalculating = true;
-            button.classList.add('loading');
-            button.disabled = true;
-
-            setTimeout(() => {
-                const type = document.getElementById('type').value;
-                const amount = parseFloat(document.getElementById('amount').value) || 0;
-                const dueDateInput = document.getElementById('dueDate').value;
-                const checkDateInput = document.getElementById('checkDate').value;
-                const dueDate = new Date(dueDateInput + 'T23:59:59+03:00'); // End of due date in EAT
-                const checkDate = new Date(checkDateInput + 'T00:00:00+03:00'); // Start of check date in EAT
-                const resultDiv = document.getElementById('result');
-
-                if (!amount || isNaN(dueDate.getTime()) || isNaN(checkDate.getTime())) {
-                    resultDiv.innerHTML = "Please enter valid amount, due date, and check date.";
-                    resetButton(button);
-                    return;
-                }
-
-                // Calculate days delayed starting from 10th as day 1 after due time
-                const timeDiff = checkDate - dueDate;
-                let totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Total days from due date end
-                let daysDelayed = totalDays >= 0 ? totalDays + 1 : 0; // Start 10th as 1 if on or after due date
-                console.log('Debug - Due Date:', dueDate.toISOString());
-                console.log('Debug - Check Date:', checkDate.toISOString());
-                console.log('Debug - Time Diff (ms):', timeDiff);
-                console.log('Debug - Total Days:', totalDays);
-                console.log('Debug - Days Delayed:', daysDelayed); // Final delay value
-
-                let penalty = 0;
-                let interest = 0;
-                let totalOwed = amount;
-
-                if (type === 'contribution') {
-                    const penaltyStartDay = 1; // 10th as day 1 after due time
-                    if (daysDelayed < penaltyStartDay) {
-                        penalty = 0;
-                    } else if (daysDelayed <= 7) { // 7 days total (10th–16th)
-                        penalty = amount * 0.30;
-                    } else {
-                        penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7)); // 1% daily after 7 days
-                    }
-                    totalOwed += penalty;
-                } else if (type === 'loan') {
-                    // Loan calculation disabled for now
-                    resultDiv.innerHTML = "Loan calculations are on hold.";
-                    resetButton(button);
-                    return;
-                }
-
-                resultDiv.innerHTML = `
-                    Days Delayed: ${daysDelayed} days<br>
-                    ${type === 'loan' ? `Interest: ${interest.toFixed(2)}<br>` : ''}
-                    Penalty: ${typeof penalty === 'number' ? penalty.toFixed(2) : penalty}<br>
-                    Total Amount Owed: ${typeof totalOwed === 'number' ? totalOwed.toFixed(2) : totalOwed}
-                `;
-
-                resetButton(button);
-            }, 1000); // Simulate loading delay
-        }
-
-        function resetButton(button) {
-            setTimeout(() => {
-                isCalculating = false;
-                button.classList.remove('loading');
-                button.disabled = false;
-                updateButtonState();
-            }, 1000);
-        }
-
-        // Initial call
-        toggleFields();
-    </script>
-</body>
-</html>
+        resetButton(button);
+    }, 1000); // Simulate loading delay
+}
