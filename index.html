@@ -105,6 +105,9 @@
         <label for="dueDate">Due Date:</label>
         <input type="date" id="dueDate" required onchange="updateButtonState()" disabled><br><br>
 
+        <label for="checkDate">Check Date:</label>
+        <input type="date" id="checkDate" required onchange="updateButtonState()"><br><br>
+
         <div id="loanFields" style="display:none;">
             <label for="loanType">Loan Type:</label>
             <select id="loanType">
@@ -136,8 +139,8 @@
         function populateMonths() {
             const monthSelect = document.getElementById('month');
             monthSelect.innerHTML = ''; // Clear existing options
-            const currentDate = new Date('2025-07-14T12:00:00+03:00'); // Explicit EAT (UTC+3)
-            const currentMonth = currentDate.getMonth(); // 0-based (June = 5)
+            const currentDate = new Date(); // Use system date
+            const currentMonth = currentDate.getMonth(); // 0-based
             const currentYear = currentDate.getFullYear();
 
             for (let month = 0; month < currentMonth; month++) {
@@ -157,12 +160,12 @@
             if (type === 'contribution' && monthSelect.style.display !== 'none') {
                 const selectedMonth = document.getElementById('month').value.split('-');
                 const year = parseInt(selectedMonth[0]);
-                const month = parseInt(selectedMonth[1])  -1; // 0-based month
+                const month = parseInt(selectedMonth[1]) - 1; // 0-based month
                 let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0)); // Start of next month in UTC
                 dueDate.setUTCDate(10); // Explicitly set to 10th in UTC
                 console.log('Initial dueDate:', new Date(dueDate).toISOString().split('T')[0]); // Debug initial
                 if (isNaN(dueDate.getTime())) {
-                    dueDateInput.value = new Date('2025-07-14T12:00:00+03:00').toISOString().split('T')[0]; // Fallback
+                    dueDateInput.value = new Date().toISOString().split('T')[0]; // Fallback to today
                 } else {
                     dueDateInput.value = new Date(dueDate).toISOString().split('T')[0]; // Convert back to local time
                 }
@@ -177,12 +180,13 @@
             const button = document.getElementById('calcButton');
             const amount = document.getElementById('amount').value;
             const dueDate = document.getElementById('dueDate').value;
-            button.disabled = isCalculating || !amount || !dueDate;
+            const checkDate = document.getElementById('checkDate').value;
+            button.disabled = isCalculating || !amount || !dueDate || !checkDate;
         }
 
         function calculate() {
             const button = document.getElementById('calcButton');
-            if (isCalculating || !document.getElementById('amount').value || !document.getElementById('dueDate').value) return;
+            if (isCalculating || !document.getElementById('amount').value || !document.getElementById('dueDate').value || !document.getElementById('checkDate').value) return;
 
             isCalculating = true;
             button.classList.add('loading');
@@ -191,34 +195,40 @@
             setTimeout(() => {
                 const type = document.getElementById('type').value;
                 const amount = parseFloat(document.getElementById('amount').value) || 0;
-                const dueDate = new Date(document.getElementById('dueDate').value + 'T12:00:00+03:00');
-                const currentDate = new Date('2025-07-14T12:00:00+03:00'); // Current date in EAT
+                const dueDateInput = document.getElementById('dueDate').value;
+                const checkDateInput = document.getElementById('checkDate').value;
+                const dueDate = new Date(dueDateInput + 'T23:59:59+03:00'); // End of due date in EAT
+                const checkDate = new Date(checkDateInput + 'T00:00:00+03:00'); // Start of check date in EAT
                 const resultDiv = document.getElementById('result');
 
-                if (!amount || isNaN(dueDate.getTime())) {
-                    resultDiv.innerHTML = "Please enter valid amount and due date.";
+                if (!amount || isNaN(dueDate.getTime()) || isNaN(checkDate.getTime())) {
+                    resultDiv.innerHTML = "Please enter valid amount, due date, and check date.";
                     resetButton(button);
                     return;
                 }
 
-                // Calculate days delayed starting from the 11th inclusively, including partial days
-                const timeDiff = currentDate - dueDate;
-                let daysDelayed = Math.ceil((timeDiff - 86400000) / (1000 * 60 * 60 * 24)); // Include current day from start
-                if (daysDelayed < 0) daysDelayed = 0; // Ensure non-negative
-                console.log('Days Delayed Calculation:', timeDiff, daysDelayed); // Debug
+                // Calculate exact days delayed
+                const timeDiff = checkDate - dueDate;
+                let totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Total days from due date to check date
+                let daysDelayed = totalDays > 0 ? totalDays - 1 : 0; // Subtract 1 to start counting from 11th as day 1
+                console.log('Debug - Due Date:', dueDate.toISOString());
+                console.log('Debug - Check Date:', checkDate.toISOString());
+                console.log('Debug - Time Diff (ms):', timeDiff);
+                console.log('Debug - Total Days:', totalDays);
+                console.log('Debug - Days Delayed:', daysDelayed); // Final delay value
 
                 let penalty = 0;
                 let interest = 0;
                 let totalOwed = amount;
 
                 if (type === 'contribution') {
-                    const penaltyStartDay = 1; // 11th is day 1
+                    const penaltyStartDay = 1; // 11th of next month is day 1
                     if (daysDelayed < penaltyStartDay) {
                         penalty = 0;
-                    } else if (daysDelayed <= penaltyStartDay + 6) { // 7 days total (11th-17th)
+                    } else if (daysDelayed <= 7) { // 7 days total (11th–17th)
                         penalty = amount * 0.30;
                     } else {
-                        penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - (penaltyStartDay + 6))); // 1% daily after 7 days
+                        penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7)); // 1% daily after 7 days
                     }
                     totalOwed += penalty;
                 } else if (type === 'loan') {
