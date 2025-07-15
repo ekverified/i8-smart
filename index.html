@@ -138,10 +138,15 @@
 
         function populateMonths() {
             const monthSelect = document.getElementById('month');
+            if (!monthSelect) {
+                console.error('Month select element not found!');
+                return;
+            }
             monthSelect.innerHTML = ''; // Clear existing options
-            const currentDate = new Date(); // Use system date
-            const currentMonth = currentDate.getMonth(); // 0-based
-            const currentYear = currentDate.getFullYear();
+            const currentDate = new Date(); // Use system date, e.g., July 15, 2025, 11:02 AM EAT
+            const currentMonth = currentDate.getMonth(); // Should be 6 (0-based, July)
+            const currentYear = currentDate.getFullYear(); // Should be 2025
+            console.log('Debug - Current Month:', currentMonth, 'Current Year:', currentYear);
 
             for (let month = 0; month < currentMonth; month++) {
                 const monthName = new Date(currentYear, month, 1).toLocaleString('default', { month: 'long' });
@@ -150,6 +155,10 @@
                 option.value = optionValue;
                 option.text = `${monthName} ${currentYear}`;
                 monthSelect.appendChild(option);
+                console.log('Debug - Added Option:', optionValue, option.text);
+            }
+            if (monthSelect.children.length === 0) {
+                console.warn('No months populated!');
             }
         }
 
@@ -163,13 +172,13 @@
                 const month = parseInt(selectedMonth[1]) - 1; // 0-based month
                 let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0)); // Start of next month in UTC
                 dueDate.setUTCDate(10); // Explicitly set to 10th in UTC
-                console.log('Initial dueDate:', new Date(dueDate).toISOString().split('T')[0]); // Debug initial
+                console.log('Debug - Selected Month:', selectedMonth, 'Calculated Due Date:', dueDate);
                 if (isNaN(dueDate.getTime())) {
                     dueDateInput.value = new Date().toISOString().split('T')[0]; // Fallback to today
                 } else {
                     dueDateInput.value = new Date(dueDate).toISOString().split('T')[0]; // Convert back to local time
                 }
-                console.log('Final dueDate:', dueDateInput.value); // Debug final
+                console.log('Debug - Final Due Date:', dueDateInput.value);
             } else {
                 dueDateInput.disabled = false; // Enable for manual input on loans
             }
@@ -207,10 +216,10 @@
                     return;
                 }
 
-                // Calculate exact days delayed
+                // Calculate days delayed starting from 10th as day 1 after due time
                 const timeDiff = checkDate - dueDate;
-                let totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Total days from due date to check date
-                let daysDelayed = totalDays > 0 ? totalDays - 1 : 0; // Subtract 1 to start counting from 11th as day 1
+                let totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Total days from due date end
+                let daysDelayed = totalDays >= 0 ? totalDays + 1 : 0; // Start 10th as 1 if on or after due date
                 console.log('Debug - Due Date:', dueDate.toISOString());
                 console.log('Debug - Check Date:', checkDate.toISOString());
                 console.log('Debug - Time Diff (ms):', timeDiff);
@@ -222,10 +231,10 @@
                 let totalOwed = amount;
 
                 if (type === 'contribution') {
-                    const penaltyStartDay = 1; // 11th of next month is day 1
+                    const penaltyStartDay = 1; // 10th as day 1 after due time
                     if (daysDelayed < penaltyStartDay) {
                         penalty = 0;
-                    } else if (daysDelayed <= 7) { // 7 days total (11th–17th)
+                    } else if (daysDelayed <= 7) { // 7 days total (10th–16th)
                         penalty = amount * 0.30;
                     } else {
                         penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7)); // 1% daily after 7 days
