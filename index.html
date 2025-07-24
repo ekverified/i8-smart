@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>i-8 SMART BOT</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
-            padding: 15px;
+            padding: 1rem;
             background-color: #e6f0fa;
             color: #2c3e50;
             display: flex;
@@ -17,26 +20,26 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 400px;
-            width: 100%;
+            width: 90%;
+            max-width: 600px;
             background: #ffffff;
-            padding: 20px;
+            padding: 1.5rem;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 52, 89, 0.1);
             border: 1px solid #3498db;
         }
         .title-container {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 1rem;
         }
         .title-container .main-title {
-            font-size: 1.3em;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
             color: #2980b9;
             font-weight: 600;
             margin: 0;
         }
         .title-container .sub-title {
-            font-size: 0.9em;
+            font-size: clamp(0.8rem, 3vw, 1rem);
             color: #2980b9;
             font-weight: bold;
             text-transform: lowercase;
@@ -44,56 +47,76 @@
         }
         label {
             display: block;
-            margin: 8px 0 4px;
+            margin: 0.5rem 0 0.25rem;
             color: #34495e;
-            font-size: 0.9em;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
             font-weight: 500;
         }
         select, input {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
             border: 1px solid #3498db;
             border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.9em;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             background-color: #f5f7fa;
             transition: border-color 0.3s;
+            -webkit-appearance: none; /* Improve dropdown appearance on mobile */
+            -moz-appearance: none;
+            appearance: none;
         }
         select:focus, input:focus {
             border-color: #2980b9;
             outline: none;
         }
         #loanFields {
-            margin-top: 10px;
+            margin-top: 0.75rem;
             display: none;
         }
         .result {
-            margin-top: 15px;
-            padding: 12px;
+            margin-top: 1rem;
+            padding: 0.75rem;
             background: #e8f1f8;
             border-radius: 4px;
             color: #2c3e50;
-            font-size: 0.9em;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
             line-height: 1.4;
             border: 1px solid #3498db;
+            overflow-x: auto; /* Enable horizontal scrolling for table on small screens */
+        }
+        .result table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+        }
+        .result th, .result td {
+            padding: 0.5rem;
+            border: 1px solid #3498db;
+            text-align: left;
+        }
+        .result th {
+            background-color: #3498db;
+            color: #fff;
+        }
+        .result tr:nth-child(even) {
+            background-color: #f5f7fa;
         }
         button {
             background: #3498db;
             color: #fff;
-            padding: 8px;
+            padding: 0;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
-            font-size: 0.9em;
+            width: clamp(2.5rem, 10vw, 3rem);
+            height: clamp(2.5rem, 10vw, 3rem);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
             font-weight: 500;
             transition: background 0.3s;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 10px auto 0;
+            margin: 0.75rem auto 0;
         }
         button:hover {
             background: #2980b9;
@@ -112,20 +135,57 @@
         .loading::after {
             content: '';
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 0.75rem;
+            height: 0.75rem;
             border: 2px solid #fff;
             border-top: 2px solid #3498db;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-left: 0;
-            vertical-align: middle;
         }
         .footer {
             text-align: center;
-            margin-top: 15px;
-            font-size: 0.8em;
+            margin-top: 1rem;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
             color: #7f8c8d;
+        }
+
+        /* Media Queries for Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            select, input {
+                padding: 0.5rem;
+            }
+            button {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+            .result {
+                font-size: 0.8rem;
+            }
+        }
+        @media (min-width: 601px) and (max-width: 1024px) {
+            .container {
+                max-width: 500px;
+            }
+            select, input {
+                padding: 0.75rem;
+            }
+        }
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 600px;
+            }
+            select, input {
+                padding: 0.75rem;
+            }
+            .title-container .main-title {
+                font-size: 1.6rem;
+            }
+            .title-container .sub-title {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
@@ -137,7 +197,7 @@
         </div>
         <label for="type">Type:</label>
         <select id="type" onchange="toggleFields()">
-            <option value="contribution">Contribution</option>
+            <option value="contribution">Deposit</option>
             <option value="loan">Loan</option>
         </select><br><br>
 
@@ -177,7 +237,7 @@
             loanFields.style.display = type === 'loan' ? 'block' : 'none';
             monthSelect.style.display = type === 'contribution' ? 'block' : 'none';
             dueDateInput.disabled = type === 'contribution';
-            populateMonths(); // Ensure months are populated on toggle
+            populateMonths();
             updateDueDate();
             updateButtonState();
         }
@@ -188,21 +248,25 @@
                 console.error('Month select element not found!');
                 return;
             }
-            monthSelect.innerHTML = ''; // Clear existing options
+            monthSelect.innerHTML = '';
             const currentDate = new Date();
-            const currentMonth = currentDate.getMonth(); // 0-based, July is 6
-            const currentYear = currentDate.getFullYear(); // 2025
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
 
-            for (let month = 0; month < currentMonth; month++) {
-                const monthName = new Date(currentYear, month, 1).toLocaleString('default', { month: 'long' });
-                const optionValue = `${currentYear}-${(month + 1).toString().padStart(2, '0')}`;
-                const option = document.createElement('option');
-                option.value = optionValue;
-                option.text = `${monthName} ${currentYear}`;
-                monthSelect.appendChild(option);
+            for (let year = currentYear - 1; year <= currentYear; year++) {
+                const maxMonth = year === currentYear ? currentMonth : 11;
+                for (let month = 0; month <= maxMonth; month++) {
+                    const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
+                    const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    option.text = `${monthName} ${year}`;
+                    monthSelect.appendChild(option);
+                }
             }
+
             if (monthSelect.children.length === 0) {
-                console.warn('No months populated! Current month might be the first.');
+                console.warn('No months populated! Adding current month as fallback.');
                 const option = document.createElement('option');
                 option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
                 option.text = `${new Date(currentYear, currentMonth, 1).toLocaleString('default', { month: 'long' })} ${currentYear}`;
@@ -217,13 +281,13 @@
             if (type === 'contribution' && monthSelect.style.display !== 'none') {
                 const selectedMonth = document.getElementById('month').value.split('-');
                 const year = parseInt(selectedMonth[0]);
-                const month = parseInt(selectedMonth[1]) - 1; // 0-based
-                let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0)); // Start of next month
-                dueDate.setUTCDate(10); // Set to 10th
+                const month = parseInt(selectedMonth[1]) - 1;
+                let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
+                dueDate.setUTCDate(10);
                 if (isNaN(dueDate.getTime())) {
-                    dueDateInput.value = new Date().toISOString().split('T')[0]; // Fallback to today
+                    dueDateInput.value = new Date().toISOString().split('T')[0];
                 } else {
-                    dueDateInput.value = new Date(dueDate).toISOString().split('T')[0]; // Local format
+                    dueDateInput.value = new Date(dueDate).toISOString().split('T')[0];
                 }
             }
             updateButtonState();
@@ -264,7 +328,6 @@
                     return;
                 }
 
-                // Calculate days delayed accurately (due date is end of term)
                 const oneDay = 24 * 60 * 60 * 1000;
                 let daysDelayed = Math.floor((checkDate - dueDate) / oneDay);
                 if (daysDelayed < 0) daysDelayed = 0;
@@ -286,26 +349,65 @@
                 } else if (type === 'loan' && document.getElementById('loanType').value) {
                     const loanType = document.getElementById('loanType').value;
                     if (daysDelayed <= 7) {
-                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10; // 5% for short, 10% for medium
-                        totalOwed = amount + interest; // Total owed is principal + interest during grace
+                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10;
+                        totalOwed = amount + interest;
                     } else {
-                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10; // 5% for short, 10% for medium
+                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10;
                         const rolledAmount = amount + interest;
-                        const rollOverInterest = rolledAmount * 0.05; // 5% roll-over for both
-                        penalty = rolledAmount * 0.005 * (daysDelayed - 7); // 0.5% per day beyond 7 days
+                        const rollOverInterest = rolledAmount * 0.05;
+                        penalty = rolledAmount * 0.005 * (daysDelayed - 7);
                         totalOwed = amount + interest + rollOverInterest + penalty;
                     }
                 }
 
-                resultDiv.innerHTML = `
-                    Days Delayed: ${daysDelayed} days<br>
-                    ${type === 'loan' ? `Initial Interest: ${interest.toFixed(2)}<br>` : ''}
-                    ${type === 'contribution' ? `Penalty: ${penalty.toFixed(2)}<br>` : ''}
-                    ${type === 'loan' && daysDelayed > 7 ? `Roll-over Interest: ${(totalOwed - amount - interest - penalty).toFixed(2)}<br>` : ''}
-                    ${type === 'loan' && daysDelayed > 7 ? `Penalty: ${penalty.toFixed(2)}<br>` : ''}
-                    Total Amount Owed: ${totalOwed.toFixed(2)}
+                let tableHTML = `
+                    <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.8rem, 2.5vw, 0.9rem);">
+                        <tr style="background-color: #3498db; color: #fff;">
+                            <th style="padding: 0.5rem; border: 1px solid #2980b9;">Field</th>
+                            <th style="padding: 0.5rem; border: 1px solid #2980b9;">Value</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Days Delayed</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${daysDelayed} days</td>
+                        </tr>
+                `;
+                if (type === 'loan') {
+                    tableHTML += `
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Initial Interest</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${interest.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+                if (type === 'contribution') {
+                    tableHTML += `
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Penalty</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${penalty.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+                if (type === 'loan' && daysDelayed > 7) {
+                    tableHTML += `
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Roll-over Interest</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${(totalOwed - amount - interest - penalty).toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Penalty</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${penalty.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+                tableHTML += `
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db; font-weight: bold;">Total Amount Owed</td>
+                            <td style="padding: 0.5rem; border: 1px solid #3498db; font-weight: bold;">${totalOwed.toFixed(2)}</td>
+                        </tr>
+                    </table>
                 `;
 
+                resultDiv.innerHTML = tableHTML;
                 resetButton(button);
             }, 500);
         }
@@ -319,7 +421,6 @@
             }, 500);
         }
 
-        // Initial call
         toggleFields();
     </script>
 </body>
