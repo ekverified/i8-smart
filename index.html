@@ -3,424 +3,628 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="i-8 SMART BOT: Calculate deposit penalties and loan interest in KES with ease.">
+    <meta name="author" content="e.k">
+    <meta name="keywords" content="sacco calculator, Kenya finance, deposit penalty, loan interest">
     <title>i-8 SMART BOT</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 1rem;
-            background-color: #e6f0fa;
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #e6f0fa 0%, #d1e3f6 100%);
             color: #2c3e50;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 0.5rem;
         }
         .container {
-            width: 90%;
-            max-width: 600px;
+            width: 95%;
+            max-width: 500px;
             background: #ffffff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 52, 89, 0.1);
-            border: 1px solid #3498db;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 52, 89, 0.15);
+            border: 1px solid #1a73e8;
+            animation: containerEnter 0.8s ease-out;
+        }
+        @keyframes containerEnter {
+            from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .title-container {
             text-align: center;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            animation: fadeIn 1s ease-out;
+        }
+        .title-container .logo {
+            width: 1.5rem;
+            height: 1.5rem;
+            transition: transform 0.3s;
+        }
+        .title-container .logo:hover {
+            transform: rotate(360deg);
         }
         .title-container .main-title {
-            font-size: clamp(1.2rem, 4vw, 1.5rem);
-            color: #2980b9;
-            font-weight: 600;
-            margin: 0;
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+            color: #1a73e8;
+            font-weight: 700;
         }
         .title-container .sub-title {
-            font-size: clamp(0.8rem, 3vw, 1rem);
-            color: #2980b9;
-            font-weight: bold;
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            color: #34c759;
+            font-weight: 500;
             text-transform: lowercase;
-            margin: 0;
         }
         label {
             display: block;
-            margin: 0.5rem 0 0.25rem;
-            color: #34495e;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            margin: 0.3rem 0 0.2rem;
+            color: #2c3e50;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
             font-weight: 500;
+            animation: fadeIn 0.8s ease-out;
+            animation-delay: calc(0.1s * var(--field-index));
         }
         select, input {
             width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            border: 1px solid #3498db;
-            border-radius: 4px;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            background-color: #f5f7fa;
-            transition: border-color 0.3s;
-            -webkit-appearance: none; /* Improve dropdown appearance on mobile */
-            -moz-appearance: none;
-            appearance: none;
+            padding: 0.5rem;
+            margin-bottom: 0.3rem;
+            border: 1px solid #1a73e8;
+            border-radius: 6px;
+            font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+            background: #f5f7fa;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+            animation: fadeIn 0.8s ease-out;
+            animation-delay: calc(0.1s * var(--field-index));
+        }
+        select {
+            background: #f5f7fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 0.5rem center/1rem;
         }
         select:focus, input:focus {
-            border-color: #2980b9;
+            border-color: #34c759;
+            box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2);
+            transform: scale(1.02);
             outline: none;
         }
-        #loanFields {
-            margin-top: 0.75rem;
+        .error {
+            color: #e74c3c;
+            font-size: clamp(0.6rem, 1.8vw, 0.7rem);
+            margin-bottom: 0.3rem;
+            display: none;
+            animation: shake 0.3s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        #contributionFields, #loanFields {
+            margin-top: 0.3rem;
             display: none;
         }
         .result {
-            margin-top: 1rem;
-            padding: 0.75rem;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
             background: #e8f1f8;
-            border-radius: 4px;
+            border-radius: 6px;
             color: #2c3e50;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
             line-height: 1.4;
-            border: 1px solid #3498db;
-            overflow-x: auto; /* Enable horizontal scrolling for table on small screens */
+            border: 1px solid #1a73e8;
+            overflow-x: auto;
+            animation: resultEnter 0.5s ease-out;
+        }
+        @keyframes resultEnter {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .result table {
             width: 100%;
             border-collapse: collapse;
-            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
         }
         .result th, .result td {
-            padding: 0.5rem;
-            border: 1px solid #3498db;
+            padding: 0.4rem;
+            border: 1px solid #1a73e8;
             text-align: left;
         }
         .result th {
-            background-color: #3498db;
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
             color: #fff;
         }
         .result tr:nth-child(even) {
-            background-color: #f5f7fa;
+            background: #f5f7fa;
         }
         button {
-            background: #3498db;
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
             color: #fff;
-            padding: 0;
             border: none;
             border-radius: 50%;
             cursor: pointer;
-            width: clamp(2.5rem, 10vw, 3rem);
-            height: clamp(2.5rem, 10vw, 3rem);
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            width: clamp(2rem, 8vw, 2.5rem);
+            height: clamp(2rem, 8vw, 2.5rem);
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
             font-weight: 500;
-            transition: background 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0.75rem auto 0;
+            margin: 0.5rem auto 0;
         }
         button:hover {
-            background: #2980b9;
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+            background: linear-gradient(135deg, #34c759, #4cd964);
+        }
+        button:active {
+            transform: scale(0.9);
+            background: linear-gradient(135deg, #e74c3c, #ff6b6b);
         }
         button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .loading {
             opacity: 0.7;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); border-top-color: #34c759; }
+            100% { transform: rotate(360deg); border-top-color: #1a73e8; }
         }
         .loading::after {
             content: '';
             display: inline-block;
-            width: 0.75rem;
-            height: 0.75rem;
+            width: 0.8rem;
+            height: 0.8rem;
             border: 2px solid #fff;
-            border-top: 2px solid #3498db;
+            border-top: 2px solid #34c759;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
         .footer {
             text-align: center;
-            margin-top: 1rem;
-            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            margin-top: 0.5rem;
+            font-size: clamp(0.6rem, 1.8vw, 0.7rem);
             color: #7f8c8d;
+            animation: fadeIn 1s ease-out;
         }
-
-        /* Media Queries for Responsive Design */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: modalEnter 0.5s ease-out;
+        }
+        @keyframes modalEnter {
+            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .close-modal {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #2c3e50;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .close-modal:hover {
+            color: #e74c3c;
+            transform: scale(1.2);
+        }
         @media (max-width: 600px) {
             .container {
-                padding: 1rem;
+                padding: 0.8rem;
             }
             select, input {
-                padding: 0.5rem;
+                padding: 0.4rem;
             }
             button {
-                width: 2.5rem;
-                height: 2.5rem;
+                width: 2rem;
+                height: 2rem;
             }
             .result {
-                font-size: 0.8rem;
+                font-size: 0.7rem;
+            }
+            .modal-content {
+                padding: 0.8rem;
+                width: 95%;
             }
         }
         @media (min-width: 601px) and (max-width: 1024px) {
             .container {
-                max-width: 500px;
-            }
-            select, input {
-                padding: 0.75rem;
+                max-width: 450px;
             }
         }
         @media (min-width: 1025px) {
             .container {
-                max-width: 600px;
-            }
-            select, input {
-                padding: 0.75rem;
+                max-width: 500px;
             }
             .title-container .main-title {
-                font-size: 1.6rem;
+                font-size: 1.4rem;
             }
             .title-container .sub-title {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
         }
+        select:focus-visible, input:focus-visible, button:focus-visible {
+            outline: 2px solid #34c759;
+            outline-offset: 2px;
+        }
+        #type, #amount, #year, #month, #dueDate, #checkDate, #loanType {
+            --field-index: 0;
+        }
+        #type { --field-index: 1; }
+        #amount { --field-index: 2; }
+        #year { --field-index: 3; }
+        #month { --field-index: 4; }
+        #dueDate { --field-index: 5; }
+        #checkDate { --field-index: 6; }
+        #loanType { --field-index: 7; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="title-container">
-            <div class="main-title">i-8 SMART</div>
-            <div class="sub-title">bot</div>
+            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1a73e8">
+                <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <div>
+                <div class="main-title">i-8 SMART</div>
+                <div class="sub-title">bot</div>
+            </div>
         </div>
         <label for="type">Type:</label>
-        <select id="type" onchange="toggleFields()">
+        <select id="type" aria-label="Select transaction type: Deposit or Loan" onchange="toggleFields()">
             <option value="contribution">Deposit</option>
             <option value="loan">Loan</option>
-        </select><br><br>
+        </select>
+        <span id="typeError" class="error"></span>
 
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" min="0" step="100" placeholder="Enter amount" required><br><br>
+        <label for="amount">Amount (KES):</label>
+        <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
+        <span id="amountError" class="error"></span>
 
-        <label for="month">Contribution Month:</label>
-        <select id="month" onchange="updateDueDate()"></select><br><br>
+        <div id="contributionFields">
+            <label for="year">Contribution Year:</label>
+            <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
+            <span id="yearError" class="error"></span>
+
+            <label for="month">Contribution Month:</label>
+            <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
+            <span id="monthError" class="error"></span>
+        </div>
 
         <label for="dueDate">Due Date:</label>
-        <input type="date" id="dueDate" required onchange="updateButtonState()" disabled><br><br>
+        <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+        <span id="dueDateError" class="error"></span>
 
         <label for="checkDate">Check Date:</label>
-        <input type="date" id="checkDate" required onchange="updateButtonState()"><br><br>
+        <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+        <span id="checkDateError" class="error"></span>
 
         <div id="loanFields">
             <label for="loanType">Loan Type:</label>
-            <select id="loanType">
+            <select id="loanType" aria-label="Select loan type: Short Term or Medium Term">
                 <option value="short">Short Term (30 days)</option>
                 <option value="medium">Medium Term (90 days)</option>
-            </select><br><br>
+            </select>
+            <span id="loanTypeError" class="error"></span>
         </div>
 
-        <button onclick="calculate()" id="calcButton">Calc</button>
+        <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
         <div id="result" class="result"></div>
         <div class="footer">Powered by e.k</div>
     </div>
 
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeResultModal()" aria-label="Close results">&times;</button>
+            <div id="modalResult"></div>
+        </div>
+    </div>
+
     <script>
+        const CONFIG = {
+            CONTRIBUTION_PENALTY: 0.30,
+            CONTRIBUTION_DAILY_PENALTY: 0.01,
+            LOAN_SHORT_INTEREST: 0.05,
+            LOAN_MEDIUM_INTEREST: 0.10,
+            ROLLOVER_INTEREST: 0.05,
+            LOAN_DAILY_PENALTY: 0.005,
+            PENALTY_START_DAY: 1
+        };
+
+        const elements = {
+            type: document.getElementById('type'),
+            amount: document.getElementById('amount'),
+            contributionFields: document.getElementById('contributionFields'),
+            year: document.getElementById('year'),
+            month: document.getElementById('month'),
+            dueDate: document.getElementById('dueDate'),
+            checkDate: document.getElementById('checkDate'),
+            loanFields: document.getElementById('loanFields'),
+            loanType: document.getElementById('loanType'),
+            calcButton: document.getElementById('calcButton'),
+            result: document.getElementById('result'),
+            resultModal: document.getElementById('resultModal'),
+            modalResult: document.getElementById('modalResult'),
+            errors: {
+                type: document.getElementById('typeError'),
+                amount: document.getElementById('amountError'),
+                year: document.getElementById('yearError'),
+                month: document.getElementById('monthError'),
+                dueDate: document.getElementById('dueDateError'),
+                checkDate: document.getElementById('checkDateError'),
+                loanType: document.getElementById('loanTypeError')
+            }
+        };
+
         let isCalculating = false;
 
-        function toggleFields() {
-            const type = document.getElementById('type').value;
-            const loanFields = document.getElementById('loanFields');
-            const monthSelect = document.getElementById('month');
-            const dueDateInput = document.getElementById('dueDate');
-            loanFields.style.display = type === 'loan' ? 'block' : 'none';
-            monthSelect.style.display = type === 'contribution' ? 'block' : 'none';
-            dueDateInput.disabled = type === 'contribution';
+        function sanitizeInput(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
+        function validateInputs() {
+            const errors = [];
+            const amount = parseFloat(elements.amount.value) || 0;
+            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+            const type = elements.type.value;
+            const year = elements.year.value;
+            const month = elements.month.value;
+
+            Object.values(elements.errors).forEach(error => error.style.display = 'none');
+
+            if (amount <= 0 || isNaN(amount)) {
+                elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
+                elements.errors.amount.style.display = 'block';
+                errors.push('Invalid amount');
+            }
+            if (type === 'contribution' && !year) {
+                elements.errors.year.textContent = 'Please select a year.';
+                elements.errors.year.style.display = 'block';
+                errors.push('Invalid year');
+            }
+            if (type === 'contribution' && !month) {
+                elements.errors.month.textContent = 'Please select a month.';
+                elements.errors.month.style.display = 'block';
+                errors.push('Invalid month');
+            }
+            if (isNaN(dueDate.getTime())) {
+                elements.errors.dueDate.textContent = 'Invalid due date.';
+                elements.errors.dueDate.style.display = 'block';
+                errors.push('Invalid due date');
+            }
+            if (isNaN(checkDate.getTime())) {
+                elements.errors.checkDate.textContent = 'Invalid check date.';
+                elements.errors.checkDate.style.display = 'block';
+                errors.push('Invalid check date');
+            }
+            if (type === 'loan' && !elements.loanType.value) {
+                elements.errors.loanType.textContent = 'Please select a loan type.';
+                elements.errors.loanType.style.display = 'block';
+                errors.push('Invalid loan type');
+            }
+
+            return errors.length === 0 ? null : errors.join(', ');
+        }
+
+        function calculateContributionPenalty(amount, daysDelayed) {
+            if (daysDelayed < CONFIG.PENALTY_START_DAY) return 0;
+            if (daysDelayed <= 7) return amount * CONFIG.CONTRIBUTION_PENALTY;
+            return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
+        }
+
+        function calculateLoanOwed(amount, daysDelayed, loanType) {
+            const interest = loanType === 'short' ? amount * CONFIG.LOAN_SHORT_INTEREST : amount * CONFIG.LOAN_MEDIUM_INTEREST;
+            if (daysDelayed <= 7) return { totalOwed: amount + interest, interest, penalty: 0, rollOverInterest: 0 };
+            const rolledAmount = amount + interest;
+            const rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
+            const penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
+            return { totalOwed: amount + interest + rollOverInterest + penalty, interest, penalty, rollOverInterest };
+        }
+
+        function saveCalculation(data) {
+            const history = JSON.parse(localStorage.getItem('calculations') || '[]');
+            history.push({ ...data, timestamp: new Date().toISOString() });
+            localStorage.setItem('calculations', JSON.stringify(history));
+        }
+
+        function populateYears() {
+            const yearSelect = elements.year;
+            yearSelect.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let year = 2024; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.text = year;
+                yearSelect.appendChild(option);
+            }
+            yearSelect.value = currentYear;
             populateMonths();
-            updateDueDate();
-            updateButtonState();
         }
 
         function populateMonths() {
-            const monthSelect = document.getElementById('month');
-            if (!monthSelect) {
-                console.error('Month select element not found!');
-                return;
-            }
+            const year = parseInt(elements.year.value);
+            const monthSelect = elements.month;
             monthSelect.innerHTML = '';
             const currentDate = new Date();
-            const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth();
+            const startMonth = year === 2024 ? 0 : 0;
+            const maxMonth = year === currentYear ? currentMonth : 11;
+            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
-            for (let year = currentYear - 1; year <= currentYear; year++) {
-                const maxMonth = year === currentYear ? currentMonth : 11;
-                for (let month = 0; month <= maxMonth; month++) {
-                    const monthName = new Date(year, month, 1).toLocaleString('default', { month: 'long' });
-                    const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-                    const option = document.createElement('option');
-                    option.value = optionValue;
-                    option.text = `${monthName} ${year}`;
-                    monthSelect.appendChild(option);
-                }
+            for (let month = startMonth; month <= maxMonth; month++) {
+                const monthName = monthAbbr[month];
+                const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                const option = document.createElement('option');
+                option.value = optionValue;
+                option.text = `${monthName} ${year}`;
+                monthSelect.appendChild(option);
             }
 
             if (monthSelect.children.length === 0) {
-                console.warn('No months populated! Adding current month as fallback.');
                 const option = document.createElement('option');
                 option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
-                option.text = `${new Date(currentYear, currentMonth, 1).toLocaleString('default', { month: 'long' })} ${currentYear}`;
+                option.text = `${monthAbbr[currentMonth]} ${currentYear}`;
                 monthSelect.appendChild(option);
             }
+            updateDueDate();
+        }
+
+        function toggleFields() {
+            const type = elements.type.value;
+            elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
+            elements.loanFields.style.display = type === 'loan' ? 'block' : 'none';
+            elements.dueDate.disabled = type === 'contribution';
+            if (type === 'contribution') {
+                populateYears();
+            } else {
+                elements.dueDate.value = '';
+            }
+            updateButtonState();
         }
 
         function updateDueDate() {
-            const type = document.getElementById('type').value;
-            const dueDateInput = document.getElementById('dueDate');
-            const monthSelect = document.getElementById('month');
-            if (type === 'contribution' && monthSelect.style.display !== 'none') {
-                const selectedMonth = document.getElementById('month').value.split('-');
+            const type = elements.type.value;
+            if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
+                const selectedMonth = elements.month.value.split('-');
                 const year = parseInt(selectedMonth[0]);
                 const month = parseInt(selectedMonth[1]) - 1;
                 let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
                 dueDate.setUTCDate(10);
-                if (isNaN(dueDate.getTime())) {
-                    dueDateInput.value = new Date().toISOString().split('T')[0];
-                } else {
-                    dueDateInput.value = new Date(dueDate).toISOString().split('T')[0];
-                }
+                elements.dueDate.value = isNaN(dueDate.getTime()) ? new Date().toISOString().split('T')[0] : new Date(dueDate).toISOString().split('T')[0];
             }
             updateButtonState();
         }
 
         function updateButtonState() {
-            const button = document.getElementById('calcButton');
-            const amount = document.getElementById('amount').value;
-            const dueDate = document.getElementById('dueDate').value;
-            const checkDate = document.getElementById('checkDate').value;
-            button.disabled = isCalculating || !amount || !dueDate || !checkDate;
+            const type = elements.type.value;
+            elements.calcButton.disabled = isCalculating || !elements.amount.value || !elements.dueDate.value || !elements.checkDate.value || (type === 'contribution' && !elements.year.value) || (type === 'loan' && !elements.loanType.value);
         }
 
         function calculate() {
-            const button = document.getElementById('calcButton');
-            if (isCalculating || !document.getElementById('amount').value || !document.getElementById('dueDate').value || !document.getElementById('checkDate').value) return;
+            const validationError = validateInputs();
+            if (validationError) {
+                elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+                return;
+            }
 
             isCalculating = true;
-            button.classList.add('loading');
-            button.disabled = true;
+            elements.calcButton.classList.add('loading');
+            elements.calcButton.disabled = true;
 
-            setTimeout(() => {
-                const type = document.getElementById('type').value;
-                const amount = parseFloat(document.getElementById('amount').value) || 0;
-                const dueDateInput = document.getElementById('dueDate').value;
-                const checkDateInput = document.getElementById('checkDate').value;
-                const dueDate = new Date(dueDateInput + 'T00:00:00');
-                const checkDate = new Date(checkDateInput + 'T00:00:00');
-                const resultDiv = document.getElementById('result');
+            const type = elements.type.value;
+            const amount = parseFloat(elements.amount.value);
+            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+            const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
 
-                console.log('Debug - Due Date:', dueDate.toISOString());
-                console.log('Debug - Check Date:', checkDate.toISOString());
-                console.log('Debug - Amount:', amount);
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Field</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
+                    </tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+            `;
 
-                if (!amount || isNaN(dueDate.getTime()) || isNaN(checkDate.getTime())) {
-                    resultDiv.innerHTML = "Please enter valid amount, due date, and check date.";
-                    resetButton(button);
-                    return;
-                }
-
-                const oneDay = 24 * 60 * 60 * 1000;
-                let daysDelayed = Math.floor((checkDate - dueDate) / oneDay);
-                if (daysDelayed < 0) daysDelayed = 0;
-
-                let penalty = 0;
-                let interest = 0;
-                let totalOwed = amount;
-
-                if (type === 'contribution') {
-                    const penaltyStartDay = 1;
-                    if (daysDelayed < penaltyStartDay) {
-                        penalty = 0;
-                    } else if (daysDelayed <= 7) {
-                        penalty = amount * 0.30;
-                    } else {
-                        penalty = (amount * 0.30) + (amount * 0.01 * (daysDelayed - 7));
-                    }
-                    totalOwed += penalty;
-                } else if (type === 'loan' && document.getElementById('loanType').value) {
-                    const loanType = document.getElementById('loanType').value;
-                    if (daysDelayed <= 7) {
-                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10;
-                        totalOwed = amount + interest;
-                    } else {
-                        interest = loanType === 'short' ? amount * 0.05 : amount * 0.10;
-                        const rolledAmount = amount + interest;
-                        const rollOverInterest = rolledAmount * 0.05;
-                        penalty = rolledAmount * 0.005 * (daysDelayed - 7);
-                        totalOwed = amount + interest + rollOverInterest + penalty;
-                    }
-                }
-
-                let tableHTML = `
-                    <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.8rem, 2.5vw, 0.9rem);">
-                        <tr style="background-color: #3498db; color: #fff;">
-                            <th style="padding: 0.5rem; border: 1px solid #2980b9;">Field</th>
-                            <th style="padding: 0.5rem; border: 1px solid #2980b9;">Value</th>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Days Delayed</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${daysDelayed} days</td>
-                        </tr>
-                `;
-                if (type === 'loan') {
-                    tableHTML += `
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Initial Interest</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${interest.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
-                if (type === 'contribution') {
-                    tableHTML += `
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Penalty</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${penalty.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
-                if (type === 'loan' && daysDelayed > 7) {
-                    tableHTML += `
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Roll-over Interest</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${(totalOwed - amount - interest - penalty).toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">Penalty</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db;">${penalty.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
+            if (type === 'contribution') {
+                const penalty = calculateContributionPenalty(amount, daysDelayed);
+                const totalOwed = amount + penalty;
                 tableHTML += `
-                        <tr>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db; font-weight: bold;">Total Amount Owed</td>
-                            <td style="padding: 0.5rem; border: 1px solid #3498db; font-weight: bold;">${totalOwed.toFixed(2)}</td>
-                        </tr>
-                    </table>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
+                saveCalculation({ type, amount, totalOwed, daysDelayed, penalty });
+            } else {
+                const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
+                tableHTML += `
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                    ${daysDelayed > 7 ? `
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
+                    ` : ''}
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                `;
+                saveCalculation({ type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest });
+            }
 
-                resultDiv.innerHTML = tableHTML;
-                resetButton(button);
-            }, 500);
+            tableHTML += '</table>';
+
+            if (window.innerHeight < 600) {
+                elements.modalResult.innerHTML = tableHTML;
+                elements.resultModal.style.display = 'flex';
+            } else {
+                elements.result.innerHTML = tableHTML;
+                elements.resultModal.style.display = 'none';
+            }
+
+            resetButton();
         }
 
-        function resetButton(button) {
-            setTimeout(() => {
-                isCalculating = false;
-                button.classList.remove('loading');
-                button.disabled = false;
-                updateButtonState();
-            }, 500);
+        function resetButton() {
+            isCalculating = false;
+            elements.calcButton.classList.remove('loading');
+            updateButtonState();
         }
 
+        function closeResultModal() {
+            elements.resultModal.style.display = 'none';
+            elements.result.innerHTML = '';
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.error('Service Worker error:', err));
+            });
+        }
+
+        elements.calcButton.addEventListener('keypress', e => {
+            if (e.key === 'Enter') calculate();
+        });
+
+        populateYears();
         toggleFields();
     </script>
 </body>
