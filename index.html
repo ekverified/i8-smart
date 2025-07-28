@@ -646,6 +646,7 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            console.log('jsPDF initialized', { doc });
             const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
             const hasPenalties = lastResult.penalty > 0 || (lastResult.rollOverInterest && lastResult.rollOverInterest > 0);
 
@@ -684,16 +685,26 @@
             }
 
             content += `\n\nRegards\ni-8 Ltd.\n\n`;
+            console.log('Content prepared:', content);
             doc.setFontSize(12);
             const lines = doc.splitTextToSize(content, 180);
+            console.log('Lines split:', lines.length);
             doc.text(lines, 10, 10);
 
             doc.setFontStyle('italic');
             const italicLines = doc.splitTextToSize('For enquiries and complaints contact customer care; insightfuleightcoltd@gmail.com', 180);
+            console.log('Italic lines prepared:', italicLines.length);
             doc.text(italicLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
             doc.setFontStyle('normal');
 
-            doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
+            console.log('Attempting to save PDF');
+            try {
+                doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
+                console.log('PDF save attempted');
+            } catch (error) {
+                console.error('PDF save failed:', error);
+                alert('Failed to download PDF. Check console for details.');
+            }
         }
 
         if ('serviceWorker' in navigator) {
