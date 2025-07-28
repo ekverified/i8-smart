@@ -635,67 +635,46 @@
                 return;
             }
 
-            let name = '';
-            while (!name) {
-                name = prompt('Enter your name (required):', 'Customer');
-                console.log('Name prompted:', name);
-                if (!name) {
-                    alert('Please enter a valid name.');
-                }
+            let name = prompt('Enter your name:', 'Customer');
+            console.log('Name entered:', name);
+            if (!name) {
+                alert('Please enter a valid name.');
+                return;
             }
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             console.log('jsPDF initialized', { doc });
-            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-            const hasPenalties = lastResult.penalty > 0 || (lastResult.rollOverInterest && lastResult.rollOverInterest > 0);
 
+            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
             let content = `Dear ${sanitizeInput(name)},\n\n`;
             content += `This document outlines the details of your ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} as assessed on ${today}.\n\n`;
 
             if (lastResult.type === 'contribution') {
                 const penalty = lastResult.penalty;
-                content += `The deposit amount of **${lastResult.amount.toFixed(2)} KES** incurred a delay of **${lastResult.daysDelayed} days**. `;
+                content += `The deposit amount of ${lastResult.amount.toFixed(2)} KES incurred a delay of ${lastResult.daysDelayed} days. `;
                 if (penalty > 0) {
-                    content += `A penalty of **${penalty.toFixed(2)} KES** was applied because the delay exceeded ${CONFIG.PENALTY_START_DAY} day. `;
-                    if (lastResult.daysDelayed <= 7) {
-                        content += `This is calculated at a flat rate of **${(CONFIG.CONTRIBUTION_PENALTY * 100).toFixed(2)}%** of the deposit amount.`;
-                    } else {
-                        content += `For the first 7 days, a **${(CONFIG.CONTRIBUTION_PENALTY * 100).toFixed(2)}%** penalty was applied, and an additional **${(CONFIG.CONTRIBUTION_DAILY_PENALTY * 100).toFixed(2)}%** per day was added for the remaining **${lastResult.daysDelayed - 7} days**.`;
-                    }
-                    content += `\n\nThe total amount owed is therefore **${lastResult.totalOwed.toFixed(2)} KES**.`;
+                    content += `A penalty of ${penalty.toFixed(2)} KES was applied. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
                 } else {
-                    content += `No penalty was applied as the delay was less than ${CONFIG.PENALTY_START_DAY} day.\n\nThe total amount owed remains **${lastResult.totalOwed.toFixed(2)} KES**.`;
+                    content += `No penalty applied. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
                 }
             } else {
                 const { interest, penalty, rollOverInterest } = lastResult;
-                content += `The loan amount of **${lastResult.amount.toFixed(2)} KES** with a **${elements.loanType.value === 'short' ? 'short-term' : 'medium-term'}** term incurred a delay of **${lastResult.daysDelayed} days**. `;
-                content += `An initial interest of **${interest.toFixed(2)} KES** was calculated at a rate of **${(elements.loanType.value === 'short' ? CONFIG.LOAN_SHORT_INTEREST * 100 : CONFIG.LOAN_MEDIUM_INTEREST * 100).toFixed(2)}%**. `;
+                content += `The loan amount of ${lastResult.amount.toFixed(2)} KES incurred a delay of ${lastResult.daysDelayed} days. `;
+                content += `Interest: ${interest.toFixed(2)} KES. `;
                 if (lastResult.daysDelayed > 7) {
-                    content += `Due to the delay exceeding 7 days, a roll-over interest of **${rollOverInterest.toFixed(2)} KES** was added at **${(CONFIG.ROLLOVER_INTEREST * 100).toFixed(2)}%** of the initial amount plus interest, `;
-                    content += `and a penalty of **${penalty.toFixed(2)} KES** was applied at **${(CONFIG.LOAN_DAILY_PENALTY * 100).toFixed(2)}%** per day for the additional **${lastResult.daysDelayed - 7} days**.`;
-                } else {
-                    content += `No additional penalties or roll-over interest were applied as the delay was within 7 days.`;
+                    content += `Roll-over interest: ${rollOverInterest.toFixed(2)} KES. Penalty: ${penalty.toFixed(2)} KES. `;
                 }
-                content += `\n\nThe total amount owed is **${lastResult.totalOwed.toFixed(2)} KES**.`;
+                content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
             }
 
-            if (hasPenalties) {
-                content += `\n\nPlease update your account to clear the penalties and arrears at your earliest convenience.`;
-            }
-
-            content += `\n\nRegards\ni-8 Ltd.\n\n`;
+            content += `\n\nRegards\ni-8 Ltd.`;
             console.log('Content prepared:', content);
+
             doc.setFontSize(12);
             const lines = doc.splitTextToSize(content, 180);
             console.log('Lines split:', lines.length);
             doc.text(lines, 10, 10);
-
-            doc.setFontStyle('italic');
-            const italicLines = doc.splitTextToSize('For enquiries and complaints contact customer care; insightfuleightcoltd@gmail.com', 180);
-            console.log('Italic lines prepared:', italicLines.length);
-            doc.text(italicLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
-            doc.setFontStyle('normal');
 
             console.log('Attempting to save PDF');
             try {
