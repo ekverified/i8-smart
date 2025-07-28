@@ -48,14 +48,6 @@
             gap: 0.5rem;
             animation: fadeIn 1s ease-out;
         }
-        .title-container .logo {
-            width: 1.5rem;
-            height: 1.5rem;
-            transition: transform 0.3s;
-        }
-        .title-container .logo:hover {
-            transform: rotate(360deg);
-        }
         .title-container .main-title {
             font-size: clamp(1.1rem, 3.5vw, 1.3rem);
             color: #1a73e8;
@@ -298,9 +290,6 @@
 <body>
     <div class="container">
         <div class="title-container">
-            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1a73e8">
-                <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-            </svg>
             <div>
                 <div class="main-title">i-8 SMART</div>
                 <div class="sub-title">bot</div>
@@ -581,7 +570,7 @@
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
-                lastResult = { type, amount, totalOwed, daysDelayed, penalty };
+                lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
                 saveCalculation(lastResult);
             } else {
                 const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
@@ -593,7 +582,7 @@
                     ` : ''}
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
-                lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest };
+                lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value };
                 saveCalculation(lastResult);
             }
 
@@ -652,29 +641,42 @@
 
             if (lastResult.type === 'contribution') {
                 const penalty = lastResult.penalty;
-                content += `The deposit amount of ${lastResult.amount.toFixed(2)} KES incurred a delay of ${lastResult.daysDelayed} days. `;
+                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                const monthParts = lastResult.month.split('-');
+                const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+                content += `The deposit amount of ${lastResult.amount.toFixed(2)} KES for ${monthName} ${monthParts[0]} was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
                 if (penalty > 0) {
-                    content += `A penalty of ${penalty.toFixed(2)} KES was applied. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
+                    content += `A penalty of ${penalty.toFixed(2)} KES was applied (30% flat rate for the first 7 days, plus 1% per day thereafter). `;
+                    content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
                 } else {
-                    content += `No penalty applied. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
+                    content += `No penalty was applied as the delay was less than 1 day. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
                 }
+                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.`;
             } else {
-                const { interest, penalty, rollOverInterest } = lastResult;
-                content += `The loan amount of ${lastResult.amount.toFixed(2)} KES incurred a delay of ${lastResult.daysDelayed} days. `;
-                content += `Interest: ${interest.toFixed(2)} KES. `;
+                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                const loanType = elements.loanType.value === 'short' ? 'Short Term (30 days)' : 'Medium Term (90 days)';
+                content += `The loan amount of ${lastResult.amount.toFixed(2)} KES with a ${loanType} term was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
+                content += `Initial interest: ${lastResult.interest.toFixed(2)} KES (${elements.loanType.value === 'short' ? '5%' : '10%'} rate). `;
                 if (lastResult.daysDelayed > 7) {
-                    content += `Roll-over interest: ${rollOverInterest.toFixed(2)} KES. Penalty: ${penalty.toFixed(2)} KES. `;
+                    content += `Roll-over interest: ${lastResult.rollOverInterest.toFixed(2)} KES (5% of initial amount plus interest). `;
+                    content += `Penalty: ${lastResult.penalty.toFixed(2)} KES (0.5% per day after 7 days). `;
                 }
-                content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.`;
+                content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
+                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.`;
             }
 
-            content += `\n\nRegards\ni-8 Ltd.`;
             console.log('Content prepared:', content);
 
             doc.setFontSize(12);
             const lines = doc.splitTextToSize(content, 180);
             console.log('Lines split:', lines.length);
             doc.text(lines, 10, 10);
+
+            doc.setFontSize(8);
+            const footer = 'For enquiries or complaints write to i-8 Co. Ltd thro\' <a href="mailto:insightfuleightcoltd@gmail.com">insightfuleightcoltd@gmail.com</a>';
+            const footerLines = doc.splitTextToSize(footer, 180);
+            console.log('Footer lines prepared:', footerLines.length);
+            doc.text(footerLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
 
             console.log('Attempting to save PDF');
             try {
