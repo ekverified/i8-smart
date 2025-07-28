@@ -577,7 +577,7 @@
                 tableHTML += `
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
                     ${daysDelayed > 7 ? `
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 0.4rm; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
                     ` : ''}
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
@@ -673,7 +673,7 @@
             doc.text(lines, 10, 10);
 
             doc.setFontSize(8);
-            const footer = 'For enquiries or complaints write to i-8 Co. Ltd thro\' <a href="mailto:insightfuleightcoltd@gmail.com">insightfuleightcoltd@gmail.com</a>';
+            const footer = 'For enquiries or complaints write to i-8 Co. Ltd thro\' insightfuleightcoltd@gmail.com';
             const footerLines = doc.splitTextToSize(footer, 180);
             console.log('Footer lines prepared:', footerLines.length);
             doc.text(footerLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
