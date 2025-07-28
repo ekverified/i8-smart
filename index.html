@@ -360,7 +360,6 @@
             </button>
         </div>
         <div id="result" class="result"></div>
-        <div class="footer">Powered by e.k</div>
     </div>
 
     <div id="resultModal" class="modal">
@@ -670,7 +669,8 @@
             if (hasPenalties) {
                 content += '\nPlease update your account to clear the penalties and arrears.';
             }
-            content += '\n\nThis is an official document for Insightful Eight Co. Ltd';
+            content += '\n\nRegards, i-8 Ltd.\n\n';
+            content += '_For enquiries and complaints contact customer care; insightfuleightcoltd@gmail.com_';
 
             doc.setFontSize(12);
             const lines = doc.splitTextToSize(content, 180); // Adjust width as needed
