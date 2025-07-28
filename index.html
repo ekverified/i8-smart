@@ -199,13 +199,6 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        .footer {
-            text-align: center;
-            margin-top: 0.5rem;
-            font-size: clamp(0.6rem, 1.8vw, 0.7rem);
-            color: #7f8c8d;
-            animation: fadeIn 1s ease-out;
-        }
         .modal {
             display: none;
             position: fixed;
@@ -642,39 +635,64 @@
                 return;
             }
 
-            const name = prompt('Enter your name:', 'Customer');
-            console.log('Name prompted:', name);
-            if (!name) return;
+            let name = '';
+            while (!name) {
+                name = prompt('Enter your name (required):', 'Customer');
+                console.log('Name prompted:', name);
+                if (!name) {
+                    alert('Please enter a valid name.');
+                }
+            }
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
             const hasPenalties = lastResult.penalty > 0 || (lastResult.rollOverInterest && lastResult.rollOverInterest > 0);
-            let content = `Dear ${sanitizeInput(name)},\n\nYour ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} is as follows:\n\n`;
 
-            content += `Days Delayed: ${lastResult.daysDelayed}\n`;
+            let content = `Dear ${sanitizeInput(name)},\n\n`;
+            content += `This document outlines the details of your ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} as assessed on ${today}.\n\n`;
+
             if (lastResult.type === 'contribution') {
-                content += `Penalty (KES): ${lastResult.penalty.toFixed(2)}\n`;
-                content += `Total Amount Owed (KES): ${lastResult.totalOwed.toFixed(2)}\n`;
-            } else {
-                content += `Initial Interest (KES): ${lastResult.interest.toFixed(2)}\n`;
-                if (lastResult.daysDelayed > 7) {
-                    content += `Roll-over Interest (KES): ${lastResult.rollOverInterest.toFixed(2)}\n`;
-                    content += `Penalty (KES): ${lastResult.penalty.toFixed(2)}\n`;
+                const penalty = lastResult.penalty;
+                content += `The deposit amount of **${lastResult.amount.toFixed(2)} KES** incurred a delay of **${lastResult.daysDelayed} days**. `;
+                if (penalty > 0) {
+                    content += `A penalty of **${penalty.toFixed(2)} KES** was applied because the delay exceeded ${CONFIG.PENALTY_START_DAY} day. `;
+                    if (lastResult.daysDelayed <= 7) {
+                        content += `This is calculated at a flat rate of **${(CONFIG.CONTRIBUTION_PENALTY * 100).toFixed(2)}%** of the deposit amount.`;
+                    } else {
+                        content += `For the first 7 days, a **${(CONFIG.CONTRIBUTION_PENALTY * 100).toFixed(2)}%** penalty was applied, and an additional **${(CONFIG.CONTRIBUTION_DAILY_PENALTY * 100).toFixed(2)}%** per day was added for the remaining **${lastResult.daysDelayed - 7} days**.`;
+                    }
+                    content += `\n\nThe total amount owed is therefore **${lastResult.totalOwed.toFixed(2)} KES**.`;
+                } else {
+                    content += `No penalty was applied as the delay was less than ${CONFIG.PENALTY_START_DAY} day.\n\nThe total amount owed remains **${lastResult.totalOwed.toFixed(2)} KES**.`;
                 }
-                content += `Total Amount Owed (KES): ${lastResult.totalOwed.toFixed(2)}\n`;
+            } else {
+                const { interest, penalty, rollOverInterest } = lastResult;
+                content += `The loan amount of **${lastResult.amount.toFixed(2)} KES** with a **${elements.loanType.value === 'short' ? 'short-term' : 'medium-term'}** term incurred a delay of **${lastResult.daysDelayed} days**. `;
+                content += `An initial interest of **${interest.toFixed(2)} KES** was calculated at a rate of **${(elements.loanType.value === 'short' ? CONFIG.LOAN_SHORT_INTEREST * 100 : CONFIG.LOAN_MEDIUM_INTEREST * 100).toFixed(2)}%**. `;
+                if (lastResult.daysDelayed > 7) {
+                    content += `Due to the delay exceeding 7 days, a roll-over interest of **${rollOverInterest.toFixed(2)} KES** was added at **${(CONFIG.ROLLOVER_INTEREST * 100).toFixed(2)}%** of the initial amount plus interest, `;
+                    content += `and a penalty of **${penalty.toFixed(2)} KES** was applied at **${(CONFIG.LOAN_DAILY_PENALTY * 100).toFixed(2)}%** per day for the additional **${lastResult.daysDelayed - 7} days**.`;
+                } else {
+                    content += `No additional penalties or roll-over interest were applied as the delay was within 7 days.`;
+                }
+                content += `\n\nThe total amount owed is **${lastResult.totalOwed.toFixed(2)} KES**.`;
             }
 
-            content += `\nas at today ${today}.\n`;
             if (hasPenalties) {
-                content += '\nPlease update your account to clear the penalties and arrears.';
+                content += `\n\nPlease update your account to clear the penalties and arrears at your earliest convenience.`;
             }
-            content += '\n\nRegards, i-8 Ltd.\n\n';
-            content += '_For enquiries and complaints contact customer care; insightfuleightcoltd@gmail.com_';
 
+            content += `\n\nRegards\ni-8 Ltd.\n\n`;
             doc.setFontSize(12);
-            const lines = doc.splitTextToSize(content, 180); // Adjust width as needed
+            const lines = doc.splitTextToSize(content, 180);
             doc.text(lines, 10, 10);
+
+            doc.setFontStyle('italic');
+            const italicLines = doc.splitTextToSize('For enquiries and complaints contact customer care; insightfuleightcoltd@gmail.com', 180);
+            doc.text(italicLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
+            doc.setFontStyle('normal');
+
             doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
         }
 
