@@ -146,6 +146,12 @@
         .result tr:nth-child(even) {
             background: #f5f7fa;
         }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
         button {
             background: linear-gradient(135deg, #1a73e8, #4285f4);
             color: #fff;
@@ -160,7 +166,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0.5rem auto 0;
         }
         button:hover {
             transform: scale(1.15);
@@ -295,6 +300,7 @@
         #checkDate { --field-index: 6; }
         #loanType { --field-index: 7; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -345,7 +351,14 @@
             <span id="loanTypeError" class="error"></span>
         </div>
 
-        <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+        <div class="button-container">
+            <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+            <button id="downloadButton" style="display: none;" onclick="downloadPDF()" aria-label="Download PDF">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#1a73e8">
+                    <path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7zm8 3v-3h-2v3H7l5 5 5-5h-4z"/>
+                </svg>
+            </button>
+        </div>
         <div id="result" class="result"></div>
         <div class="footer">Powered by e.k</div>
     </div>
@@ -379,6 +392,7 @@
             loanFields: document.getElementById('loanFields'),
             loanType: document.getElementById('loanType'),
             calcButton: document.getElementById('calcButton'),
+            downloadButton: document.getElementById('downloadButton'),
             result: document.getElementById('result'),
             resultModal: document.getElementById('resultModal'),
             modalResult: document.getElementById('modalResult'),
@@ -394,6 +408,7 @@
         };
 
         let isCalculating = false;
+        let lastResult = null;
 
         function sanitizeInput(input) {
             const div = document.createElement('div');
@@ -574,7 +589,8 @@
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
-                saveCalculation({ type, amount, totalOwed, daysDelayed, penalty });
+                lastResult = { type, amount, totalOwed, daysDelayed, penalty };
+                saveCalculation(lastResult);
             } else {
                 const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
                 tableHTML += `
@@ -585,7 +601,8 @@
                     ` : ''}
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
-                saveCalculation({ type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest });
+                lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest };
+                saveCalculation(lastResult);
             }
 
             tableHTML += '</table>';
@@ -597,6 +614,8 @@
                 elements.result.innerHTML = tableHTML;
                 elements.resultModal.style.display = 'none';
             }
+
+            elements.downloadButton.style.display = 'flex';
 
             resetButton();
         }
@@ -610,6 +629,53 @@
         function closeResultModal() {
             elements.resultModal.style.display = 'none';
             elements.result.innerHTML = '';
+            elements.downloadButton.style.display = 'none';
+        }
+
+        function downloadPDF() {
+            console.log('downloadPDF called', { lastResult, windowJspdf: !!window.jspdf });
+            if (!lastResult) {
+                alert('Please calculate a result first.');
+                return;
+            }
+            if (!window.jspdf) {
+                alert('PDF library failed to load. Please check your internet connection or try again later.');
+                return;
+            }
+
+            const name = prompt('Enter your name:', 'Customer');
+            console.log('Name prompted:', name);
+            if (!name) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            const hasPenalties = lastResult.penalty > 0 || (lastResult.rollOverInterest && lastResult.rollOverInterest > 0);
+            let content = `Dear ${sanitizeInput(name)},\n\nYour ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} is as follows:\n\n`;
+
+            content += `Days Delayed: ${lastResult.daysDelayed}\n`;
+            if (lastResult.type === 'contribution') {
+                content += `Penalty (KES): ${lastResult.penalty.toFixed(2)}\n`;
+                content += `Total Amount Owed (KES): ${lastResult.totalOwed.toFixed(2)}\n`;
+            } else {
+                content += `Initial Interest (KES): ${lastResult.interest.toFixed(2)}\n`;
+                if (lastResult.daysDelayed > 7) {
+                    content += `Roll-over Interest (KES): ${lastResult.rollOverInterest.toFixed(2)}\n`;
+                    content += `Penalty (KES): ${lastResult.penalty.toFixed(2)}\n`;
+                }
+                content += `Total Amount Owed (KES): ${lastResult.totalOwed.toFixed(2)}\n`;
+            }
+
+            content += `\nas at today ${today}.\n`;
+            if (hasPenalties) {
+                content += '\nPlease update your account to clear the penalties and arrears.';
+            }
+            content += '\n\nThis is an official document for Insightful Eight Co. Ltd';
+
+            doc.setFontSize(12);
+            const lines = doc.splitTextToSize(content, 180); // Adjust width as needed
+            doc.text(lines, 10, 10);
+            doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
         }
 
         if ('serviceWorker' in navigator) {
