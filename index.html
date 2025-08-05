@@ -872,18 +872,26 @@
                 let content = `Dear ${sanitizeInput(name)},\n\n`;
                 content += `This document outlines the details of your ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} as assessed on ${today}.\n\n`;
 
+                doc.setFontSize(12);
+                let lines = doc.splitTextToSize(content, maxWidth);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7 + 10;
+
                 if (lastResult.type === 'contribution') {
                     const penalty = lastResult.penalty;
                     const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                     const monthParts = lastResult.month.split('-');
                     const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
-                    content += `The deposit amount of ${lastResult.amount.toFixed(2)} KES for ${monthName} ${monthParts[0]} was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
+                    content = `The deposit amount of ${lastResult.amount.toFixed(2)} KES for ${monthName} ${monthParts[0]} was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
                     if (penalty > 0) {
                         content += `A penalty of ${penalty.toFixed(2)} KES was applied (30% flat rate for the first 7 days, plus 1% per day thereafter). `;
                         content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
                     } else {
                         content += `No penalty was applied as the delay was less than 1 day. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
                     }
+                    lines = doc.splitTextToSize(content, maxWidth);
+                    doc.text(lines, margin, yOffset);
+                    yOffset += lines.length * 7 + 10;
                 } else if (lastResult.type === 'loan') {
                     const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                     let loanType, interestRate;
@@ -897,40 +905,71 @@
                         loanType = `Long Term (${lastResult.repaymentPeriod} months)`;
                         interestRate = '15%';
                     }
-                    content += `The loan amount of ${lastResult.amount.toFixed(2)} KES with a ${loanType} term was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
+                    content = `The loan amount of ${lastResult.amount.toFixed(2)} KES with a ${loanType} term was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
                     content += `Initial interest: ${lastResult.interest.toFixed(2)} KES (${interestRate} rate). `;
                     if (lastResult.daysDelayed > 7) {
                         content += `Roll-over interest: ${lastResult.rollOverInterest.toFixed(2)} KES (5% of initial amount plus interest). `;
                         content += `Penalty: ${lastResult.penalty.toFixed(2)} KES (0.5% per day after 7 days). `;
                     }
                     content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
+                    lines = doc.splitTextToSize(content, maxWidth);
+                    doc.text(lines, margin, yOffset);
+                    yOffset += lines.length * 7 + 10;
+
                     if (lastResult.amortization && lastResult.amortization.length > 0) {
-                        content += `Amortization Schedule:\n`;
-                        lastResult.amortization.forEach(row => {
-                            content += `Month ${row.month}: Payment ${row.payment} KES, Interest ${row.interest} KES, Principal ${row.principal} KES, Balance ${row.balance} KES\n`;
+                        doc.text('Amortization Schedule:', margin, yOffset);
+                        yOffset += 7;
+                        const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                        const tableData = lastResult.amortization.map(row => [
+                            row.month.toString(),
+                            row.payment,
+                            row.interest,
+                            row.principal,
+                            row.balance
+                        ]);
+                        doc.autoTable({
+                            head: [headers],
+                            body: tableData,
+                            startY: yOffset,
+                            styles: {
+                                fontSize: 8,
+                                cellPadding: 2,
+                                lineColor: [26, 115, 232],
+                                lineWidth: 0.3
+                            },
+                            headStyles: {
+                                fillColor: [26, 115, 232],
+                                textColor: [255, 255, 255],
+                                fontStyle: 'bold'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [245, 247, 250]
+                            },
+                            margin: { left: margin, right: margin }
                         });
-                        content += '\n';
+                        yOffset = doc.lastAutoTable.finalY + 10;
                     }
                 }
-                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.\n\n`;
-                content += `Regards,\ni-8 Ltd.`;
-
-                doc.setFontSize(12);
-                const lines = doc.splitTextToSize(content, maxWidth);
-                doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 7 + 10;
 
                 if (resultChartInstance) {
-                    const chartImage = resultChartInstance.toBase64Image();
                     if (yOffset + 60 > pageHeight - margin) {
                         doc.addPage();
                         yOffset = margin;
                     }
                     doc.text(lastResult.type === 'contribution' ? 'Deposit Breakdown Chart:' : 'Loan Breakdown Chart:', margin, yOffset);
                     yOffset += 10;
+                    const chartImage = resultChartInstance.toBase64Image();
                     doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
                     yOffset += 90;
                 }
+
+                content = `Kindly update your account to help i-8 Ltd grow bigger and serve you better.\n\nRegards,\ni-8 Ltd.`;
+                if (yOffset + 20 > pageHeight - margin) {
+                    doc.addPage();
+                    yOffset = margin;
+                }
+                lines = doc.splitTextToSize(content, maxWidth);
+                doc.text(lines, margin, yOffset);
 
                 doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
             } catch (error) {
