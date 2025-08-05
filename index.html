@@ -326,9 +326,10 @@
 
         <div id="loanFields">
             <label for="loanType">Loan Type:</label>
-            <select id="loanType" aria-label="Select loan type: Short Term or Medium Term">
+            <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term">
                 <option value="short">Short Term (30 days)</option>
                 <option value="medium">Medium Term (90 days)</option>
+                <option value="long">Long Term (365 days)</option>
             </select>
             <span id="loanTypeError" class="error"></span>
         </div>
@@ -357,6 +358,10 @@
             CONTRIBUTION_DAILY_PENALTY: 0.01,
             LOAN_SHORT_INTEREST: 0.05,
             LOAN_MEDIUM_INTEREST: 0.10,
+            LOAN_LONG_INTEREST: 0.15,
+            LOAN_SHORT_MINIMUM: 2000,
+            LOAN_MEDIUM_MINIMUM: 5000,
+            LOAN_LONG_MINIMUM: 30000,
             ROLLOVER_INTEREST: 0.05,
             LOAN_DAILY_PENALTY: 0.005,
             PENALTY_START_DAY: 1
@@ -405,6 +410,7 @@
             const type = elements.type.value;
             const year = elements.year.value;
             const month = elements.month.value;
+            const loanType = elements.loanType.value;
 
             Object.values(elements.errors).forEach(error => error.style.display = 'none');
 
@@ -412,7 +418,22 @@
                 elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
                 elements.errors.amount.style.display = 'block';
                 errors.push('Invalid amount');
+            } else if (type === 'loan' && loanType) {
+                if (loanType === 'short' && amount < CONFIG.LOAN_SHORT_MINIMUM) {
+                    elements.errors.amount.textContent = `Amount for Short Term loan must be at least ${CONFIG.LOAN_SHORT_MINIMUM} KES.`;
+                    elements.errors.amount.style.display = 'block';
+                    errors.push('Amount below minimum for Short Term loan');
+                } else if (loanType === 'medium' && amount < CONFIG.LOAN_MEDIUM_MINIMUM) {
+                    elements.errors.amount.textContent = `Amount for Medium Term loan must be at least ${CONFIG.LOAN_MEDIUM_MINIMUM} KES.`;
+                    elements.errors.amount.style.display = 'block';
+                    errors.push('Amount below minimum for Medium Term loan');
+                } else if (loanType === 'long' && amount < CONFIG.LOAN_LONG_MINIMUM) {
+                    elements.errors.amount.textContent = `Amount for Long Term loan must be at least ${CONFIG.LOAN_LONG_MINIMUM} KES.`;
+                    elements.errors.amount.style.display = 'block';
+                    errors.push('Amount below minimum for Long Term loan');
+                }
             }
+
             if (type === 'contribution' && !year) {
                 elements.errors.year.textContent = 'Please select a year.';
                 elements.errors.year.style.display = 'block';
@@ -433,7 +454,7 @@
                 elements.errors.checkDate.style.display = 'block';
                 errors.push('Invalid check date');
             }
-            if (type === 'loan' && !elements.loanType.value) {
+            if (type === 'loan' && !loanType) {
                 elements.errors.loanType.textContent = 'Please select a loan type.';
                 elements.errors.loanType.style.display = 'block';
                 errors.push('Invalid loan type');
@@ -449,7 +470,14 @@
         }
 
         function calculateLoanOwed(amount, daysDelayed, loanType) {
-            const interest = loanType === 'short' ? amount * CONFIG.LOAN_SHORT_INTEREST : amount * CONFIG.LOAN_MEDIUM_INTEREST;
+            let interest;
+            if (loanType === 'short') {
+                interest = amount * CONFIG.LOAN_SHORT_INTEREST;
+            } else if (loanType === 'medium') {
+                interest = amount * CONFIG.LOAN_MEDIUM_INTEREST;
+            } else {
+                interest = amount * CONFIG.LOAN_LONG_INTEREST;
+            }
             if (daysDelayed <= 7) return { totalOwed: amount + interest, interest, penalty: 0, rollOverInterest: 0 };
             const rolledAmount = amount + interest;
             const rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
@@ -577,7 +605,7 @@
                 tableHTML += `
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
                     ${daysDelayed > 7 ? `
-                        <tr><td style="padding: 0.4rm; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
                     ` : ''}
                     <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
@@ -651,18 +679,30 @@
                 } else {
                     content += `No penalty was applied as the delay was less than 1 day. Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
                 }
-                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.`;
+                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.\n\n`;
+                content += `Regards,\ni-8 Ltd.`;
             } else {
                 const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                const loanType = elements.loanType.value === 'short' ? 'Short Term (30 days)' : 'Medium Term (90 days)';
+                let loanType, interestRate;
+                if (elements.loanType.value === 'short') {
+                    loanType = 'Short Term (30 days)';
+                    interestRate = '5%';
+                } else if (elements.loanType.value === 'medium') {
+                    loanType = 'Medium Term (90 days)';
+                    interestRate = '10%';
+                } else {
+                    loanType = 'Long Term (365 days)';
+                    interestRate = '15%';
+                }
                 content += `The loan amount of ${lastResult.amount.toFixed(2)} KES with a ${loanType} term was due on ${dueDate} and incurred a delay of ${lastResult.daysDelayed} days. `;
-                content += `Initial interest: ${lastResult.interest.toFixed(2)} KES (${elements.loanType.value === 'short' ? '5%' : '10%'} rate). `;
+                content += `Initial interest: ${lastResult.interest.toFixed(2)} KES (${interestRate} rate). `;
                 if (lastResult.daysDelayed > 7) {
                     content += `Roll-over interest: ${lastResult.rollOverInterest.toFixed(2)} KES (5% of initial amount plus interest). `;
                     content += `Penalty: ${lastResult.penalty.toFixed(2)} KES (0.5% per day after 7 days). `;
                 }
                 content += `Total owed: ${lastResult.totalOwed.toFixed(2)} KES.\n\n`;
-                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.`;
+                content += `Kindly update your account to help i-8 Ltd grow bigger and serve you better.\n\n`;
+                content += `Regards,\ni-8 Ltd.`;
             }
 
             console.log('Content prepared:', content);
@@ -671,12 +711,6 @@
             const lines = doc.splitTextToSize(content, 180);
             console.log('Lines split:', lines.length);
             doc.text(lines, 10, 10);
-
-            doc.setFontSize(8);
-            const footer = 'For enquiries or complaints write to i-8 Co. Ltd thro\' insightfuleightcoltd@gmail.com';
-            const footerLines = doc.splitTextToSize(footer, 180);
-            console.log('Footer lines prepared:', footerLines.length);
-            doc.text(footerLines, 10, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 10 + lines.length * 7);
 
             console.log('Attempting to save PDF');
             try {
@@ -691,9 +725,11 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.error('Service Worker error:', err));
+                    .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err.message));
             });
+        } else {
+            console.log('Service Worker not supported in this browser.');
         }
 
         elements.calcButton.addEventListener('keypress', e => {
