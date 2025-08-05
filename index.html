@@ -311,6 +311,7 @@
         #repaymentPeriod { --field-index: 8; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -531,7 +532,7 @@
             }
             if (type === 'loan' && loanType === 'long' && !repaymentPeriod) {
                 elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
-                elements.errors.repaymentPeriod.style.display = 'block';
+                elements.errors.repaymentPeriod.textContent = 'block';
                 errors.push('Invalid repayment period');
             }
 
@@ -619,23 +620,27 @@
                 chartData = [data.amount, data.interest, data.penalty, data.rollOverInterest];
                 chartTitle = 'Loan Breakdown (KES)';
             }
-            resultChartInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: chartData,
-                        backgroundColor: ['#1a73e8', '#34c759', '#e74c3c', '#f1c40f']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        title: { display: true, text: chartTitle }
+            try {
+                resultChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: chartData,
+                            backgroundColor: ['#1a73e8', '#34c759', '#e74c3c', '#f1c40f']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: chartTitle }
+                        }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                logError('Chart creation failed', error);
+            }
         }
 
         function populateYears() {
@@ -849,7 +854,13 @@
                 return;
             }
             if (!window.jspdf) {
+                logError('jsPDF library not loaded', null);
                 alert('PDF library failed to load. Please check your internet connection or try again later.');
+                return;
+            }
+            if (!window.jspdf.jsPDF.prototype.autoTable) {
+                logError('jsPDF-AutoTable plugin not loaded', null);
+                alert('PDF table plugin failed to load. Please check your internet connection or try again later.');
                 return;
             }
 
@@ -892,6 +903,18 @@
                     lines = doc.splitTextToSize(content, maxWidth);
                     doc.text(lines, margin, yOffset);
                     yOffset += lines.length * 7 + 10;
+
+                    if (resultChartInstance) {
+                        if (yOffset + 60 > pageHeight - margin) {
+                            doc.addPage();
+                            yOffset = margin;
+                        }
+                        doc.text('Deposit Breakdown Chart:', margin, yOffset);
+                        yOffset += 10;
+                        const chartImage = resultChartInstance.toBase64Image();
+                        doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                        yOffset += 90;
+                    }
                 } else if (lastResult.type === 'loan') {
                     const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                     let loanType, interestRate;
@@ -917,50 +940,63 @@
                     yOffset += lines.length * 7 + 10;
 
                     if (lastResult.amortization && lastResult.amortization.length > 0) {
-                        doc.text('Amortization Schedule:', margin, yOffset);
-                        yOffset += 7;
-                        const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
-                        const tableData = lastResult.amortization.map(row => [
-                            row.month.toString(),
-                            row.payment,
-                            row.interest,
-                            row.principal,
-                            row.balance
-                        ]);
-                        doc.autoTable({
-                            head: [headers],
-                            body: tableData,
-                            startY: yOffset,
-                            styles: {
-                                fontSize: 8,
-                                cellPadding: 2,
-                                lineColor: [26, 115, 232],
-                                lineWidth: 0.3
-                            },
-                            headStyles: {
-                                fillColor: [26, 115, 232],
-                                textColor: [255, 255, 255],
-                                fontStyle: 'bold'
-                            },
-                            alternateRowStyles: {
-                                fillColor: [245, 247, 250]
-                            },
-                            margin: { left: margin, right: margin }
-                        });
-                        yOffset = doc.lastAutoTable.finalY + 10;
+                        try {
+                            doc.text('Amortization Schedule:', margin, yOffset);
+                            yOffset += 7;
+                            const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                            const tableData = lastResult.amortization.map(row => [
+                                row.month.toString(),
+                                row.payment,
+                                row.interest,
+                                row.principal,
+                                row.balance
+                            ]);
+                            doc.autoTable({
+                                head: [headers],
+                                body: tableData,
+                                startY: yOffset,
+                                styles: {
+                                    fontSize: 8,
+                                    cellPadding: 2,
+                                    lineColor: [26, 115, 232],
+                                    lineWidth: 0.3,
+                                    textColor: [44, 62, 80]
+                                },
+                                headStyles: {
+                                    fillColor: [26, 115, 232],
+                                    textColor: [255, 255, 255],
+                                    fontStyle: 'bold'
+                                },
+                                alternateRowStyles: {
+                                    fillColor: [245, 247, 250]
+                                },
+                                margin: { left: margin, right: margin }
+                            });
+                            yOffset = doc.lastAutoTable.finalY + 10;
+                        } catch (error) {
+                            logError('Failed to generate amortization table in PDF', error);
+                            doc.text('Error: Could not generate amortization table.', margin, yOffset);
+                            yOffset += 10;
+                        }
                     }
-                }
 
-                if (resultChartInstance) {
-                    if (yOffset + 60 > pageHeight - margin) {
-                        doc.addPage();
-                        yOffset = margin;
+                    if (resultChartInstance) {
+                        try {
+                            if (yOffset + 60 > pageHeight - margin) {
+                                doc.addPage();
+                                yOffset = margin;
+                            }
+                            doc.text('Loan Breakdown Chart:', margin, yOffset);
+                            yOffset += 10;
+                            const chartImage = resultChartInstance.toBase64Image();
+                            doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                            yOffset += 90;
+                        } catch (error) {
+                            logError('Failed to add chart to PDF', error);
+                            doc.text('Error: Could not add chart to PDF.', margin, yOffset);
+                            yOffset += 10;
+                        }
                     }
-                    doc.text(lastResult.type === 'contribution' ? 'Deposit Breakdown Chart:' : 'Loan Breakdown Chart:', margin, yOffset);
-                    yOffset += 10;
-                    const chartImage = resultChartInstance.toBase64Image();
-                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
-                    yOffset += 90;
                 }
 
                 content = `Kindly update your account to help i-8 Ltd grow bigger and serve you better.\n\nRegards,\ni-8 Ltd.`;
@@ -974,7 +1010,7 @@
                 doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
             } catch (error) {
                 logError('PDF generation failed', error);
-                alert('Failed to download PDF. Please try again.');
+                alert('Failed to download PDF. Please check the console for details and try again.');
             }
         }
 
