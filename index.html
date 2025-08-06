@@ -310,8 +310,8 @@
         #loanType { --field-index: 7; }
         #repaymentPeriod { --field-index: 8; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAahn1f1kXbGqT34rR3wSHscaR3V6w==" crossorigin="anonymous" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha512-LL2VbQ6vK7J8Vocor0Aevp4b2b7r2bY0aWBRlzMY1b3ZaQgo3f0V1Yx0ZXY1b3j2B5hKqD6hmpK2umr3eT4D9ZQ==" crossorigin="anonymous" defer></script>
+    <script src="/scripts/jspdf.umd.min.js"></script>
+    <script src="/scripts/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha512-JWqWZuE2J3Cwrt2m+ZrCx7E2tN3iT2Jni3nO0rLte3MkuZOC/l0zW1SCU8LYzunlYQ6oFwrrgA4kJCe3v0pF1dg==" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -323,9 +323,10 @@
             </div>
         </div>
         <label for="type">Type:</label>
-        <select id="type" aria-label="Select transaction type: Deposit or Loan" onchange="toggleFields()">
+        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loan" onchange="toggleFields()">
             <option value="contribution">Deposit</option>
-            <option value="loan">Loan</option>
+            <option value="existing_loan">Existing Loan</option>
+            <option value="new_loan">New Loan</option>
         </select>
         <span id="typeError" class="error"></span>
 
@@ -343,29 +344,29 @@
             <span id="monthError" class="error"></span>
         </div>
 
-        <label for="dueDate">Due Date:</label>
-        <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
-        <span id="dueDateError" class="error"></span>
+        <div id="dateFields">
+            <label for="dueDate">Due Date:</label>
+            <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+            <span id="dueDateError" class="error"></span>
 
-        <label for="checkDate">Check Date:</label>
-        <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
-        <span id="checkDateError" class="error"></span>
+            <label for="checkDate">Check Date:</label>
+            <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+            <span id="checkDateError" class="error"></span>
+        </div>
 
         <div id="loanFields">
             <label for="loanType">Loan Type:</label>
             <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
-                <option value="short">Short Term (30 days)</option>
-                <option value="medium">Medium Term (90 days)</option>
-                <option value="long">Long Term (up to 12 months)</option>
+                <option value="short">Short Term (30 Days)</option>
+                <option value="medium">Medium Term (90 Days)</option>
+                <option value="long">Long Term (365 Days)</option>
             </select>
             <span id="loanTypeError" class="error"></span>
 
             <div id="repaymentFields">
-                <label for="repaymentPeriod">Repayment Period (Long Term):</label>
-                <select id="repaymentPeriod" aria-label="Select repayment period for Long Term loan">
-                    <option value="6">6 Months</option>
-                    <option value="9">9 Months</option>
-                    <option value="12">12 Months</option>
+                <label for="repaymentPeriod">Repayment Period (Months):</label>
+                <select id="repaymentPeriod" aria-label="Select repayment period">
+                    <option value="">Select months</option>
                 </select>
                 <span id="repaymentPeriodError" class="error"></span>
             </div>
@@ -415,6 +416,7 @@
             contributionFields: document.getElementById('contributionFields'),
             year: document.getElementById('year'),
             month: document.getElementById('month'),
+            dateFields: document.getElementById('dateFields'),
             dueDate: document.getElementById('dueDate'),
             checkDate: document.getElementById('checkDate'),
             loanFields: document.getElementById('loanFields'),
@@ -476,20 +478,30 @@
             const errors = [];
             const type = elements.type.value;
             const amount = parseFloat(elements.amount.value) || 0;
-            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
-            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
             const year = elements.year.value;
             const month = elements.month.value;
             const loanType = elements.loanType.value;
-            const repaymentPeriod = parseInt(elements.repaymentPeriod.value) || 0;
+            const repaymentPeriod = elements.repaymentPeriod.value;
+            let dueDate, checkDate;
+
+            if (type !== 'new_loan') {
+                dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+            }
 
             Object.values(elements.errors).forEach(error => error.style.display = 'none');
+
+            if (!type) {
+                elements.errors.type.textContent = 'Please select a type.';
+                elements.errors.type.style.display = 'block';
+                errors.push('Invalid type');
+            }
 
             if (amount <= 0 || isNaN(amount)) {
                 elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
                 elements.errors.amount.style.display = 'block';
                 errors.push('Invalid amount');
-            } else if (type === 'loan' && loanType) {
+            } else if (type === 'existing_loan' || type === 'new_loan') {
                 if (loanType === 'short' && amount < CONFIG.LOAN_SHORT_MINIMUM) {
                     elements.errors.amount.textContent = `Amount for Short Term loan must be at least ${CONFIG.LOAN_SHORT_MINIMUM} KES.`;
                     elements.errors.amount.style.display = 'block';
@@ -504,36 +516,56 @@
                     errors.push('Amount below minimum for Long Term loan');
                 }
             }
-
-            if (type === 'contribution' && !year) {
-                elements.errors.year.textContent = 'Please select a year.';
-                elements.errors.year.style.display = 'block';
-                errors.push('Invalid year');
+            if (type === 'contribution') {
+                if (!year) {
+                    elements.errors.year.textContent = 'Please select a year.';
+                    elements.errors.year.style.display = 'block';
+                    errors.push('Invalid year');
+                }
+                if (!month) {
+                    elements.errors.month.textContent = 'Please select a month.';
+                    elements.errors.month.style.display = 'block';
+                    errors.push('Invalid month');
+                }
+                if (isNaN(dueDate.getTime())) {
+                    elements.errors.dueDate.textContent = 'Invalid due date.';
+                    elements.errors.dueDate.style.display = 'block';
+                    errors.push('Invalid due date');
+                }
+                if (isNaN(checkDate.getTime())) {
+                    elements.errors.checkDate.textContent = 'Invalid check date.';
+                    elements.errors.checkDate.style.display = 'block';
+                    errors.push('Invalid check date');
+                }
             }
-            if (type === 'contribution' && !month) {
-                elements.errors.month.textContent = 'Please select a month.';
-                elements.errors.month.style.display = 'block';
-                errors.push('Invalid month');
+            if (type === 'existing_loan') {
+                if (!loanType) {
+                    elements.errors.loanType.textContent = 'Please select a loan type.';
+                    elements.errors.loanType.style.display = 'block';
+                    errors.push('Invalid loan type');
+                }
+                if (isNaN(dueDate.getTime())) {
+                    elements.errors.dueDate.textContent = 'Invalid due date.';
+                    elements.errors.dueDate.style.display = 'block';
+                    errors.push('Invalid due date');
+                }
+                if (isNaN(checkDate.getTime())) {
+                    elements.errors.checkDate.textContent = 'Invalid check date.';
+                    elements.errors.checkDate.style.display = 'block';
+                    errors.push('Invalid check date');
+                }
             }
-            if (isNaN(dueDate.getTime())) {
-                elements.errors.dueDate.textContent = 'Invalid due date.';
-                elements.errors.dueDate.style.display = 'block';
-                errors.push('Invalid due date');
-            }
-            if (isNaN(checkDate.getTime())) {
-                elements.errors.checkDate.textContent = 'Invalid check date.';
-                elements.errors.checkDate.style.display = 'block';
-                errors.push('Invalid check date');
-            }
-            if (type === 'loan' && !loanType) {
-                elements.errors.loanType.textContent = 'Please select a loan type.';
-                elements.errors.loanType.style.display = 'block';
-                errors.push('Invalid loan type');
-            }
-            if (type === 'loan' && loanType === 'long' && !repaymentPeriod) {
-                elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
-                elements.errors.repaymentPeriod.style.display = 'block';
-                errors.push('Invalid repayment period');
+            if (type === 'new_loan') {
+                if (!loanType) {
+                    elements.errors.loanType.textContent = 'Please select a loan type.';
+                    elements.errors.loanType.style.display = 'block';
+                    errors.push('Invalid loan type');
+                }
+                if (!repaymentPeriod) {
+                    elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
+                    elements.errors.repaymentPeriod.style.display = 'block';
+                    errors.push('Invalid repayment period');
+                }
             }
 
             return errors.length === 0 ? null : errors.join(', ');
@@ -545,17 +577,14 @@
             return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
         }
 
-        function calculateLoanOwed(amount, daysDelayed, loanType, repaymentPeriod) {
-            let interest, termMonths;
+        function calculateLoanOwed(amount, daysDelayed, loanType) {
+            let interest;
             if (loanType === 'short') {
                 interest = amount * CONFIG.LOAN_SHORT_INTEREST;
-                termMonths = 1;
             } else if (loanType === 'medium') {
                 interest = amount * CONFIG.LOAN_MEDIUM_INTEREST;
-                termMonths = 3;
             } else {
                 interest = amount * CONFIG.LOAN_LONG_INTEREST;
-                termMonths = repaymentPeriod;
             }
             let totalOwed = amount + interest;
             let penalty = 0;
@@ -566,34 +595,32 @@
                 penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
                 totalOwed = amount + interest + rollOverInterest + penalty;
             }
-            return { totalOwed, interest, penalty, rollOverInterest, termMonths };
+            return { totalOwed, interest, penalty, rollOverInterest };
         }
 
-        function generateAmortization(amount, interestRate, termMonths) {
-            try {
-                const interest = amount * interestRate;
-                const totalOwed = amount + interest;
-                const monthlyPayment = totalOwed / termMonths;
-                const monthlyInterest = interest / termMonths;
-                const monthlyPrincipal = amount / termMonths;
-                let balance = totalOwed;
-                let schedule = [];
-                for (let i = 1; i <= termMonths; i++) {
-                    balance -= monthlyPayment;
-                    if (balance < 0) balance = 0;
-                    schedule.push({
-                        month: i,
-                        payment: monthlyPayment.toFixed(2),
-                        interest: monthlyInterest.toFixed(2),
-                        principal: monthlyPrincipal.toFixed(2),
-                        balance: balance.toFixed(2)
-                    });
-                }
-                return schedule;
-            } catch (error) {
-                logError('Amortization calculation failed', error);
-                return [];
+        function calculateNewLoan(amount, loanType, repaymentPeriod) {
+            const interestRate = loanType === 'short' ? CONFIG.LOAN_SHORT_INTEREST :
+                                loanType === 'medium' ? CONFIG.LOAN_MEDIUM_INTEREST :
+                                CONFIG.LOAN_LONG_INTEREST;
+            const interest = amount * interestRate;
+            const totalOwed = amount + interest;
+            const monthlyPayment = totalOwed / repaymentPeriod;
+            const monthlyInterest = interest / repaymentPeriod;
+            const monthlyPrincipal = amount / repaymentPeriod;
+            let balance = totalOwed;
+            let schedule = [];
+            for (let i = 1; i <= repaymentPeriod; i++) {
+                balance -= monthlyPayment;
+                if (balance < 0) balance = 0;
+                schedule.push({
+                    month: i,
+                    payment: monthlyPayment.toFixed(2),
+                    interest: monthlyInterest.toFixed(2),
+                    principal: monthlyPrincipal.toFixed(2),
+                    balance: balance.toFixed(2)
+                });
             }
+            return { totalOwed, interest, amortization: schedule, termMonths: repaymentPeriod };
         }
 
         function saveCalculation(data) {
@@ -608,6 +635,11 @@
 
         function createResultChart(data) {
             if (resultChartInstance) resultChartInstance.destroy();
+            if (data.type === 'new_loan') {
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                return;
+            }
             const ctx = window.innerHeight < 600 ? elements.modalResultChart : elements.resultChart;
             ctx.style.display = 'block';
             let labels, chartData, chartTitle;
@@ -616,9 +648,13 @@
                 chartData = [data.amount, data.penalty];
                 chartTitle = 'Deposit Breakdown (KES)';
             } else {
-                labels = ['Principal', 'Interest', 'Penalty', 'Roll-over Interest'];
-                chartData = [data.amount, data.interest, data.penalty, data.rollOverInterest];
-                chartTitle = 'Loan Breakdown (KES)';
+                labels = ['Principal', 'Interest'];
+                chartData = [data.amount, data.interest];
+                if (data.daysDelayed > 7) {
+                    labels.push('Penalty', 'Roll-over Interest');
+                    chartData.push(data.penalty, data.rollOverInterest);
+                }
+                chartTitle = 'Existing Loan Breakdown (KES)';
             }
             try {
                 resultChartInstance = new Chart(ctx, {
@@ -640,6 +676,7 @@
                 });
             } catch (error) {
                 logError('Chart creation failed', error);
+                ctx.style.display = 'none';
             }
         }
 
@@ -686,23 +723,43 @@
             updateDueDate();
         }
 
+        function toggleRepaymentFields() {
+            const type = elements.type.value;
+            const loanType = elements.loanType.value;
+            elements.repaymentFields.style.display = (type === 'new_loan' && loanType !== '') ? 'block' : 'none';
+            elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
+            if (type === 'new_loan' && loanType) {
+                let options = [];
+                if (loanType === 'short') {
+                    options = [1];
+                } else if (loanType === 'medium') {
+                    options = [2, 3];
+                } else if (loanType === 'long') {
+                    options = [3, 6, 7, 8, 9, 10, 11, 12];
+                }
+                options.forEach(months => {
+                    const option = document.createElement('option');
+                    option.value = months;
+                    option.text = months;
+                    elements.repaymentPeriod.appendChild(option);
+                });
+            }
+            updateButtonState();
+        }
+
         function toggleFields() {
             const type = elements.type.value;
             elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
-            elements.loanFields.style.display = type === 'loan' ? 'block' : 'none';
+            elements.loanFields.style.display = (type === 'existing_loan' || type === 'new_loan') ? 'block' : 'none';
+            elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
             elements.dueDate.disabled = type === 'contribution';
             if (type === 'contribution') {
                 populateYears();
             } else {
                 elements.dueDate.value = '';
+                elements.checkDate.value = '';
             }
             toggleRepaymentFields();
-            updateButtonState();
-        }
-
-        function toggleRepaymentFields() {
-            const loanType = elements.loanType.value;
-            elements.repaymentFields.style.display = loanType === 'long' ? 'block' : 'none';
             updateButtonState();
         }
 
@@ -722,19 +779,26 @@
         function updateButtonState() {
             const type = elements.type.value;
             const loanType = elements.loanType.value;
-            elements.calcButton.disabled = isCalculating || 
-                !elements.amount.value || 
-                !elements.dueDate.value || 
-                !elements.checkDate.value || 
-                (type === 'contribution' && !elements.year.value) || 
-                (type === 'loan' && !loanType) || 
-                (type === 'loan' && loanType === 'long' && !elements.repaymentPeriod.value);
+            const amount = elements.amount.value;
+            const repaymentPeriod = elements.repaymentPeriod.value;
+            const year = elements.year.value;
+            const month = elements.month.value;
+            const dueDate = elements.dueDate.value;
+            const checkDate = elements.checkDate.value;
+
+            elements.calcButton.disabled = isCalculating || !amount || 
+                (type === 'contribution' && (!year || !month || !dueDate || !checkDate)) || 
+                (type === 'existing_loan' && (!loanType || !dueDate || !checkDate)) || 
+                (type === 'new_loan' && (!loanType || !repaymentPeriod));
         }
 
         async function calculate() {
             const validationError = validateInputs();
             if (validationError) {
                 elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                if (resultChartInstance) resultChartInstance.destroy();
                 return;
             }
 
@@ -771,12 +835,11 @@
                     lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
                     createResultChart(lastResult);
                     saveCalculation(lastResult);
-                } else if (type === 'loan') {
+                } else if (type === 'existing_loan') {
                     const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
                     const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
                     const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
-                    const repaymentPeriod = elements.loanType.value === 'long' ? parseInt(elements.repaymentPeriod.value) : null;
-                    const { totalOwed, interest, penalty, rollOverInterest, termMonths } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value, repaymentPeriod);
+                    const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
                     tableHTML += `
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
@@ -786,7 +849,18 @@
                         ` : ''}
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                     `;
-                    const amortization = generateAmortization(amount, elements.loanType.value === 'short' ? CONFIG.LOAN_SHORT_INTEREST : elements.loanType.value === 'medium' ? CONFIG.LOAN_MEDIUM_INTEREST : CONFIG.LOAN_LONG_INTEREST, termMonths);
+                    tableHTML += '</table>';
+                    lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
+                    createResultChart(lastResult);
+                    saveCalculation(lastResult);
+                } else if (type === 'new_loan') {
+                    const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
+                    const loanType = elements.loanType.value;
+                    const { totalOwed, interest, amortization, termMonths } = calculateNewLoan(amount, loanType, repaymentPeriod);
+                    tableHTML += `
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                    `;
                     if (amortization.length > 0) {
                         tableHTML += `
                             <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
@@ -810,8 +884,10 @@
                         tableHTML += '</table></td></tr>';
                     }
                     tableHTML += '</table>';
-                    lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, amortization, termMonths, repaymentPeriod };
-                    createResultChart(lastResult);
+                    lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
+                    elements.resultChart.style.display = 'none';
+                    elements.modalResultChart.style.display = 'none';
+                    if (resultChartInstance) resultChartInstance.destroy();
                     saveCalculation(lastResult);
                 }
 
@@ -827,6 +903,9 @@
             } catch (error) {
                 logError('Calculation failed', error);
                 elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation. Please try again.</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                if (resultChartInstance) resultChartInstance.destroy();
             } finally {
                 resetButton();
                 hideProgress();
@@ -856,13 +935,14 @@
                 return;
             }
 
-            const checkLibraries = (callback, retries = 5, delay = 500) => {
+            const checkLibraries = async (callback, retries = 10, delay = 1000) => {
                 if (window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.prototype.autoTable === 'function') {
                     console.log('[i-8 SMART BOT] jsPDF and AutoTable loaded successfully');
                     callback();
                 } else if (retries > 0) {
                     console.warn(`[i-8 SMART BOT] jsPDF or AutoTable not loaded, retrying (${retries} attempts left)`);
-                    setTimeout(() => checkLibraries(callback, retries - 1, delay), delay);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    checkLibraries(callback, retries - 1, delay);
                 } else {
                     console.error('[i-8 SMART BOT] jsPDF or AutoTable failed to load after retries');
                     alert('PDF generation libraries failed to load. Please check your internet connection or try again later.');
@@ -886,26 +966,22 @@
                     const margin = 10;
                     const maxWidth = pageWidth - 2 * margin;
 
-                    // Set font and styles for professional look
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(12);
 
-                    // Header
                     doc.setFontSize(16);
                     doc.setFont('helvetica', 'bold');
                     doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
                     yOffset += 10;
 
-                    // Subheader with date
                     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                     doc.setFontSize(10);
                     doc.setFont('helvetica', 'normal');
                     doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
                     yOffset += 10;
 
-                    // Greeting
                     let content = `Dear ${sanitizeInput(name)},\n\n`;
-                    content += `This document provides a detailed summary of your ${lastResult.type === 'contribution' ? 'deposit' : 'loan'} calculation as of ${today}. Please review the details below.\n\n`;
+                    content += `This document provides a detailed summary of your ${lastResult.type === 'contribution' ? 'deposit' : lastResult.type === 'existing_loan' ? 'existing loan' : 'new loan'} calculation as of ${today}. Please review the details below.\n\n`;
                     let lines = doc.splitTextToSize(content, maxWidth);
                     doc.setFontSize(12);
                     doc.text(lines, margin, yOffset);
@@ -958,20 +1034,20 @@
                                 yOffset += 10;
                             }
                         }
-                    } else if (lastResult.type === 'loan') {
+                    } else if (lastResult.type === 'existing_loan') {
                         const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                         let loanType, interestRate;
-                        if (elements.loanType.value === 'short') {
-                            loanType = 'Short Term (1 month)';
+                        if (lastResult.loanType === 'short') {
+                            loanType = 'Short Term (30 Days)';
                             interestRate = '5%';
-                        } else if (elements.loanType.value === 'medium') {
-                            loanType = 'Medium Term (3 months)';
+                        } else if (lastResult.loanType === 'medium') {
+                            loanType = 'Medium Term (90 Days)';
                             interestRate = '10%';
                         } else {
-                            loanType = `Long Term (${lastResult.repaymentPeriod} months)`;
+                            loanType = 'Long Term (365 Days)';
                             interestRate = '15%';
                         }
-                        content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+                        content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
                         content += `Loan Details:\n`;
                         content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
                         if (lastResult.daysDelayed > 7) {
@@ -981,6 +1057,55 @@
                             content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
                         }
                         content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                        lines = doc.splitTextToSize(content, maxWidth);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(11);
+                        doc.text(lines, margin, yOffset);
+                        yOffset += lines.length * 7 + 10;
+
+                        if (resultChartInstance) {
+                            try {
+                                if (yOffset + 80 > pageHeight - margin) {
+                                    doc.addPage();
+                                    yOffset = margin;
+                                }
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Existing Loan Breakdown Chart:', margin, yOffset);
+                                yOffset += 10;
+                                const chartImage = resultChartInstance.toBase64Image();
+                                if (chartImage) {
+                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                                    yOffset += 90;
+                                } else {
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setFontSize(10);
+                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                                    yOffset += 10;
+                                }
+                            } catch (error) {
+                                logError('Failed to add chart to PDF', error);
+                                doc.setFont('helvetica', 'normal');
+                                doc.setFontSize(10);
+                                doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                                yOffset += 10;
+                            }
+                        }
+                    } else if (lastResult.type === 'new_loan') {
+                        let loanType, interestRate;
+                        if (lastResult.loanType === 'short') {
+                            loanType = 'Short Term (30 Days)';
+                            interestRate = '5%';
+                        } else if (lastResult.loanType === 'medium') {
+                            loanType = 'Medium Term (90 Days)';
+                            interestRate = '10%';
+                        } else {
+                            loanType = 'Long Term (365 Days)';
+                            interestRate = '15%';
+                        }
+                        content = `Your ${loanType} new loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+                        content += `Loan Details:\n`;
+                        content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                        content += `- Total Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
                         lines = doc.splitTextToSize(content, maxWidth);
                         doc.setFont('helvetica', 'normal');
                         doc.setFontSize(11);
@@ -1026,37 +1151,8 @@
                             });
                             yOffset = doc.lastAutoTable.finalY + 10;
                         }
-
-                        if (resultChartInstance) {
-                            try {
-                                if (yOffset + 80 > pageHeight - margin) {
-                                    doc.addPage();
-                                    yOffset = margin;
-                                }
-                                doc.setFont('helvetica', 'bold');
-                                doc.text('Loan Breakdown Chart:', margin, yOffset);
-                                yOffset += 10;
-                                const chartImage = resultChartInstance.toBase64Image();
-                                if (chartImage) {
-                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
-                                    yOffset += 90;
-                                } else {
-                                    doc.setFont('helvetica', 'normal');
-                                    doc.setFontSize(10);
-                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                    yOffset += 10;
-                                }
-                            } catch (error) {
-                                logError('Failed to add chart to PDF', error);
-                                doc.setFont('helvetica', 'normal');
-                                doc.setFontSize(10);
-                                doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                yOffset += 10;
-                            }
-                        }
                     }
 
-                    // Footer
                     if (yOffset + 20 > pageHeight - margin) {
                         doc.addPage();
                         yOffset = margin;
@@ -1082,22 +1178,14 @@
             });
         }
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registered successfully:', reg.scope))
-                    .catch(err => logError('Service Worker registration failed:', err));
-            });
-        } else {
-            logError('Service Worker not supported in this browser.', null);
-        }
-
         elements.calcButton.addEventListener('keypress', e => {
             if (e.key === 'Enter') calculate();
         });
 
-        populateYears();
-        toggleFields();
+        window.addEventListener('load', () => {
+            populateYears();
+            toggleFields();
+        });
     </script>
 </body>
 </html>
