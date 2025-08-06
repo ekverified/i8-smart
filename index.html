@@ -257,6 +257,8 @@
         }
         canvas {
             max-width: 100%;
+            max-height: 300px;
+            height: auto;
             margin-top: 0.5rem;
         }
         @media (max-width: 600px) {
@@ -276,6 +278,9 @@
             .modal-content {
                 padding: 0.8rem;
                 width: 95%;
+            }
+            canvas {
+                max-height: 200px;
             }
         }
         @media (min-width: 601px) and (max-width: 1024px) {
@@ -310,8 +315,8 @@
         #loanType { --field-index: 7; }
         #repaymentPeriod { --field-index: 8; }
     </style>
-    <script src="/scripts/jspdf.umd.min.js"></script>
-    <script src="/scripts/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha512-JWqWZuE2J3Cwrt2m+ZrCx7E2tN3iT2Jni3nO0rLte3MkuZOC/l0zW1SCU8LYzunlYQ6oFwrrgA4kJCe3v0pF1dg==" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -634,14 +639,37 @@
         }
 
         function createResultChart(data) {
-            if (resultChartInstance) resultChartInstance.destroy();
+            if (resultChartInstance) {
+                resultChartInstance.destroy();
+                resultChartInstance = null;
+            }
             if (data.type === 'new_loan') {
                 elements.resultChart.style.display = 'none';
                 elements.modalResultChart.style.display = 'none';
                 return;
             }
+
+            // Check if Chart.js is loaded
+            if (!window.Chart) {
+                logError('Chart.js not loaded');
+                elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed. Please check your internet connection and try again.</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                return;
+            }
+
             const ctx = window.innerHeight < 600 ? elements.modalResultChart : elements.resultChart;
+            if (!ctx || !ctx.getContext) {
+                logError('Canvas element not found or invalid');
+                elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed due to canvas issue.</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                return;
+            }
+
+            // Ensure canvas is visible before rendering
             ctx.style.display = 'block';
+
             let labels, chartData, chartTitle;
             if (data.type === 'contribution') {
                 labels = ['Deposit Amount', 'Penalty'];
@@ -656,6 +684,16 @@
                 }
                 chartTitle = 'Existing Loan Breakdown (KES)';
             }
+
+            // Validate chart data
+            if (!chartData.every(value => Number.isFinite(value) && value >= 0)) {
+                logError('Invalid chart data', chartData);
+                elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed due to invalid data.</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
+                return;
+            }
+
             try {
                 resultChartInstance = new Chart(ctx, {
                     type: 'pie',
@@ -663,20 +701,46 @@
                         labels: labels,
                         datasets: [{
                             data: chartData,
-                            backgroundColor: ['#1a73e8', '#34c759', '#e74c3c', '#f1c40f']
+                            backgroundColor: ['#1a73e8', '#34c759', '#e74c3c', '#f1c40f'],
+                            borderColor: ['#ffffff'],
+                            borderWidth: 2
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: chartTitle }
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 },
+                                    color: '#2c3e50',
+                                    padding: 15
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: chartTitle,
+                                font: { size: 14, weight: 'bold' },
+                                color: '#1a73e8',
+                                padding: { top: 10, bottom: 10 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        return `${context.label}: KES ${value.toFixed(2)}`;
+                                    }
+                                }
+                            }
                         }
                     }
                 });
             } catch (error) {
                 logError('Chart creation failed', error);
-                ctx.style.display = 'none';
+                elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed. Please try again.</span>`;
+                elements.resultChart.style.display = 'none';
+                elements.modalResultChart.style.display = 'none';
             }
         }
 
@@ -726,7 +790,7 @@
         function toggleRepaymentFields() {
             const type = elements.type.value;
             const loanType = elements.loanType.value;
-            elements.repaymentFields.style.display = (type === 'new_loan' && loanType !== '') ? 'block' : 'none';
+            elements.repaymentFields.style.display = (type === 'new_loan' && loanType) ? 'block' : 'none';
             elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
             if (type === 'new_loan' && loanType) {
                 let options = [];
@@ -735,7 +799,7 @@
                 } else if (loanType === 'medium') {
                     options = [2, 3];
                 } else if (loanType === 'long') {
-                    options = [3, 6, 7, 8, 9, 10, 11, 12];
+                    options = [4, 5, 6, 7, 8, 9, 10, 11, 12];
                 }
                 options.forEach(months => {
                     const option = document.createElement('option');
@@ -778,18 +842,26 @@
 
         function updateButtonState() {
             const type = elements.type.value;
-            const loanType = elements.loanType.value;
             const amount = elements.amount.value;
-            const repaymentPeriod = elements.repaymentPeriod.value;
             const year = elements.year.value;
             const month = elements.month.value;
             const dueDate = elements.dueDate.value;
             const checkDate = elements.checkDate.value;
+            const loanType = elements.loanType.value;
+            const repaymentPeriod = elements.repaymentPeriod.value;
 
-            elements.calcButton.disabled = isCalculating || !amount || 
-                (type === 'contribution' && (!year || !month || !dueDate || !checkDate)) || 
-                (type === 'existing_loan' && (!loanType || !dueDate || !checkDate)) || 
-                (type === 'new_loan' && (!loanType || !repaymentPeriod));
+            const isAmountValid = amount && parseFloat(amount) > 0;
+            let isValid = false;
+
+            if (type === 'contribution') {
+                isValid = isAmountValid && year && month && dueDate && checkDate;
+            } else if (type === 'existing_loan') {
+                isValid = isAmountValid && loanType && dueDate && checkDate;
+            } else if (type === 'new_loan') {
+                isValid = isAmountValid && loanType && repaymentPeriod;
+            }
+
+            elements.calcButton.disabled = isCalculating || !isValid;
         }
 
         async function calculate() {
@@ -930,24 +1002,14 @@
         function downloadPDF() {
             console.log('[i-8 SMART BOT] Starting PDF generation');
             if (!lastResult) {
-                console.warn('[i-8 SMART BOT] No calculation result available');
                 alert('Please calculate a result first.');
                 return;
             }
 
-            const checkLibraries = async (callback, retries = 10, delay = 1000) => {
-                if (window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.prototype.autoTable === 'function') {
-                    console.log('[i-8 SMART BOT] jsPDF and AutoTable loaded successfully');
-                    callback();
-                } else if (retries > 0) {
-                    console.warn(`[i-8 SMART BOT] jsPDF or AutoTable not loaded, retrying (${retries} attempts left)`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    checkLibraries(callback, retries - 1, delay);
-                } else {
-                    console.error('[i-8 SMART BOT] jsPDF or AutoTable failed to load after retries');
-                    alert('PDF generation libraries failed to load. Please check your internet connection or try again later.');
-                }
-            };
+            if (!window.jspdf || !window.jspdf.jsPDF || !window.jspdf.jsPDF.prototype.autoTable) {
+                alert('PDF generation libraries failed to load. Please check your internet connection and try again.');
+                return;
+            }
 
             let name = prompt('Enter your name:', 'Customer');
             if (!name || name.trim() === '') {
@@ -956,226 +1018,210 @@
             }
             name = name.trim();
 
-            checkLibraries(() => {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    let yOffset = 10;
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
-                    const margin = 10;
-                    const maxWidth = pageWidth - 2 * margin;
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                let yOffset = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 10;
+                const maxWidth = pageWidth - 2 * margin;
 
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
+                yOffset += 10;
+
+                const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
+                yOffset += 10;
+
+                let content = `Dear ${sanitizeInput(name)},\n\n`;
+                content += `This document provides a detailed summary of your ${lastResult.type === 'contribution' ? 'deposit' : lastResult.type === 'existing_loan' ? 'existing loan' : 'new loan'} calculation as of ${today}. Please review the details below.\n\n`;
+                let lines = doc.splitTextToSize(content, maxWidth);
+                doc.setFontSize(12);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7 + 10;
+
+                if (lastResult.type === 'contribution') {
+                    const penalty = lastResult.penalty;
+                    const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                    const monthParts = lastResult.month.split('-');
+                    const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+                    content = `Your deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+                    content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
+                    content += `Penalty Details:\n`;
+                    content += penalty > 0
+                        ? `- A flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
+                        + `- For delays beyond 7 days, an additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) is charged.\n`
+                        + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
+                        : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
+                    content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                    lines = doc.splitTextToSize(content, maxWidth);
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(12);
-
-                    doc.setFontSize(16);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
-                    yOffset += 10;
-
-                    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
-                    yOffset += 10;
-
-                    let content = `Dear ${sanitizeInput(name)},\n\n`;
-                    content += `This document provides a detailed summary of your ${lastResult.type === 'contribution' ? 'deposit' : lastResult.type === 'existing_loan' ? 'existing loan' : 'new loan'} calculation as of ${today}. Please review the details below.\n\n`;
-                    let lines = doc.splitTextToSize(content, maxWidth);
-                    doc.setFontSize(12);
+                    doc.setFontSize(11);
                     doc.text(lines, margin, yOffset);
                     yOffset += lines.length * 7 + 10;
 
-                    if (lastResult.type === 'contribution') {
-                        const penalty = lastResult.penalty;
-                        const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                        const monthParts = lastResult.month.split('-');
-                        const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
-                        content = `Your deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
-                        content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
-                        content += `Penalty Details:\n`;
-                        content += penalty > 0
-                            ? `- A flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
-                            + `- For delays beyond 7 days, an additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) is charged.\n`
-                            + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
-                            : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
-                        content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
-                        lines = doc.splitTextToSize(content, maxWidth);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(11);
-                        doc.text(lines, margin, yOffset);
-                        yOffset += lines.length * 7 + 10;
-
-                        if (resultChartInstance) {
-                            try {
-                                if (yOffset + 80 > pageHeight - margin) {
-                                    doc.addPage();
-                                    yOffset = margin;
-                                }
-                                doc.setFont('helvetica', 'bold');
-                                doc.text('Deposit Breakdown Chart:', margin, yOffset);
-                                yOffset += 10;
-                                const chartImage = resultChartInstance.toBase64Image();
-                                if (chartImage) {
-                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
-                                    yOffset += 90;
-                                } else {
-                                    doc.setFont('helvetica', 'normal');
-                                    doc.setFontSize(10);
-                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                    yOffset += 10;
-                                }
-                            } catch (error) {
-                                logError('Failed to add chart to PDF', error);
-                                doc.setFont('helvetica', 'normal');
-                                doc.setFontSize(10);
-                                doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                yOffset += 10;
-                            }
-                        }
-                    } else if (lastResult.type === 'existing_loan') {
-                        const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                        let loanType, interestRate;
-                        if (lastResult.loanType === 'short') {
-                            loanType = 'Short Term (30 Days)';
-                            interestRate = '5%';
-                        } else if (lastResult.loanType === 'medium') {
-                            loanType = 'Medium Term (90 Days)';
-                            interestRate = '10%';
-                        } else {
-                            loanType = 'Long Term (365 Days)';
-                            interestRate = '15%';
-                        }
-                        content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
-                        content += `Loan Details:\n`;
-                        content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
-                        if (lastResult.daysDelayed > 7) {
-                            content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
-                            content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
-                        } else {
-                            content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
-                        }
-                        content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
-                        lines = doc.splitTextToSize(content, maxWidth);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(11);
-                        doc.text(lines, margin, yOffset);
-                        yOffset += lines.length * 7 + 10;
-
-                        if (resultChartInstance) {
-                            try {
-                                if (yOffset + 80 > pageHeight - margin) {
-                                    doc.addPage();
-                                    yOffset = margin;
-                                }
-                                doc.setFont('helvetica', 'bold');
-                                doc.text('Existing Loan Breakdown Chart:', margin, yOffset);
-                                yOffset += 10;
-                                const chartImage = resultChartInstance.toBase64Image();
-                                if (chartImage) {
-                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
-                                    yOffset += 90;
-                                } else {
-                                    doc.setFont('helvetica', 'normal');
-                                    doc.setFontSize(10);
-                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                    yOffset += 10;
-                                }
-                            } catch (error) {
-                                logError('Failed to add chart to PDF', error);
-                                doc.setFont('helvetica', 'normal');
-                                doc.setFontSize(10);
-                                doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
-                                yOffset += 10;
-                            }
-                        }
-                    } else if (lastResult.type === 'new_loan') {
-                        let loanType, interestRate;
-                        if (lastResult.loanType === 'short') {
-                            loanType = 'Short Term (30 Days)';
-                            interestRate = '5%';
-                        } else if (lastResult.loanType === 'medium') {
-                            loanType = 'Medium Term (90 Days)';
-                            interestRate = '10%';
-                        } else {
-                            loanType = 'Long Term (365 Days)';
-                            interestRate = '15%';
-                        }
-                        content = `Your ${loanType} new loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
-                        content += `Loan Details:\n`;
-                        content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
-                        content += `- Total Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
-                        lines = doc.splitTextToSize(content, maxWidth);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(11);
-                        doc.text(lines, margin, yOffset);
-                        yOffset += lines.length * 7 + 10;
-
-                        if (lastResult.amortization && lastResult.amortization.length > 0) {
-                            if (yOffset + 20 > pageHeight - margin) {
+                    if (resultChartInstance) {
+                        try {
+                            if (yOffset + 80 > pageHeight - margin) {
                                 doc.addPage();
                                 yOffset = margin;
                             }
                             doc.setFont('helvetica', 'bold');
-                            doc.text('Amortization Schedule:', margin, yOffset);
-                            yOffset += 7;
-                            const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
-                            const tableData = lastResult.amortization.map(row => [
-                                row.month.toString(),
-                                row.payment,
-                                row.interest,
-                                row.principal,
-                                row.balance
-                            ]);
-                            doc.autoTable({
-                                head: [headers],
-                                body: tableData,
-                                startY: yOffset,
-                                styles: {
-                                    fontSize: 8,
-                                    cellPadding: 2,
-                                    lineColor: [26, 115, 232],
-                                    lineWidth: 0.3,
-                                    textColor: [44, 62, 80]
-                                },
-                                headStyles: {
-                                    fillColor: [26, 115, 232],
-                                    textColor: [255, 255, 255],
-                                    fontStyle: 'bold'
-                                },
-                                alternateRowStyles: {
-                                    fillColor: [245, 247, 250]
-                                },
-                                margin: { left: margin, right: margin }
-                            });
-                            yOffset = doc.lastAutoTable.finalY + 10;
+                            doc.text('Deposit Breakdown Chart:', margin, yOffset);
+                            yOffset += 10;
+                            const chartImage = resultChartInstance.toBase64Image();
+                            doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                            yOffset += 90;
+                        } catch (error) {
+                            logError('Failed to add chart to PDF', error);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(10);
+                            doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                            yOffset += 10;
                         }
                     }
-
-                    if (yOffset + 20 > pageHeight - margin) {
-                        doc.addPage();
-                        yOffset = margin;
+                } else if (lastResult.type === 'existing_loan') {
+                    const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                    let loanType, interestRate;
+                    if (lastResult.loanType === 'short') {
+                        loanType = 'Short Term (30 Days)';
+                        interestRate = '5%';
+                    } else if (lastResult.loanType === 'medium') {
+                        loanType = 'Medium Term (90 Days)';
+                        interestRate = '10%';
+                    } else {
+                        loanType = 'Long Term (365 Days)';
+                        interestRate = '15%';
                     }
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10);
-                    content = `Kindly update your account to help i-8 Ltd grow and serve you better.\n\n`;
+                    content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+                    content += `Loan Details:\n`;
+                    content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                    if (lastResult.daysDelayed > 7) {
+                        content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
+                        content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
+                    } else {
+                        content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
+                    }
+                    content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
                     lines = doc.splitTextToSize(content, maxWidth);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
                     doc.text(lines, margin, yOffset);
-                    yOffset += lines.length * 7;
+                    yOffset += lines.length * 7 + 10;
 
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('Regards,', margin, yOffset);
-                    yOffset += 7;
-                    doc.setFont('helvetica', 'italic');
-                    doc.text('i-8 Ltd. (info@i8ltd.co.ke)', margin, yOffset);
+                    if (resultChartInstance) {
+                        try {
+                            if (yOffset + 80 > pageHeight - margin) {
+                                doc.addPage();
+                                yOffset = margin;
+                            }
+                            doc.setFont('helvetica', 'bold');
+                            doc.text('Existing Loan Breakdown Chart:', margin, yOffset);
+                            yOffset += 10;
+                            const chartImage = resultChartInstance.toBase64Image();
+                            doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                            yOffset += 90;
+                        } catch (error) {
+                            logError('Failed to add chart to PDF', error);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(10);
+                            doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                            yOffset += 10;
+                        }
+                    }
+                } else if (lastResult.type === 'new_loan') {
+                    let loanType, interestRate;
+                    if (lastResult.loanType === 'short') {
+                        loanType = 'Short Term (30 Days)';
+                        interestRate = '5%';
+                    } else if (lastResult.loanType === 'medium') {
+                        loanType = 'Medium Term (90 Days)';
+                        interestRate = '10%';
+                    } else {
+                        loanType = 'Long Term (365 Days)';
+                        interestRate = '15%';
+                    }
+                    content = `Your ${loanType} new loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+                    content += `Loan Details:\n`;
+                    content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                    content += `- Total Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                    lines = doc.splitTextToSize(content, maxWidth);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
+                    doc.text(lines, margin, yOffset);
+                    yOffset += lines.length * 7 + 10;
 
-                    doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
-                } catch (error) {
-                    console.error('[i-8 SMART BOT] PDF generation failed', error);
-                    alert('Failed to generate PDF. Please try again or check the console for details.');
+                    if (lastResult.amortization && lastResult.amortization.length > 0) {
+                        if (yOffset + 20 > pageHeight - margin) {
+                            doc.addPage();
+                            yOffset = margin;
+                        }
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Amortization Schedule:', margin, yOffset);
+                        yOffset += 7;
+                        const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                        const tableData = lastResult.amortization.map(row => [
+                            row.month.toString(),
+                            row.payment,
+                            row.interest,
+                            row.principal,
+                            row.balance
+                        ]);
+                        doc.autoTable({
+                            head: [headers],
+                            body: tableData,
+                            startY: yOffset,
+                            styles: {
+                                fontSize: 8,
+                                cellPadding: 2,
+                                lineColor: [26, 115, 232],
+                                lineWidth: 0.3,
+                                textColor: [44, 62, 80]
+                            },
+                            headStyles: {
+                                fillColor: [26, 115, 232],
+                                textColor: [255, 255, 255],
+                                fontStyle: 'bold'
+                            },
+                            alternateRowStyles: {
+                                fillColor: [245, 247, 250]
+                            },
+                            margin: { left: margin, right: margin }
+                        });
+                        yOffset = doc.lastAutoTable.finalY + 10;
+                    }
                 }
-            });
+
+                if (yOffset + 20 > pageHeight - margin) {
+                    doc.addPage();
+                    yOffset = margin;
+                }
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                content = `Kindly update your account to help i-8 Ltd grow and serve you better.\n\n`;
+                lines = doc.splitTextToSize(content, maxWidth);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7;
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Regards,', margin, yOffset);
+                yOffset += 7;
+                doc.setFont('helvetica', 'italic');
+                doc.text('i-8 Ltd. (info@i8ltd.co.ke)', margin, yOffset);
+
+                doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
+            } catch (error) {
+                logError('PDF generation failed', error);
+                alert('Failed to generate PDF. Please ensure you have an internet connection and try again.');
+            }
         }
 
         elements.calcButton.addEventListener('keypress', e => {
@@ -1185,6 +1231,9 @@
         window.addEventListener('load', () => {
             populateYears();
             toggleFields();
+            elements.amount.addEventListener('input', updateButtonState);
+            elements.loanType.addEventListener('change', updateButtonState);
+            elements.repaymentPeriod.addEventListener('change', updateButtonState);
         });
     </script>
 </body>
