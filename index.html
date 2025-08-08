@@ -1,403 +1,1442 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>i-8 SMART BOT</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: clamp(14px, 2vw, 16px);
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    #result, #amortization-schedule {
-      margin-top: 20px;
-    }
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
-    .loading {
-      color: blue;
-      margin-top: 10px;
-    }
-    @media (max-width: 600px) {
-      input, select, button {
-        font-size: clamp(12px, 1.5vw, 14px);
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>i-8 SMART BOT</h1>
-    <form id="calculator-form">
-      <label for="calcType">Calculation Type:</label>
-      <select id="calcType" onchange="toggleFormFields()">
-        <option value="Deposit">Deposit</option>
-        <option value="Existing Loan">Existing Loan</option>
-        <option value="New Loan">New Loan</option>
-      </select>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+            <meta name="description" content="i-8 SMART BOT: Calculate deposit penalties and loan interest in KES with detailed charts.">
+            <meta name="author" content="e.k">
+            <meta name="keywords" content="sacco calculator, Kenya finance, deposit penalty, loan interest, financial charts">
+            <title>i-8 SMART BOT</title>
+            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
+            <link rel="manifest" href="/manifest.json">
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+                body {
+                    font-family: 'Roboto', Arial, sans-serif;
+                    background: linear-gradient(135deg, #e6f0fa 0%, #d1e3f6 100%);
+                    color: #2c3e50;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    padding: 0.5rem;
+                }
+                .container {
+                    width: 95%;
+                    max-width: 600px;
+                    background: #ffffff;
+                    padding: 1rem;
+                    border-radius: 12px;
+                    box-shadow: 0 6px 20px rgba(0, 52, 89, 0.15);
+                    border: 1px solid #1a73e8;
+                    animation: containerEnter 0.8s ease-out;
+                }
+                @keyframes containerEnter {
+                    from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .title-container {
+                    text-align: center;
+                    margin-bottom: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    animation: fadeIn 1s ease-out;
+                }
+                .title-container .main-title {
+                    font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+                    color: #1a73e8;
+                    font-weight: 700;
+                }
+                .title-container .sub-title {
+                    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+                    color: #34c759;
+                    font-weight: 500;
+                    text-transform: lowercase;
+                }
+                label {
+                    display: block;
+                    margin: 0.3rem 0 0.2rem;
+                    color: #2c3e50;
+                    font-size: clamp(0.7rem, 2vw, 0.8rem);
+                    font-weight: 500;
+                    animation: fadeIn 0.8s ease-out;
+                    animation-delay: calc(0.1s * var(--field-index));
+                }
+                select, input {
+                    width: 100%;
+                    padding: 0.5rem;
+                    margin-bottom: 0.3rem;
+                    border: 1px solid #1a73e8;
+                    border-radius: 6px;
+                    font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+                    background: #f5f7fa;
+                    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+                    animation: fadeIn 0.8s ease-out;
+                    animation-delay: calc(0.1s * var(--field-index));
+                }
+                select {
+                    background: #f5f7fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 0.5rem center/1rem;
+                }
+                select:focus, input:focus {
+                    border-color: #34c759;
+                    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2);
+                    transform: scale(1.02);
+                    outline: none;
+                }
+                .error {
+                    color: #e74c3c;
+                    font-size: clamp(0.6rem, 1.8vw, 0.7rem);
+                    margin-bottom: 0.3rem;
+                    display: none;
+                    animation: shake 0.3s ease-in-out;
+                }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+                #contributionFields, #loanFields, #repaymentFields, #newLoanFields {
+                    margin-top: 0.3rem;
+                    display: none;
+                }
+                .result {
+                    margin-top: 0.5rem;
+                    padding: 0.5rem;
+                    background: #e8f1f8;
+                    border-radius: 6px;
+                    color: #2c3e50;
+                    font-size: clamp(0.7rem, 2vw, 0.8rem);
+                    line-height: 1.4;
+                    border: 1px solid #1a73e8;
+                    overflow-x: auto;
+                    animation: resultEnter 0.5s ease-out;
+                }
+                @keyframes resultEnter {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .result table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: clamp(0.7rem, 2vw, 0.8rem);
+                }
+                .result th, .result td {
+                    padding: 0.4rem;
+                    border: 1px solid #1a73e8;
+                    text-align: left;
+                }
+                .result th {
+                    background: linear-gradient(135deg, #1a73e8, #4285f4);
+                    color: #fff;
+                }
+                .result tr:nth-child(even) {
+                    background: #f5f7fa;
+                }
+                .button-container {
+                    display: flex;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    margin-top: 0.5rem;
+                }
+                button {
+                    background: linear-gradient(135deg, #1a73e8, #4285f4);
+                    color: #fff;
+                    border: none;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    width: clamp(2rem, 8vw, 2.5rem);
+                    height: clamp(2rem, 8vw, 2.5rem);
+                    font-size: clamp(0.8rem, 2vw, 0.9rem);
+                    font-weight: 500;
+                    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                button:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+                    background: linear-gradient(135deg, #34c759, #4cd964);
+                }
+                button:active {
+                    transform: scale(0.9);
+                    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+                }
+                button:disabled {
+                    background: #bdc3c7;
+                    cursor: not-allowed;
+                    transform: none;
+                    box-shadow: none;
+                }
+                .loading {
+                    opacity: 0.7;
+                    position: relative;
+                }
+                .loading::after {
+                    content: '';
+                    display: inline-block;
+                    width: 0.8rem;
+                    height: 0.8rem;
+                    border: 2px solid #fff;
+                    border-top: 2px solid #34c759;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); border-top-color: #34c759; }
+                    100% { transform: rotate(360deg); border-top-color: #1a73e8; }
+                }
+                .progress-bar {
+                    width: 100%;
+                    height: 5px;
+                    background: #e8f1f8;
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin-top: 0.5rem;
+                    display: none;
+                }
+                .progress-bar.active {
+                    display: block;
+                }
+                .progress-bar div {
+                    height: 100%;
+                    background: linear-gradient(135deg, #34c759, #4cd964);
+                    width: 0;
+                    transition: width 1s ease-in-out;
+                }
+                .modal {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                    animation: fadeIn 0.5s ease-in;
+                }
+                .modal-content {
+                    background: #fff;
+                    padding: 1rem;
+                    border-radius: 12px;
+                    width: 90%;
+                    max-width: 500px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+                    position: relative;
+                    animation: modalEnter 0.5s ease-out;
+                }
+                @keyframes modalEnter {
+                    from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+                    to { transform: translateY(0) scale(1); opacity: 1; }
+                }
+                .close-modal {
+                    position: absolute;
+                    top: 0.5rem;
+                    right: 0.5rem;
+                    background: none;
+                    border: none;
+                    font-size: 1.2rem;
+                    cursor: pointer;
+                    color: #2c3e50;
+                    transition: color 0.2s, transform 0.2s;
+                }
+                .close-modal:hover {
+                    color: #e74c3c;
+                    transform: scale(1.2);
+                }
+                canvas {
+                    max-width: 100%;
+                    max-height: 300px;
+                    height: auto;
+                    margin-top: 0.5rem;
+                }
+                @media (max-width: 600px) {
+                    .container {
+                        padding: 0.8rem;
+                    }
+                    select, input {
+                        padding: 0.4rem;
+                    }
+                    button {
+                        width: 2rem;
+                        height: 2rem;
+                    }
+                    .result {
+                        font-size: 0.7rem;
+                    }
+                    .modal-content {
+                        padding: 0.8rem;
+                        width: 95%;
+                    }
+                    canvas {
+                        max-height: 200px;
+                    }
+                }
+                @media (min-width: 601px) and (max-width: 1024px) {
+                    .container {
+                        max-width: 550px;
+                    }
+                }
+                @media (min-width: 1025px) {
+                    .container {
+                        max-width: 600px;
+                    }
+                    .title-container .main-title {
+                        font-size: 1.4rem;
+                    }
+                    .title-container .sub-title {
+                        font-size: 1rem;
+                    }
+                }
+                select:focus-visible, input:focus-visible, button:focus-visible {
+                    outline: 2px solid #34c759;
+                    outline-offset: 2px;
+                }
+                #type, #amount, #year, #month, #dueDate, #checkDate, #loanType, #repaymentPeriod, #idNumber, #name, #email {
+                    --field-index: 0;
+                }
+                #type { --field-index: 1; }
+                #amount { --field-index: 2; }
+                #year { --field-index: 3; }
+                #month { --field-index: 4; }
+                #dueDate { --field-index: 5; }
+                #checkDate { --field-index: 6; }
+                #loanType { --field-index: 7; }
+                #repaymentPeriod { --field-index: 8; }
+                #idNumber { --field-index: 9; }
+                #name { --field-index: 10; }
+                #email { --field-index: 11; }
+            </style>
+            <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+            <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha512-JWqWZuE2J3Cwrt2m+ZrCx7E2tN3iT2Jni3nO0rLte3MkuZOC/l0zW1SCU8LYzunlYQ6oFwrrgA4kJCe3v0pF1dg==" crossorigin="anonymous"></script>
+            <script src="https://apis.google.com/js/api.js" defer></script>
+        </head>
+        <body>
+            <div class="container">
+                <div class="title-container">
+                    <div>
+                        <div class="main-title">i-8 SMART</div>
+                        <div class="sub-title">bot</div>
+                    </div>
+                </div>
+                <form id="calculator-form">
+                    <label for="type">Type:</label>
+                    <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loan" onchange="toggleFields()">
+                        <option value="contribution">Deposit</option>
+                        <option value="existing_loan">Existing Loan</option>
+                        <option value="new_loan">New Loan</option>
+                    </select>
+                    <span id="typeError" class="error"></span>
 
-      <!-- Deposit/Existing Loan Fields -->
-      <div id="deposit-existing-fields">
-        <label for="amount">Amount (KES):</label>
-        <input type="number" id="amount" min="0" required>
-        <label for="dueDate">Due Date:</label>
-        <input type="date" id="dueDate" required>
-        <label for="checkDate">Check Date:</label>
-        <input type="date" id="checkDate" required>
-      </div>
+                    <label for="amount">Amount (KES):</label>
+                    <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
+                    <span id="amountError" class="error"></span>
 
-      <!-- New Loan Fields -->
-      <div id="new-loan-fields" style="display: none;">
-        <label for="idNumber">ID Number:</label>
-        <input type="text" id="idNumber" required>
-        <label for="name">Name:</label>
-        <input type="text" id="name" required>
-        <label for="email">Email:</label>
-        <input type="email" id="email" required>
-        <label for="loanType">Loan Type:</label>
-        <select id="loanType" onchange="updateRepaymentOptions()">
-          <option value="Short">Short Term (5%, 1 month)</option>
-          <option value="Medium">Medium Term (10%, 2-3 months)</option>
-          <option value="Long">Long Term (15%, 4-12 months)</option>
-        </select>
-        <label for="repaymentPeriod">Repayment Period (Months):</label>
-        <select id="repaymentPeriod">
-          <option value="1">1 month</option>
-        </select>
-        <label for="loanAmount">Amount (KES):</label>
-        <input type="number" id="loanAmount" min="0" required>
-      </div>
+                    <div id="contributionFields">
+                        <label for="year">Contribution Year:</label>
+                        <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
+                        <span id="yearError" class="error"></span>
 
-      <button type="submit">Calculate / Submit</button>
-    </form>
-    <div id="result"></div>
-    <div id="amortization-schedule"></div>
-    <div id="error" class="error"></div>
-    <div id="loading" class="loading"></div>
-  </div>
+                        <label for="month">Contribution Month:</label>
+                        <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
+                        <span id="monthError" class="error"></span>
+                    </div>
 
-  <script src="https://apis.google.com/js/api.js" defer></script>
-  <script>
-    // Configuration
-    const SPREADSHEET_ID = '1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10';
-    const CLIENT_ID = '46347675750-tfr3pj2bcvcdv0i3t3i0j2iave9lau2p.apps.googleusercontent.com';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqePT4Ajc4OSsnQjxY5sTg7JKag0--s-Dcqe_sey4rjP2WsOW9y9traz8ZRRse4gjrrw/exec';
-    const VIEW_ONLY_LINK = 'https://docs.google.com/spreadsheets/d/1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10/edit?usp=sharing';
+                    <div id="dateFields">
+                        <label for="dueDate">Due Date:</label>
+                        <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+                        <span id="dueDateError" class="error"></span>
 
-    // Toggle form fields
-    function toggleFormFields() {
-      const calcType = document.getElementById('calcType').value;
-      document.getElementById('deposit-existing-fields').style.display = calcType === 'New Loan' ? 'none' : 'block';
-      document.getElementById('new-loan-fields').style.display = calcType === 'New Loan' ? 'block' : 'none';
-      document.getElementById('result').innerHTML = '';
-      document.getElementById('amortization-schedule').innerHTML = '';
-      document.getElementById('error').innerHTML = '';
-      document.getElementById('loading').innerHTML = '';
-      if (calcType === 'New Loan') updateRepaymentOptions();
-    }
+                        <label for="checkDate">Check Date:</label>
+                        <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+                        <span id="checkDateError" class="error"></span>
+                    </div>
 
-    // Update repayment period options
-    function updateRepaymentOptions() {
-      const loanType = document.getElementById('loanType').value;
-      const repaymentPeriod = document.getElementById('repaymentPeriod');
-      repaymentPeriod.innerHTML = '';
-      const options = loanType === 'Short' ? [1] :
-                      loanType === 'Medium' ? [2, 3] :
-                      [4, 5, 6, 7, 8, 9, 10, 11, 12];
-      options.forEach(month => {
-        const option = document.createElement('option');
-        option.value = month;
-        option.text = `${month} month${month > 1 ? 's' : ''}`;
-        repaymentPeriod.appendChild(option);
-      });
-    }
+                    <div id="loanFields">
+                        <label for="loanType">Loan Type:</label>
+                        <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
+                            <option value="short">Short Term (30 Days)</option>
+                            <option value="medium">Medium Term (90 Days)</option>
+                            <option value="long">Long Term (365 Days)</option>
+                        </select>
+                        <span id="loanTypeError" class="error"></span>
 
-    // Calculate days between dates
-    function getDaysDiff(startDate, endDate) {
-      const diffTime = endDate - startDate;
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
+                        <div id="repaymentFields">
+                            <label for="repaymentPeriod">Repayment Period (Months):</label>
+                            <select id="repaymentPeriod" aria-label="Select repayment period">
+                                <option value="">Select months</option>
+                            </select>
+                            <span id="repaymentPeriodError" class="error"></span>
+                        </div>
+                    </div>
 
-    // Calculate deposit penalty
-    function calculateDepositPenalty(amount, dueDate, checkDate) {
-      const daysLate = getDaysDiff(new Date(dueDate), new Date(checkDate));
-      let penalty = 0;
-      if (daysLate > 0 && daysLate <= 7) {
-        penalty = amount * 0.3;
-      } else if (daysLate > 7) {
-        penalty = amount * 0.3 + amount * 0.01 * (daysLate - 7);
-      }
-      return { amount, penalty };
-    }
+                    <div id="newLoanFields" style="display: none;">
+                        <label for="idNumber">ID Number:</label>
+                        <input type="text" id="idNumber" placeholder="Enter ID Number" aria-label="Enter ID Number" required>
+                        <span id="idNumberError" class="error"></span>
 
-    // Calculate existing loan
-    function calculateExistingLoan(amount, dueDate, checkDate) {
-      const daysLate = getDaysDiff(new Date(dueDate), new Date(checkDate));
-      let interestRate = 0.05; // Short Term default
-      const calcType = document.getElementById('calcType').value;
-      if (calcType.includes('Medium')) interestRate = 0.1;
-      else if (calcType.includes('Long')) interestRate = 0.15;
-      const interest = amount * interestRate;
-      let penalty = 0;
-      let rollOverInterest = 0;
-      if (daysLate > 7) {
-        penalty = amount * 0.005 * (daysLate - 7);
-        rollOverInterest = amount * 0.05;
-      }
-      return { principal: amount, interest, penalty, rollOverInterest };
-    }
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" placeholder="Enter Full Name" aria-label="Enter Full Name" required>
+                        <span id="nameError" class="error"></span>
 
-    // Calculate amortization schedule
-    function calculateAmortization(amount, months, loanType) {
-      const interestRate = loanType === 'Short' ? 0.05 : loanType === 'Medium' ? 0.1 : 0.15;
-      const total = amount * (1 + interestRate);
-      const monthly = (total / months).toFixed(2);
-      const schedule = [];
-      let balance = total;
-      for (let i = 1; i <= months; i++) {
-        const dueDate = new Date(2025, 7 + i, 8); // Start August 8, 2025
-        schedule.push({
-          month: i,
-          dueDate: dueDate.toISOString().split('T')[0],
-          amount: monthly,
-          balance: (balance - monthly).toFixed(2)
-        });
-        balance -= monthly;
-      }
-      return schedule;
-    }
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" placeholder="Enter Email Address" aria-label="Enter Email Address" required>
+                        <span id="emailError" class="error"></span>
+                    </div>
 
-    // Display results
-    function displayResults(data, type) {
-      let html = '<table><tr>';
-      if (type === 'Deposit') {
-        html += '<th>Amount (KES)</th><th>Penalty (KES)</th></tr>';
-        html += `<tr><td>${data.amount}</td><td>${data.penalty.toFixed(2)}</td></tr>`;
-      } else if (type === 'Existing Loan') {
-        html += '<th>Principal (KES)</th><th>Interest (KES)</th><th>Penalty (KES)</th><th>Roll-over Interest (KES)</th></tr>';
-        html += `<tr><td>${data.principal}</td><td>${data.interest.toFixed(2)}</td><td>${data.penalty.toFixed(2)}</td><td>${data.rollOverInterest.toFixed(2)}</td></tr>`;
-      }
-      html += '</table>';
-      document.getElementById('result').innerHTML = html;
-    }
+                    <div class="button-container">
+                        <button type="submit" id="calcButton" aria-label="Calculate penalties or submit loan application">Calc</button>
+                        <button id="downloadButton" style="display: none;" onclick="downloadPDF()" aria-label="Download PDF">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#1a73e8">
+                                <path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7zm8 3v-3h-2v3H7l5 5 5-5h-4z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+                <div class="progress-bar" id="progressBar">
+                    <div id="progressFill"></div>
+                </div>
+                <div id="result" class="result"></div>
+                <canvas id="resultChart" style="display: none;"></canvas>
+            </div>
 
-    // Display amortization schedule
-    function displayAmortization(schedule) {
-      let html = '<h3>Amortization Schedule</h3><table><tr><th>Month</th><th>Due Date</th><th>Amount (KES)</th><th>Balance (KES)</th></tr>';
-      schedule.forEach(row => {
-        html += `<tr><td>${row.month}</td><td>${row.dueDate}</td><td>${row.amount}</td><td>${row.balance}</td></tr>`;
-      });
-      html += '</table>';
-      document.getElementById('amortization-schedule').innerHTML = html;
-    }
+            <div id="resultModal" class="modal">
+                <div class="modal-content">
+                    <button class="close-modal" onclick="closeResultModal()" aria-label="Close results">&times;</button>
+                    <div id="modalResult"></div>
+                    <canvas id="modalResultChart" style="display: none;"></canvas>
+                </div>
+            </div>
 
-    // Initialize Google Sheets API
-    function initGapi() {
-      if (!window.gapi) {
-        document.getElementById('error').innerHTML = 'Failed to load Google API. Please try again.';
-        return;
-      }
-      gapi.load('client:auth2', () => {
-        gapi.client.init({
-          clientId: CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/spreadsheets',
-          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-        }).then(() => {
-          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
-          updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-        }).catch(err => {
-          document.getElementById('error').innerHTML = 'Google API initialization failed: ' + err.message;
-        });
-      });
-    }
+            <script>
+                // Configuration
+                const CONFIG = {
+                    CONTRIBUTION_PENALTY: 0.30,
+                    CONTRIBUTION_DAILY_PENALTY: 0.01,
+                    LOAN_SHORT_INTEREST: 0.05,
+                    LOAN_MEDIUM_INTEREST: 0.10,
+                    LOAN_LONG_INTEREST: 0.15,
+                    LOAN_SHORT_MINIMUM: 2000,
+                    LOAN_MEDIUM_MINIMUM: 5000,
+                    LOAN_LONG_MINIMUM: 30000,
+                    ROLLOVER_INTEREST: 0.05,
+                    LOAN_DAILY_PENALTY: 0.005,
+                    PENALTY_START_DAY: 1,
+                    SPREADSHEET_ID: '1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10',
+                    CLIENT_ID: '46347675750-tfr3pj2bcvcdv0i3t3i0j2iave9lau2p.apps.googleusercontent.com',
+                    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzqePT4Ajc4OSsnQjxY5sTg7JKag0--s-Dcqe_sey4rjP2WsOW9y9traz8ZRRse4gjrrw/exec',
+                    VIEW_ONLY_LINK: 'https://docs.google.com/spreadsheets/d/1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10/edit?usp=sharing'
+                };
 
-    function updateSignInStatus(isSignedIn) {
-      if (!isSignedIn) {
-        gapi.auth2.getAuthInstance().signIn().catch(err => {
-          document.getElementById('error').innerHTML = 'Google Sign-In failed: ' + err.message;
-        });
-      }
-    }
+                const elements = {
+                    type: document.getElementById('type'),
+                    amount: document.getElementById('amount'),
+                    contributionFields: document.getElementById('contributionFields'),
+                    year: document.getElementById('year'),
+                    month: document.getElementById('month'),
+                    dateFields: document.getElementById('dateFields'),
+                    dueDate: document.getElementById('dueDate'),
+                    checkDate: document.getElementById('checkDate'),
+                    loanFields: document.getElementById('loanFields'),
+                    loanType: document.getElementById('loanType'),
+                    repaymentFields: document.getElementById('repaymentFields'),
+                    repaymentPeriod: document.getElementById('repaymentPeriod'),
+                    newLoanFields: document.getElementById('newLoanFields'),
+                    idNumber: document.getElementById('idNumber'),
+                    name: document.getElementById('name'),
+                    email: document.getElementById('email'),
+                    calcButton: document.getElementById('calcButton'),
+                    downloadButton: document.getElementById('downloadButton'),
+                    result: document.getElementById('result'),
+                    progressBar: document.getElementById('progressBar'),
+                    progressFill: document.getElementById('progressFill'),
+                    resultChart: document.getElementById('resultChart'),
+                    resultModal: document.getElementById('resultModal'),
+                    modalResult: document.getElementById('modalResult'),
+                    modalResultChart: document.getElementById('modalResultChart'),
+                    errors: {
+                        type: document.getElementById('typeError'),
+                        amount: document.getElementById('amountError'),
+                        year: document.getElementById('yearError'),
+                        month: document.getElementById('monthError'),
+                        dueDate: document.getElementById('dueDateError'),
+                        checkDate: document.getElementById('checkDateError'),
+                        loanType: document.getElementById('loanTypeError'),
+                        repaymentPeriod: document.getElementById('repaymentPeriodError'),
+                        idNumber: document.getElementById('idNumberError'),
+                        name: document.getElementById('nameError'),
+                        email: document.getElementById('emailError')
+                    }
+                };
 
-    // Append loan application
-    async function appendLoanApplication(data) {
-      try {
-        document.getElementById('loading').innerHTML = 'Submitting application...';
-        const response = await gapi.client.sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'Loan Applications!A:I',
-          valueInputOption: 'USER_ENTERED',
-          resource: {
-            values: [[
-              data.applicationId, data.idNumber, data.name, data.email,
-              data.loanType, data.repaymentPeriod, data.amount,
-              new Date().toLocaleString('en-US', {timeZone: 'Africa/Nairobi'}),
-              'Pending'
-            ]]
-          }
-        });
-        document.getElementById('loading').innerHTML = '';
-        return response;
-      } catch (err) {
-        throw new Error('Failed to append loan application: ' + err.message);
-      }
-    }
+                let isCalculating = false;
+                let lastResult = null;
+                let resultChartInstance = null;
 
-    // Append installments
-    async function appendInstallments(data, schedule) {
-      try {
-        const values = schedule.map(row => [
-          data.applicationId, data.idNumber, row.month, row.dueDate, row.amount, 0, '', row.balance
-        ]);
-        const response = await gapi.client.sheets.spreadsheets.values.append({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'Installments!A:H',
-          valueInputOption: 'USER_ENTERED',
-          resource: { values }
-        });
-        return response;
-      } catch (err) {
-        throw new Error('Failed to append installments: ' + err.message);
-      }
-    }
+                function sanitizeInput(input) {
+                    const div = document.createElement('div');
+                    div.textContent = input;
+                    return div.innerHTML;
+                }
 
-    // Trigger Apps Script for notifications
-    async function sendNotifications(data) {
-      try {
-        document.getElementById('loading').innerHTML = 'Sending notifications...';
-        const response = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            applicationId: data.applicationId,
-            amount: data.amount,
-            firstName: data.name.split(' ')[0],
-            dateTime: new Date().toLocaleString('en-US', {timeZone: 'Africa/Nairobi'})
-          })
-        });
-        const result = await response.json();
-        if (result.status !== 'success') throw new Error(result.message || 'Notification request failed');
-        document.getElementById('loading').innerHTML = '';
-        document.getElementById('error').innerHTML = 'Application submitted successfully!';
-      } catch (err) {
-        document.getElementById('loading').innerHTML = '';
-        document.getElementById('error').innerHTML = 'Error sending notifications: ' + err.message;
-      }
-    }
+                function logError(message, error) {
+                    console.error(`[i-8 SMART BOT] ${message}`, error);
+                    elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(message)}</span>`;
+                }
 
-    // Validate inputs
-    function validateInputs(data) {
-      if (!data.idNumber.match(/^\d{8,10}$/)) return 'Invalid ID Number (8-10 digits)';
-      if (!data.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return 'Invalid Email';
-      if (data.loanType === 'Short' && data.amount < 2000) return 'Short Term loan must be at least 2000 KES';
-      if (data.loanType === 'Medium' && data.amount < 5000) return 'Medium Term loan must be at least 5000 KES';
-      if (data.loanType === 'Long' && data.amount < 30000) return 'Long Term loan must be at least 30000 KES';
-      return null;
-    }
+                function showProgress() {
+                    elements.progressBar.classList.add('active');
+                    elements.progressFill.style.width = '0%';
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += 10;
+                        elements.progressFill.style.width = `${progress}%`;
+                        if (progress >= 100) clearInterval(interval);
+                    }, 100);
+                }
 
-    // Form submission
-    document.getElementById('calculator-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const calcType = document.getElementById('calcType').value;
-      document.getElementById('error').innerHTML = '';
-      document.getElementById('loading').innerHTML = '';
+                function hideProgress() {
+                    elements.progressBar.classList.remove('active');
+                    elements.progressFill.style.width = '0%';
+                }
 
-      if (calcType === 'Deposit' || calcType === 'Existing Loan') {
-        const amount = parseFloat(document.getElementById('amount').value);
-        const dueDate = document.getElementById('dueDate').value;
-        const checkDate = document.getElementById('checkDate').value;
-        if (!amount || !dueDate || !checkDate) {
-          document.getElementById('error').innerHTML = 'Please fill all fields';
-          return;
-        }
-        if (calcType === 'Deposit') {
-          const result = calculateDepositPenalty(amount, dueDate, checkDate);
-          displayResults(result, 'Deposit');
-        } else {
-          const result = calculateExistingLoan(amount, dueDate, checkDate);
-          displayResults(result, 'Existing Loan');
-        }
-      } else {
-        const data = {
-          applicationId: `APP${Date.now()}`,
-          idNumber: document.getElementById('idNumber').value,
-          name: document.getElementById('name').value,
-          email: document.getElementById('email').value,
-          loanType: document.getElementById('loanType').value,
-          repaymentPeriod: parseInt(document.getElementById('repaymentPeriod').value),
-          amount: parseFloat(document.getElementById('loanAmount').value)
-        };
-        const error = validateInputs(data);
-        if (error) {
-          document.getElementById('error').innerHTML = error;
-          return;
-        }
-        const schedule = calculateAmortization(data.amount, data.repaymentPeriod, data.loanType);
-        displayAmortization(schedule);
-        try {
-          await appendLoanApplication(data);
-          await appendInstallments(data, schedule);
-          await sendNotifications(data);
-        } catch (err) {
-          document.getElementById('error').innerHTML = err.message;
-        }
-      }
-    });
+                function validateInputs() {
+                    const errors = [];
+                    const type = elements.type.value;
+                    const amount = parseFloat(elements.amount.value) || 0;
+                    const year = elements.year.value;
+                    const month = elements.month.value;
+                    const loanType = elements.loanType.value;
+                    const repaymentPeriod = elements.repaymentPeriod.value;
+                    const idNumber = elements.idNumber.value;
+                    const name = elements.name.value;
+                    const email = elements.email.value;
+                    let dueDate, checkDate;
 
-    // Initialize on load
-    window.addEventListener('load', () => {
-      try {
-        initGapi();
-      } catch (err) {
-        document.getElementById('error').innerHTML = 'Initialization failed: ' + err.message;
-      }
-    });
-  </script>
-</body>
-</html>
+                    if (type !== 'new_loan') {
+                        dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                        checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+                    }
+
+                    Object.values(elements.errors).forEach(error => error.style.display = 'none');
+
+                    if (!type) {
+                        elements.errors.type.textContent = 'Please select a type.';
+                        elements.errors.type.style.display = 'block';
+                        errors.push('Invalid type');
+                    }
+
+                    if (amount <= 0 || isNaN(amount)) {
+                        elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
+                        elements.errors.amount.style.display = 'block';
+                        errors.push('Invalid amount');
+                    } else if (type === 'existing_loan' || type === 'new_loan') {
+                        if (loanType === 'short' && amount < CONFIG.LOAN_SHORT_MINIMUM) {
+                            elements.errors.amount.textContent = `Amount for Short Term loan must be at least ${CONFIG.LOAN_SHORT_MINIMUM} KES.`;
+                            elements.errors.amount.style.display = 'block';
+                            errors.push('Amount below minimum for Short Term loan');
+                        } else if (loanType === 'medium' && amount < CONFIG.LOAN_MEDIUM_MINIMUM) {
+                            elements.errors.amount.textContent = `Amount for Medium Term loan must be at least ${CONFIG.LOAN_MEDIUM_MINIMUM} KES.`;
+                            elements.errors.amount.style.display = 'block';
+                            errors.push('Amount below minimum for Medium Term loan');
+                        } else if (loanType === 'long' && amount < CONFIG.LOAN_LONG_MINIMUM) {
+                            elements.errors.amount.textContent = `Amount for Long Term loan must be at least ${CONFIG.LOAN_LONG_MINIMUM} KES.`;
+                            elements.errors.amount.style.display = 'block';
+                            errors.push('Amount below minimum for Long Term loan');
+                        }
+                    }
+                    if (type === 'contribution') {
+                        if (!year) {
+                            elements.errors.year.textContent = 'Please select a year.';
+                            elements.errors.year.style.display = 'block';
+                            errors.push('Invalid year');
+                        }
+                        if (!month) {
+                            elements.errors.month.textContent = 'Please select a month.';
+                            elements.errors.month.style.display = 'block';
+                            errors.push('Invalid month');
+                        }
+                        if (isNaN(dueDate.getTime())) {
+                            elements.errors.dueDate.textContent = 'Invalid due date.';
+                            elements.errors.dueDate.style.display = 'block';
+                            errors.push('Invalid due date');
+                        }
+                        if (isNaN(checkDate.getTime())) {
+                            elements.errors.checkDate.textContent = 'Invalid check date.';
+                            elements.errors.checkDate.style.display = 'block';
+                            errors.push('Invalid check date');
+                        }
+                    }
+                    if (type === 'existing_loan') {
+                        if (!loanType) {
+                            elements.errors.loanType.textContent = 'Please select a loan type.';
+                            elements.errors.loanType.style.display = 'block';
+                            errors.push('Invalid loan type');
+                        }
+                        if (isNaN(dueDate.getTime())) {
+                            elements.errors.dueDate.textContent = 'Invalid due date.';
+                            elements.errors.dueDate.style.display = 'block';
+                            errors.push('Invalid due date');
+                        }
+                        if (isNaN(checkDate.getTime())) {
+                            elements.errors.checkDate.textContent = 'Invalid check date.';
+                            elements.errors.checkDate.style.display = 'block';
+                            errors.push('Invalid check date');
+                        }
+                    }
+                    if (type === 'new_loan') {
+                        if (!loanType) {
+                            elements.errors.loanType.textContent = 'Please select a loan type.';
+                            elements.errors.loanType.style.display = 'block';
+                            errors.push('Invalid loan type');
+                        }
+                        if (!repaymentPeriod) {
+                            elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
+                            elements.errors.repaymentPeriod.style.display = 'block';
+                            errors.push('Invalid repayment period');
+                        }
+                        if (!idNumber.match(/^\d{8,10}$/)) {
+                            elements.errors.idNumber.textContent = 'Invalid ID Number (8-10 digits)';
+                            elements.errors.idNumber.style.display = 'block';
+                            errors.push('Invalid ID Number');
+                        }
+                        if (!name) {
+                            elements.errors.name.textContent = 'Please enter a name.';
+                            elements.errors.name.style.display = 'block';
+                            errors.push('Invalid name');
+                        }
+                        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                            elements.errors.email.textContent = 'Invalid Email';
+                            elements.errors.email.style.display = 'block';
+                            errors.push('Invalid email');
+                        }
+                    }
+
+                    return errors.length === 0 ? null : errors.join(', ');
+                }
+
+                function calculateContributionPenalty(amount, daysDelayed) {
+                    if (daysDelayed < CONFIG.PENALTY_START_DAY) return 0;
+                    if (daysDelayed <= 7) return amount * CONFIG.CONTRIBUTION_PENALTY;
+                    return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
+                }
+
+                function calculateLoanOwed(amount, daysDelayed, loanType) {
+                    let interest;
+                    if (loanType === 'short') {
+                        interest = amount * CONFIG.LOAN_SHORT_INTEREST;
+                    } else if (loanType === 'medium') {
+                        interest = amount * CONFIG.LOAN_MEDIUM_INTEREST;
+                    } else {
+                        interest = amount * CONFIG.LOAN_LONG_INTEREST;
+                    }
+                    let totalOwed = amount + interest;
+                    let penalty = 0;
+                    let rollOverInterest = 0;
+                    if (daysDelayed > 7) {
+                        const rolledAmount = amount + interest;
+                        rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
+                        penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
+                        totalOwed = amount + interest + rollOverInterest + penalty;
+                    }
+                    return { totalOwed, interest, penalty, rollOverInterest };
+                }
+
+                function calculateNewLoan(amount, loanType, repaymentPeriod) {
+                    const interestRate = loanType === 'short' ? CONFIG.LOAN_SHORT_INTEREST :
+                                        loanType === 'medium' ? CONFIG.LOAN_MEDIUM_INTEREST :
+                                        CONFIG.LOAN_LONG_INTEREST;
+                    const interest = amount * interestRate;
+                    const totalOwed = amount + interest;
+                    const monthlyPayment = totalOwed / repaymentPeriod;
+                    const monthlyInterest = interest / repaymentPeriod;
+                    const monthlyPrincipal = amount / repaymentPeriod;
+                    let balance = totalOwed;
+                    let schedule = [];
+                    for (let i = 1; i <= repaymentPeriod; i++) {
+                        balance -= monthlyPayment;
+                        if (balance < 0) balance = 0;
+                        schedule.push({
+                            month: i,
+                            payment: monthlyPayment.toFixed(2),
+                            interest: monthlyInterest.toFixed(2),
+                            principal: monthlyPrincipal.toFixed(2),
+                            balance: balance.toFixed(2)
+                        });
+                    }
+                    return { totalOwed, interest, amortization: schedule, termMonths: repaymentPeriod };
+                }
+
+                function saveCalculation(data) {
+                    try {
+                        const history = JSON.parse(localStorage.getItem('calculations') || '[]');
+                        history.push({ ...data, timestamp: new Date().toISOString() });
+                        localStorage.setItem('calculations', JSON.stringify(history));
+                    } catch (error) {
+                        logError('Failed to save calculation', error);
+                    }
+                }
+
+                function createResultChart(data) {
+                    if (resultChartInstance) {
+                        resultChartInstance.destroy();
+                        resultChartInstance = null;
+                    }
+                    if (data.type === 'new_loan') {
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        return;
+                    }
+
+                    if (!window.Chart) {
+                        logError('Chart.js not loaded');
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed. Please check your internet connection and try again.</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        return;
+                    }
+
+                    const ctx = window.innerHeight < 600 ? elements.modalResultChart : elements.resultChart;
+                    if (!ctx || !ctx.getContext) {
+                        logError('Canvas element not found or invalid');
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed due to canvas issue.</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        return;
+                    }
+
+                    ctx.style.display = 'block';
+
+                    let labels, chartData, chartTitle;
+                    if (data.type === 'contribution') {
+                        labels = ['Deposit Amount', 'Penalty'];
+                        chartData = [data.amount, data.penalty];
+                        chartTitle = 'Deposit Breakdown (KES)';
+                    } else {
+                        labels = ['Principal', 'Interest'];
+                        chartData = [data.amount, data.interest];
+                        if (data.daysDelayed > 7) {
+                            labels.push('Penalty', 'Roll-over Interest');
+                            chartData.push(data.penalty, data.rollOverInterest);
+                        }
+                        chartTitle = 'Existing Loan Breakdown (KES)';
+                    }
+
+                    if (!chartData.every(value => Number.isFinite(value) && value >= 0)) {
+                        logError('Invalid chart data', chartData);
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed due to invalid data.</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        return;
+                    }
+
+                    try {
+                        resultChartInstance = new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: chartData,
+                                    backgroundColor: ['#1a73e8', '#34c759', '#e74c3c', '#f1c40f'],
+                                    borderColor: ['#ffffff'],
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            font: { size: 12 },
+                                            color: '#2c3e50',
+                                            padding: 15
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: chartTitle,
+                                        font: { size: 14, weight: 'bold' },
+                                        color: '#1a73e8',
+                                        padding: { top: 10, bottom: 10 }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const value = context.raw;
+                                                return `${context.label}: KES ${value.toFixed(2)}`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        logError('Chart creation failed', error);
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed. Please try again.</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                    }
+                }
+
+                function populateYears() {
+                    const yearSelect = elements.year;
+                    yearSelect.innerHTML = '';
+                    const currentYear = new Date().getFullYear();
+                    for (let year = 2024; year <= currentYear; year++) {
+                        const option = document.createElement('option');
+                        option.value = year;
+                        option.text = year;
+                        yearSelect.appendChild(option);
+                    }
+                    yearSelect.value = currentYear;
+                    populateMonths();
+                }
+
+                function populateMonths() {
+                    const year = parseInt(elements.year.value);
+                    const monthSelect = elements.month;
+                    monthSelect.innerHTML = '';
+                    const currentDate = new Date();
+                    const currentYear = currentDate.getFullYear();
+                    const currentMonth = currentDate.getMonth();
+                    const startMonth = year === 2024 ? 0 : 0;
+                    const maxMonth = year === currentYear ? currentMonth : 11;
+                    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
+                    for (let month = startMonth; month <= maxMonth; month++) {
+                        const monthName = monthAbbr[month];
+                        const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                        const option = document.createElement('option');
+                        option.value = optionValue;
+                        option.text = `${monthName} ${year}`;
+                        monthSelect.appendChild(option);
+                    }
+
+                    if (monthSelect.children.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+                        option.text = `${monthAbbr[currentMonth]} ${currentYear}`;
+                        monthSelect.appendChild(option);
+                    }
+                    updateDueDate();
+                }
+
+                function toggleRepaymentFields() {
+                    const type = elements.type.value;
+                    const loanType = elements.loanType.value;
+                    elements.repaymentFields.style.display = (type === 'new_loan' && loanType) ? 'block' : 'none';
+                    elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
+                    if (type === 'new_loan' && loanType) {
+                        let options = [];
+                        if (loanType === 'short') {
+                            options = [1];
+                        } else if (loanType === 'medium') {
+                            options = [2, 3];
+                        } else if (loanType === 'long') {
+                            options = [4, 5, 6, 7, 8, 9, 10, 11, 12];
+                        }
+                        options.forEach(months => {
+                            const option = document.createElement('option');
+                            option.value = months;
+                            option.text = months;
+                            elements.repaymentPeriod.appendChild(option);
+                        });
+                    }
+                    updateButtonState();
+                }
+
+                function toggleFields() {
+                    const type = elements.type.value;
+                    elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
+                    elements.loanFields.style.display = (type === 'existing_loan' || type === 'new_loan') ? 'block' : 'none';
+                    elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
+                    elements.newLoanFields.style.display = type === 'new_loan' ? 'block' : 'none';
+                    elements.dueDate.disabled = type === 'contribution';
+                    if (type === 'contribution') {
+                        populateYears();
+                    } else {
+                        elements.dueDate.value = '';
+                        elements.checkDate.value = '';
+                    }
+                    toggleRepaymentFields();
+                    updateButtonState();
+                }
+
+                function updateDueDate() {
+                    const type = elements.type.value;
+                    if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
+                        const selectedMonth = elements.month.value.split('-');
+                        const year = parseInt(selectedMonth[0]);
+                        const month = parseInt(selectedMonth[1]) - 1;
+                        let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
+                        dueDate.setUTCDate(10);
+                        elements.dueDate.value = isNaN(dueDate.getTime()) ? new Date().toISOString().split('T')[0] : new Date(dueDate).toISOString().split('T')[0];
+                    }
+                    updateButtonState();
+                }
+
+                function updateButtonState() {
+                    const type = elements.type.value;
+                    const amount = elements.amount.value;
+                    const year = elements.year.value;
+                    const month = elements.month.value;
+                    const dueDate = elements.dueDate.value;
+                    const checkDate = elements.checkDate.value;
+                    const loanType = elements.loanType.value;
+                    const repaymentPeriod = elements.repaymentPeriod.value;
+                    const idNumber = elements.idNumber.value;
+                    const name = elements.name.value;
+                    const email = elements.email.value;
+
+                    const isAmountValid = amount && parseFloat(amount) > 0;
+                    let isValid = false;
+
+                    if (type === 'contribution') {
+                        isValid = isAmountValid && year && month && dueDate && checkDate;
+                    } else if (type === 'existing_loan') {
+                        isValid = isAmountValid && loanType && dueDate && checkDate;
+                    } else if (type === 'new_loan') {
+                        isValid = isAmountValid && loanType && repaymentPeriod && idNumber && name && email;
+                    }
+
+                    elements.calcButton.disabled = isCalculating || !isValid;
+                }
+
+                function initGapi() {
+                    if (!window.gapi) {
+                        logError('Google API script failed to load. Please check your internet connection.', {});
+                        return Promise.reject('Google API not loaded');
+                    }
+                    return new Promise((resolve, reject) => {
+                        gapi.load('client:auth2', () => {
+                            gapi.client.init({
+                                clientId: CONFIG.CLIENT_ID,
+                                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                            }).then(() => {
+                                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
+                                updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+                                resolve();
+                            }).catch(err => {
+                                logError('Google API initialization failed: ' + err.message, err);
+                                reject(err);
+                            });
+                        });
+                    });
+                }
+
+                function updateSignInStatus(isSignedIn) {
+                    if (!isSignedIn) {
+                        gapi.auth2.getAuthInstance().signIn().catch(err => {
+                            logError('Google Sign-In failed: ' + err.message, err);
+                        });
+                    }
+                }
+
+                async function appendLoanApplication(data) {
+                    try {
+                        elements.result.innerHTML = '<span style="color: #34c759;">Submitting application...</span>';
+                        const response = await gapi.client.sheets.spreadsheets.values.append({
+                            spreadsheetId: CONFIG.SPREADSHEET_ID,
+                            range: 'Loan Applications!A:I',
+                            valueInputOption: 'USER_ENTERED',
+                            resource: {
+                                values: [[
+                                    data.applicationId,
+                                    data.idNumber,
+                                    data.name,
+                                    data.email,
+                                    data.loanType,
+                                    data.repaymentPeriod,
+                                    data.amount,
+                                    new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' }),
+                                    'Pending'
+                                ]]
+                            }
+                        });
+                        elements.result.innerHTML = '<span style="color: #34c759;">Application submitted successfully!</span>';
+                        return response;
+                    } catch (err) {
+                        throw new Error('Failed to append loan application: ' + err.message);
+                    }
+                }
+
+                async function appendInstallments(data, schedule) {
+                    try {
+                        const values = schedule.map(row => [
+                            data.applicationId,
+                            data.idNumber,
+                            row.month,
+                            row.dueDate,
+                            row.payment,
+                            0,
+                            '',
+                            row.balance
+                        ]);
+                        const response = await gapi.client.sheets.spreadsheets.values.append({
+                            spreadsheetId: CONFIG.SPREADSHEET_ID,
+                            range: 'Installments!A:H',
+                            valueInputOption: 'USER_ENTERED',
+                            resource: { values }
+                        });
+                        return response;
+                    } catch (err) {
+                        throw new Error('Failed to append installments: ' + err.message);
+                    }
+                }
+
+                async function sendNotifications(data) {
+                    try {
+                        elements.result.innerHTML = '<span style="color: #34c759;">Sending notifications...</span>';
+                        const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                applicationId: data.applicationId,
+                                amount: data.amount,
+                                firstName: data.name.split(' ')[0],
+                                dateTime: new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.status !== 'success') throw new Error(result.message || 'Notification request failed');
+                        elements.result.innerHTML = '<span style="color: #34c759;">Application and notifications submitted successfully!</span>';
+                    } catch (err) {
+                        logError('Error sending notifications: ' + err.message, err);
+                    }
+                }
+
+                async function calculate() {
+                    const validationError = validateInputs();
+                    if (validationError) {
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        if (resultChartInstance) resultChartInstance.destroy();
+                        return;
+                    }
+
+                    isCalculating = true;
+                    elements.calcButton.classList.add('loading');
+                    elements.calcButton.disabled = true;
+                    showProgress();
+
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        const type = elements.type.value;
+                        const amount = parseFloat(elements.amount.value);
+                        let tableHTML = `
+                            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Field</th>
+                                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
+                                </tr>
+                        `;
+
+                        if (type === 'contribution') {
+                            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+                            const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+                            const penalty = calculateContributionPenalty(amount, daysDelayed);
+                            const totalOwed = amount + penalty;
+                            tableHTML += `
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                            `;
+                            tableHTML += '</table>';
+                            lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
+                            createResultChart(lastResult);
+                            saveCalculation(lastResult);
+                            if (window.innerHeight < 600) {
+                                elements.modalResult.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'flex';
+                            } else {
+                                elements.result.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'none';
+                            }
+                            elements.downloadButton.style.display = 'flex';
+                        } else if (type === 'existing_loan') {
+                            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+                            const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+                            const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
+                            tableHTML += `
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                                ${daysDelayed > 7 ? `
+                                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
+                                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
+                                ` : ''}
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                            `;
+                            tableHTML += '</table>';
+                            lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
+                            createResultChart(lastResult);
+                            saveCalculation(lastResult);
+                            if (window.innerHeight < 600) {
+                                elements.modalResult.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'flex';
+                            } else {
+                                elements.result.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'none';
+                            }
+                            elements.downloadButton.style.display = 'flex';
+                        } else if (type === 'new_loan') {
+                            const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
+                            const loanType = elements.loanType.value;
+                            const { totalOwed, interest, amortization, termMonths } = calculateNewLoan(amount, loanType, repaymentPeriod);
+                            tableHTML += `
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                                <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                            `;
+                            if (amortization.length > 0) {
+                                tableHTML += `
+                                    <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
+                                    <tr><td colspan="2">
+                                        <table style="width: 100%; border-collapse: collapse;">
+                                            <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                                                <th>Month</th><th>Payment (KES)</th><th>Interest (KES)</th><th>Principal (KES)</th><th>Balance (KES)</th>
+                                            </tr>
+                                `;
+                                amortization.forEach(row => {
+                                    tableHTML += `
+                                        <tr>
+                                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.month}</td>
+                                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.payment}</td>
+                                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.interest}</td>
+                                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.principal}</td>
+                                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.balance}</td>
+                                        </tr>
+                                    `;
+                                });
+                                tableHTML += '</table></td></tr>';
+                            }
+                            tableHTML += '</table>';
+                            lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
+                            elements.resultChart.style.display = 'none';
+                            elements.modalResultChart.style.display = 'none';
+                            if (resultChartInstance) resultChartInstance.destroy();
+                            saveCalculation(lastResult);
+
+                            try {
+                                await initGapi();
+                                const data = {
+                                    applicationId: `APP${Date.now()}`,
+                                    idNumber: elements.idNumber.value,
+                                    name: elements.name.value,
+                                    email: elements.email.value,
+                                    loanType: loanType,
+                                    repaymentPeriod: repaymentPeriod,
+                                    amount: amount
+                                };
+                                await appendLoanApplication(data);
+                                const schedule = amortization.map(row => ({
+                                    month: row.month,
+                                    dueDate: new Date(2025, 7 + row.month, 8).toISOString().split('T')[0],
+                                    payment: row.payment,
+                                    balance: row.balance
+                                }));
+                                await appendInstallments(data, schedule);
+                                await sendNotifications(data);
+                            } catch (err) {
+                                logError('Failed to submit loan application: ' + err.message, err);
+                            }
+
+                            if (window.innerHeight < 600) {
+                                elements.modalResult.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'flex';
+                            } else {
+                                elements.result.innerHTML = tableHTML;
+                                elements.resultModal.style.display = 'none';
+                            }
+                            elements.downloadButton.style.display = 'flex';
+                        }
+                    } catch (error) {
+                        logError('Calculation failed', error);
+                        elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation. Please try again.</span>`;
+                        elements.resultChart.style.display = 'none';
+                        elements.modalResultChart.style.display = 'none';
+                        if (resultChartInstance) resultChartInstance.destroy();
+                    } finally {
+                        resetButton();
+                        hideProgress();
+                    }
+                }
+
+                function resetButton() {
+                    isCalculating = false;
+                    elements.calcButton.classList.remove('loading');
+                    updateButtonState();
+                }
+
+                function closeResultModal() {
+                    elements.resultModal.style.display = 'none';
+                    elements.result.innerHTML = '';
+                    elements.downloadButton.style.display = 'none';
+                    elements.resultChart.style.display = 'none';
+                    elements.modalResultChart.style.display = 'none';
+                    if (resultChartInstance) resultChartInstance.destroy();
+                }
+
+                function downloadPDF() {
+                    console.log('[i-8 SMART BOT] Starting PDF generation');
+                    if (!lastResult) {
+                        alert('Please calculate a result first.');
+                        return;
+                    }
+
+                    if (!window.jspdf || !window.jspdf.jsPDF || !window.jspdf.jsPDF.prototype.autoTable) {
+                        alert('PDF generation libraries failed to load. Please check your internet connection and try again.');
+                        return;
+                    }
+
+                    let name = prompt('Enter your name:', 'Customer');
+                    if (!name || name.trim() === '') {
+                        alert('Name is mandatory to generate the PDF report.');
+                        return;
+                    }
+                    name = name.trim();
+
+                    try {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+                        let yOffset = 10;
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const pageHeight = doc.internal.pageSize.getHeight();
+                        const margin = 10;
+                        const maxWidth = pageWidth - 2 * margin;
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(12);
+
+                        doc.setFontSize(16);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
+                        yOffset += 10;
+
+                        const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
+                        yOffset += 10;
+
+                        let content = `Dear ${sanitizeInput(name)},\n\n`;
+                        content += `This document provides a detailed summary of your ${lastResult.type === 'contribution' ? 'deposit' : lastResult.type === 'existing_loan' ? 'existing loan' : 'new loan'} calculation as of ${today}. Please review the details below.\n\n`;
+                        let lines = doc.splitTextToSize(content, maxWidth);
+                        doc.setFontSize(12);
+                        doc.text(lines, margin, yOffset);
+                        yOffset += lines.length * 7 + 10;
+
+                        if (lastResult.type === 'contribution') {
+                            const penalty = lastResult.penalty;
+                            const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                            const monthParts = lastResult.month.split('-');
+                            const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+                            content = `Your deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+                            content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
+                            content += `Penalty Details:\n`;
+                            content += penalty > 0
+                                ? `- A flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
+                                + `- For delays beyond 7 days, an additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) is charged.\n`
+                                + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
+                                : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
+                            content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                            lines = doc.splitTextToSize(content, maxWidth);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(11);
+                            doc.text(lines, margin, yOffset);
+                            yOffset += lines.length * 7 + 10;
+
+                            if (resultChartInstance) {
+                                try {
+                                    if (yOffset + 80 > pageHeight - margin) {
+                                        doc.addPage();
+                                        yOffset = margin;
+                                    }
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('Deposit Breakdown Chart:', margin, yOffset);
+                                    yOffset += 10;
+                                    const chartImage = resultChartInstance.toBase64Image();
+                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                                    yOffset += 90;
+                                } catch (error) {
+                                    logError('Failed to add chart to PDF', error);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setFontSize(10);
+                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                                    yOffset += 10;
+                                }
+                            }
+                        } else if (lastResult.type === 'existing_loan') {
+                            const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                            let loanType, interestRate;
+                            if (lastResult.loanType === 'short') {
+                                loanType = 'Short Term (30 Days)';
+                                interestRate = '5%';
+                            } else if (lastResult.loanType === 'medium') {
+                                loanType = 'Medium Term (90 Days)';
+                                interestRate = '10%';
+                            } else {
+                                loanType = 'Long Term (365 Days)';
+                                interestRate = '15%';
+                            }
+                            content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+                            content += `Loan Details:\n`;
+                            content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                            if (lastResult.daysDelayed > 7) {
+                                content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
+                                content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
+                            } else {
+                                content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
+                            }
+                            content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                            lines = doc.splitTextToSize(content, maxWidth);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(11);
+                            doc.text(lines, margin, yOffset);
+                            yOffset += lines.length * 7 + 10;
+
+                            if (resultChartInstance) {
+                                try {
+                                    if (yOffset + 80 > pageHeight - margin) {
+                                        doc.addPage();
+                                        yOffset = margin;
+                                    }
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.text('Existing Loan Breakdown Chart:', margin, yOffset);
+                                    yOffset += 10;
+                                    const chartImage = resultChartInstance.toBase64Image();
+                                    doc.addImage(chartImage, 'PNG', margin, yOffset, 80, 80);
+                                    yOffset += 90;
+                                } catch (error) {
+                                    logError('Failed to add chart to PDF', error);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.setFontSize(10);
+                                    doc.text('Chart unavailable due to rendering issue.', margin, yOffset);
+                                    yOffset += 10;
+                                }
+                            }
+                        } else if (lastResult.type === 'new_loan') {
+                            let loanType, interestRate;
+                            if (lastResult.loanType === 'short') {
+                                loanType = 'Short Term (30 Days)';
+                                interestRate = '5%';
+                            } else if (lastResult.loanType === 'medium') {
+                                loanType = 'Medium Term (90 Days)';
+                                interestRate = '10%';
+                            } else {
+                                loanType = 'Long Term (365 Days)';
+                                interestRate = '15%';
+                            }
+                            content = `Your ${loanType} new loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+                            content += `Loan Details:\n`;
+                            content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                            content += `- Total Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                            lines = doc.splitTextToSize(content, maxWidth);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(11);
+                            doc.text(lines, margin, yOffset);
+                            yOffset += lines.length * 7 + 10;
+
+                            if (lastResult.amortization && lastResult.amortization.length > 0) {
+                                if (yOffset + 20 > pageHeight - margin) {
+                                    doc.addPage();
+                                    yOffset = margin;
+                                }
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Amortization Schedule:', margin, yOffset);
+                                yOffset += 7;
+                                const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                                const tableData = lastResult.amortization.map(row => [
+                                    row.month.toString(),
+                                    row.payment,
+                                    row.interest,
+                                    row.principal,
+                                    row.balance
+                                ]);
+                                doc.autoTable({
+                                    head: [headers],
+                                    body: tableData,
+                                    startY: yOffset,
+                                    styles: {
+                                        fontSize: 8,
+                                        cellPadding: 2,
+                                        lineColor: [26, 115, 232],
+                                        lineWidth: 0.3,
+                                        textColor: [44, 62, 80]
+                                    },
+                                    headStyles: {
+                                        fillColor: [26, 115, 232],
+                                        textColor: [255, 255, 255],
+                                        fontStyle: 'bold'
+                                    },
+                                    alternateRowStyles: {
+                                        fillColor: [245, 247, 250]
+                                    },
+                                    margin: { left: margin, right: margin }
+                                });
+                                yOffset = doc.lastAutoTable.finalY + 10;
+                            }
+                        }
+
+                        if (yOffset + 20 > pageHeight - margin) {
+                            doc.addPage();
+                            yOffset = margin;
+                        }
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        content = `Kindly update your account to help i-8 Ltd grow and serve you better.\n\n`;
+                        lines = doc.splitTextToSize(content, maxWidth);
+                        doc.text(lines, margin, yOffset);
+                        yOffset += lines.length * 7;
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Regards,', margin, yOffset);
+                        yOffset += 7;
+                        doc.setFont('helvetica', 'italic');
+                        doc.text('i-8 Ltd. (info@i8ltd.co.ke)', margin, yOffset);
+
+                        doc.save(`${sanitizeInput(name)}_i-8_Smart_Bot_Result.pdf`);
+                    } catch (error) {
+                        logError('PDF generation failed', error);
+                        alert('Failed to generate PDF. Please ensure you have an internet connection and try again.');
+                    }
+                }
+
+                document.getElementById('calculator-form').addEventListener('submit', async e => {
+                    e.preventDefault();
+                    await calculate();
+                });
+
+                window.addEventListener('load', () => {
+                    populateYears();
+                    toggleFields();
+                    elements.amount.addEventListener('input', updateButtonState);
+                    elements.loanType.addEventListener('change', updateButtonState);
+                    elements.repaymentPeriod.addEventListener('change', updateButtonState);
+                    elements.idNumber.addEventListener('input', updateButtonState);
+                    elements.name.addEventListener('input', updateButtonState);
+                    elements.email.addEventListener('input', updateButtonState);
+                    initGapi().catch(err => {
+                        logError('Initialization failed: ' + err.message, err);
+                    });
+                });
+            </script>
+        </body>
+        </html>
