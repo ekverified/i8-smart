@@ -102,7 +102,7 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
-        #contributionFields, #loanFields, #repaymentFields, #newLoanFields {
+        #contributionFields, #loanFields, #repaymentFields {
             margin-top: 0.3rem;
             display: none;
         }
@@ -303,7 +303,7 @@
             outline: 2px solid #34c759;
             outline-offset: 2px;
         }
-        #type, #amount, #year, #month, #dueDate, #checkDate, #loanType, #repaymentPeriod, #idNumber, #name, #email {
+        #type, #amount, #year, #month, #dueDate, #checkDate, #loanType, #repaymentPeriod {
             --field-index: 0;
         }
         #type { --field-index: 1; }
@@ -314,14 +314,10 @@
         #checkDate { --field-index: 6; }
         #loanType { --field-index: 7; }
         #repaymentPeriod { --field-index: 8; }
-        #idNumber { --field-index: 9; }
-        #name { --field-index: 10; }
-        #email { --field-index: 11; }
     </style>
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha512-JWqWZuE2J3Cwrt2m+ZrCx7E2tN3iT2Jni3nO0rLte3MkuZOC/l0zW1SCU8LYzunlYQ6oFwrrgA4kJCe3v0pF1dg==" crossorigin="anonymous"></script>
-    <script src="https://apis.google.com/js/api.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -331,80 +327,64 @@
                 <div class="sub-title">bot</div>
             </div>
         </div>
-        <form id="calculator-form">
-            <label for="type">Type:</label>
-            <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loan" onchange="toggleFields()">
-                <option value="contribution">Deposit</option>
-                <option value="existing_loan">Existing Loan</option>
-                <option value="new_loan">New Loan</option>
+        <label for="type">Type:</label>
+        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loan" onchange="toggleFields()">
+            <option value="contribution">Deposit</option>
+            <option value="existing_loan">Existing Loan</option>
+            <option value="new_loan">New Loan</option>
+        </select>
+        <span id="typeError" class="error"></span>
+
+        <label for="amount">Amount (KES):</label>
+        <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
+        <span id="amountError" class="error"></span>
+
+        <div id="contributionFields">
+            <label for="year">Contribution Year:</label>
+            <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
+            <span id="yearError" class="error"></span>
+
+            <label for="month">Contribution Month:</label>
+            <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
+            <span id="monthError" class="error"></span>
+        </div>
+
+        <div id="dateFields">
+            <label for="dueDate">Due Date:</label>
+            <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+            <span id="dueDateError" class="error"></span>
+
+            <label for="checkDate">Check Date:</label>
+            <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+            <span id="checkDateError" class="error"></span>
+        </div>
+
+        <div id="loanFields">
+            <label for="loanType">Loan Type:</label>
+            <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
+                <option value="short">Short Term (30 Days)</option>
+                <option value="medium">Medium Term (90 Days)</option>
+                <option value="long">Long Term (365 Days)</option>
             </select>
-            <span id="typeError" class="error"></span>
+            <span id="loanTypeError" class="error"></span>
 
-            <label for="amount">Amount (KES):</label>
-            <input type="number" id="amount" min="1" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
-            <span id="amountError" class="error"></span>
-
-            <div id="contributionFields">
-                <label for="year">Contribution Year:</label>
-                <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
-                <span id="yearError" class="error"></span>
-
-                <label for="month">Contribution Month:</label>
-                <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
-                <span id="monthError" class="error"></span>
-            </div>
-
-            <div id="dateFields">
-                <label for="dueDate">Due Date:</label>
-                <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
-                <span id="dueDateError" class="error"></span>
-
-                <label for="checkDate">Check Date:</label>
-                <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
-                <span id="checkDateError" class="error"></span>
-            </div>
-
-            <div id="loanFields">
-                <label for="loanType">Loan Type:</label>
-                <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
-                    <option value="short">Short Term (30 Days)</option>
-                    <option value="medium">Medium Term (90 Days)</option>
-                    <option value="long">Long Term (365 Days)</option>
+            <div id="repaymentFields">
+                <label for="repaymentPeriod">Repayment Period (Months):</label>
+                <select id="repaymentPeriod" aria-label="Select repayment period">
+                    <option value="">Select months</option>
                 </select>
-                <span id="loanTypeError" class="error"></span>
-
-                <div id="repaymentFields">
-                    <label for="repaymentPeriod">Repayment Period (Months):</label>
-                    <select id="repaymentPeriod" aria-label="Select repayment period">
-                        <option value="">Select months</option>
-                    </select>
-                    <span id="repaymentPeriodError" class="error"></span>
-                </div>
+                <span id="repaymentPeriodError" class="error"></span>
             </div>
+        </div>
 
-            <div id="newLoanFields">
-                <label for="idNumber">ID Number:</label>
-                <input type="text" id="idNumber" placeholder="Enter ID Number" aria-label="Enter ID Number" required>
-                <span id="idNumberError" class="error"></span>
-
-                <label for="name">Name:</label>
-                <input type="text" id="name" placeholder="Enter Full Name" aria-label="Enter Full Name" required>
-                <span id="nameError" class="error"></span>
-
-                <label for="email">Email:</label>
-                <input type="email" id="email" placeholder="Enter Email Address" aria-label="Enter Email Address" required>
-                <span id="emailError" class="error"></span>
-            </div>
-
-            <div class="button-container">
-                <button type="submit" id="calcButton" aria-label="Calculate penalties or submit loan application">Calc</button>
-                <button id="downloadButton" style="display: none;" onclick="downloadPDF()" aria-label="Download PDF">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#1a73e8">
-                        <path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7zm8 3v-3h-2v3H7l5 5 5-5h-4z"/>
-                    </svg>
-                </button>
-            </div>
-        </form>
+        <div class="button-container">
+            <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+            <button id="downloadButton" style="display: none;" onclick="downloadPDF()" aria-label="Download PDF">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#1a73e8">
+                    <path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7zm8 3v-3h-2v3H7l5 5 5-5h-4z"/>
+                </svg>
+            </button>
+        </div>
         <div class="progress-bar" id="progressBar">
             <div id="progressFill"></div>
         </div>
@@ -432,11 +412,7 @@
             LOAN_LONG_MINIMUM: 30000,
             ROLLOVER_INTEREST: 0.05,
             LOAN_DAILY_PENALTY: 0.005,
-            PENALTY_START_DAY: 1,
-            SPREADSHEET_ID: '1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10',
-            CLIENT_ID: '46347675750-tfr3pj2bcvcdv0i3t3i0j2iave9lau2p.apps.googleusercontent.com',
-            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzqePT4Ajc4OSsnQjxY5sTg7JKag0--s-Dcqe_sey4rjP2WsOW9y9traz8ZRRse4gjrrw/exec',
-            VIEW_ONLY_LINK: 'https://docs.google.com/spreadsheets/d/1-HLzwKkb6sAtJskBiFn1Fsbp4WrfkLAD10AydcXCj10/edit?usp=sharing'
+            PENALTY_START_DAY: 1
         };
 
         const elements = {
@@ -452,10 +428,6 @@
             loanType: document.getElementById('loanType'),
             repaymentFields: document.getElementById('repaymentFields'),
             repaymentPeriod: document.getElementById('repaymentPeriod'),
-            newLoanFields: document.getElementById('newLoanFields'),
-            idNumber: document.getElementById('idNumber'),
-            name: document.getElementById('name'),
-            email: document.getElementById('email'),
             calcButton: document.getElementById('calcButton'),
             downloadButton: document.getElementById('downloadButton'),
             result: document.getElementById('result'),
@@ -473,10 +445,7 @@
                 dueDate: document.getElementById('dueDateError'),
                 checkDate: document.getElementById('checkDateError'),
                 loanType: document.getElementById('loanTypeError'),
-                repaymentPeriod: document.getElementById('repaymentPeriodError'),
-                idNumber: document.getElementById('idNumberError'),
-                name: document.getElementById('nameError'),
-                email: document.getElementById('emailError')
+                repaymentPeriod: document.getElementById('repaymentPeriodError')
             }
         };
 
@@ -492,7 +461,6 @@
 
         function logError(message, error) {
             console.error(`[i-8 SMART BOT] ${message}`, error);
-            elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(message)}</span>`;
         }
 
         function showProgress() {
@@ -519,9 +487,6 @@
             const month = elements.month.value;
             const loanType = elements.loanType.value;
             const repaymentPeriod = elements.repaymentPeriod.value;
-            const idNumber = elements.idNumber.value;
-            const name = elements.name.value;
-            const email = elements.email.value;
             let dueDate, checkDate;
 
             if (type !== 'new_loan') {
@@ -556,7 +521,6 @@
                     errors.push('Amount below minimum for Long Term loan');
                 }
             }
-
             if (type === 'contribution') {
                 if (!year) {
                     elements.errors.year.textContent = 'Please select a year.';
@@ -606,21 +570,6 @@
                     elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
                     elements.errors.repaymentPeriod.style.display = 'block';
                     errors.push('Invalid repayment period');
-                }
-                if (!idNumber.match(/^\d{8,10}$/)) {
-                    elements.errors.idNumber.textContent = 'Invalid ID Number (8-10 digits)';
-                    elements.errors.idNumber.style.display = 'block';
-                    errors.push('Invalid ID Number');
-                }
-                if (!name) {
-                    elements.errors.name.textContent = 'Please enter a name.';
-                    elements.errors.name.style.display = 'block';
-                    errors.push('Invalid name');
-                }
-                if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                    elements.errors.email.textContent = 'Invalid Email';
-                    elements.errors.email.style.display = 'block';
-                    errors.push('Invalid email');
                 }
             }
 
@@ -700,6 +649,7 @@
                 return;
             }
 
+            // Check if Chart.js is loaded
             if (!window.Chart) {
                 logError('Chart.js not loaded');
                 elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed. Please check your internet connection and try again.</span>`;
@@ -717,6 +667,7 @@
                 return;
             }
 
+            // Ensure canvas is visible before rendering
             ctx.style.display = 'block';
 
             let labels, chartData, chartTitle;
@@ -734,6 +685,7 @@
                 chartTitle = 'Existing Loan Breakdown (KES)';
             }
 
+            // Validate chart data
             if (!chartData.every(value => Number.isFinite(value) && value >= 0)) {
                 logError('Invalid chart data', chartData);
                 elements.result.innerHTML = `<span style="color: #e74c3c;">Chart could not be displayed due to invalid data.</span>`;
@@ -864,7 +816,6 @@
             elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
             elements.loanFields.style.display = (type === 'existing_loan' || type === 'new_loan') ? 'block' : 'none';
             elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
-            elements.newLoanFields.style.display = type === 'new_loan' ? 'block' : 'none';
             elements.dueDate.disabled = type === 'contribution';
             if (type === 'contribution') {
                 populateYears();
@@ -898,9 +849,6 @@
             const checkDate = elements.checkDate.value;
             const loanType = elements.loanType.value;
             const repaymentPeriod = elements.repaymentPeriod.value;
-            const idNumber = elements.idNumber.value;
-            const name = elements.name.value;
-            const email = elements.email.value;
 
             const isAmountValid = amount && parseFloat(amount) > 0;
             let isValid = false;
@@ -910,137 +858,10 @@
             } else if (type === 'existing_loan') {
                 isValid = isAmountValid && loanType && dueDate && checkDate;
             } else if (type === 'new_loan') {
-                isValid = isAmountValid && loanType && repaymentPeriod && idNumber && name && email;
+                isValid = isAmountValid && loanType && repaymentPeriod;
             }
 
             elements.calcButton.disabled = isCalculating || !isValid;
-        }
-
-        function initGapi() {
-            return new Promise((resolve, reject) => {
-                if (!window.gapi) {
-                    logError('Google API script failed to load. Retrying...', {});
-                    const script = document.createElement('script');
-                    script.src = 'https://apis.google.com/js/api.js';
-                    script.onload = () => {
-                        gapi.load('client:auth2', () => {
-                            gapi.client.init({
-                                clientId: CONFIG.CLIENT_ID,
-                                scope: 'https://www.googleapis.com/auth/spreadsheets',
-                                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-                            }).then(() => {
-                                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
-                                updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-                                resolve();
-                            }).catch(err => {
-                                logError('Google API initialization failed: ' + err.message, err);
-                                reject(err);
-                            });
-                        });
-                    };
-                    script.onerror = () => {
-                        logError('Failed to load Google API script', {});
-                        reject(new Error('Google API script load failed'));
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    gapi.load('client:auth2', () => {
-                        gapi.client.init({
-                            clientId: CONFIG.CLIENT_ID,
-                            scope: 'https://www.googleapis.com/auth/spreadsheets',
-                            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
-                        }).then(() => {
-                            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
-                            updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-                            resolve();
-                        }).catch(err => {
-                            logError('Google API initialization failed: ' + err.message, err);
-                            reject(err);
-                        });
-                    });
-                }
-            });
-        }
-
-        function updateSignInStatus(isSignedIn) {
-            if (!isSignedIn) {
-                gapi.auth2.getAuthInstance().signIn().catch(err => {
-                    logError('Google Sign-In failed: ' + err.message, err);
-                });
-            }
-        }
-
-        async function appendLoanApplication(data) {
-            try {
-                elements.result.innerHTML = '<span style="color: #34c759;">Submitting application...</span>';
-                const response = await gapi.client.sheets.spreadsheets.values.append({
-                    spreadsheetId: CONFIG.SPREADSHEET_ID,
-                    range: 'Loan Applications!A:I',
-                    valueInputOption: 'USER_ENTERED',
-                    resource: {
-                        values: [[
-                            data.applicationId,
-                            data.idNumber,
-                            data.name,
-                            data.email,
-                            data.loanType,
-                            data.repaymentPeriod,
-                            data.amount,
-                            new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' }),
-                            'Pending'
-                        ]]
-                    }
-                });
-                elements.result.innerHTML = '<span style="color: #34c759;">Application submitted successfully!</span>';
-                return response;
-            } catch (err) {
-                throw new Error('Failed to append loan application: ' + err.message);
-            }
-        }
-
-        async function appendInstallments(data, schedule) {
-            try {
-                const values = schedule.map(row => [
-                    data.applicationId,
-                    data.idNumber,
-                    row.month,
-                    row.dueDate,
-                    row.payment,
-                    0,
-                    '',
-                    row.balance
-                ]);
-                const response = await gapi.client.sheets.spreadsheets.values.append({
-                    spreadsheetId: CONFIG.SPREADSHEET_ID,
-                    range: 'Installments!A:H',
-                    valueInputOption: 'USER_ENTERED',
-                    resource: { values }
-                });
-                return response;
-            } catch (err) {
-                throw new Error('Failed to append installments: ' + err.message);
-            }
-        }
-
-        async function sendNotifications(data) {
-            try {
-                elements.result.innerHTML = '<span style="color: #34c759;">Sending notifications...</span>';
-                const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        applicationId: data.applicationId,
-                        amount: data.amount,
-                        firstName: data.name.split(' ')[0],
-                        dateTime: new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' })
-                    })
-                });
-                const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message || 'Notification request failed');
-                elements.result.innerHTML = '<span style="color: #34c759;">Application and notifications submitted successfully!</span>';
-            } catch (err) {
-                logError('Error sending notifications: ' + err.message, err);
-            }
         }
 
         async function calculate() {
@@ -1086,14 +907,6 @@
                     lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
                     createResultChart(lastResult);
                     saveCalculation(lastResult);
-                    if (window.innerHeight < 600) {
-                        elements.modalResult.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'flex';
-                    } else {
-                        elements.result.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'none';
-                    }
-                    elements.downloadButton.style.display = 'flex';
                 } else if (type === 'existing_loan') {
                     const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
                     const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
@@ -1112,14 +925,6 @@
                     lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
                     createResultChart(lastResult);
                     saveCalculation(lastResult);
-                    if (window.innerHeight < 600) {
-                        elements.modalResult.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'flex';
-                    } else {
-                        elements.result.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'none';
-                    }
-                    elements.downloadButton.style.display = 'flex';
                 } else if (type === 'new_loan') {
                     const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
                     const loanType = elements.loanType.value;
@@ -1156,40 +961,17 @@
                     elements.modalResultChart.style.display = 'none';
                     if (resultChartInstance) resultChartInstance.destroy();
                     saveCalculation(lastResult);
-
-                    try {
-                        await initGapi();
-                        const data = {
-                            applicationId: `APP${Date.now()}`,
-                            idNumber: elements.idNumber.value,
-                            name: elements.name.value,
-                            email: elements.email.value,
-                            loanType: loanType,
-                            repaymentPeriod: repaymentPeriod,
-                            amount: amount
-                        };
-                        await appendLoanApplication(data);
-                        const schedule = amortization.map(row => ({
-                            month: row.month,
-                            dueDate: new Date(2025, 7 + row.month, 8).toISOString().split('T')[0],
-                            payment: row.payment,
-                            balance: row.balance
-                        }));
-                        await appendInstallments(data, schedule);
-                        await sendNotifications(data);
-                    } catch (err) {
-                        logError('Failed to submit loan application: ' + err.message, err);
-                    }
-
-                    if (window.innerHeight < 600) {
-                        elements.modalResult.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'flex';
-                    } else {
-                        elements.result.innerHTML = tableHTML;
-                        elements.resultModal.style.display = 'none';
-                    }
-                    elements.downloadButton.style.display = 'flex';
                 }
+
+                if (window.innerHeight < 600) {
+                    elements.modalResult.innerHTML = tableHTML;
+                    elements.resultModal.style.display = 'flex';
+                } else {
+                    elements.result.innerHTML = tableHTML;
+                    elements.resultModal.style.display = 'none';
+                }
+
+                elements.downloadButton.style.display = 'flex';
             } catch (error) {
                 logError('Calculation failed', error);
                 elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation. Please try again.</span>`;
@@ -1442,9 +1224,8 @@
             }
         }
 
-        document.getElementById('calculator-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            await calculate();
+        elements.calcButton.addEventListener('keypress', e => {
+            if (e.key === 'Enter') calculate();
         });
 
         window.addEventListener('load', () => {
@@ -1453,13 +1234,8 @@
             elements.amount.addEventListener('input', updateButtonState);
             elements.loanType.addEventListener('change', updateButtonState);
             elements.repaymentPeriod.addEventListener('change', updateButtonState);
-            elements.idNumber.addEventListener('input', updateButtonState);
-            elements.name.addEventListener('input', updateButtonState);
-            elements.email.addEventListener('input', updateButtonState);
-            initGapi().catch(err => {
-                logError('Initialization failed: ' + err.message, err);
-            });
         });
     </script>
 </body>
 </html>
+
