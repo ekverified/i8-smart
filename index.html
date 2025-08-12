@@ -486,10 +486,10 @@
             </button>
         </div>
         <label for="type">Type:</label>
-        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or Repayment Modes" onchange="toggleFields()">
+        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loans" onchange="toggleFields()">
             <option value="contribution">Deposit</option>
             <option value="existing_loan">Existing Loan</option>
-            <option value="apply_loan">Repayment Modes</option>
+            <option value="apply_loan">New Loans</option>
         </select>
         <span id="typeError" class="error"></span>
 
@@ -939,48 +939,25 @@
 
         async function generatePDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
+            const doc = new jsPDF();
             let yOffset = 10;
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 10;
-            const maxWidth = pageWidth - 2 * margin;
-            const lineHeight = 6;
-            const sectionSpacing = 8;
 
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(12);
-
-            function checkPageBreak(requiredHeight) {
-                if (yOffset + requiredHeight > pageHeight - margin) {
-                    doc.addPage();
-                    yOffset = margin;
-                    return true;
-                }
-                return false;
-            }
-
-            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
-            yOffset += lineHeight + sectionSpacing;
+            doc.setFontSize(14);
+            doc.text('i-8 SMART BOT Financial Report', 105, yOffset, { align: 'center' });
+            yOffset += 10;
 
             const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
-            yOffset += lineHeight;
+            doc.text(`Generated on: ${today}`, 200, yOffset, { align: 'right' });
+            yOffset += 10;
 
             let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.`;
-            let lines = doc.splitTextToSize(content, maxWidth);
-            checkPageBreak(lines.length * lineHeight + sectionSpacing);
-            doc.setFontSize(10);
+            let lines = doc.splitTextToSize(content, 190);
             doc.text(lines, margin, yOffset);
-            yOffset += lines.length * lineHeight + sectionSpacing;
+            yOffset += lines.length * 6 + 10;
 
             if (lastResult.type === 'contribution') {
                 const penalty = lastResult.penalty;
@@ -996,12 +973,10 @@
                     + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
                     : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
                 content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, maxWidth);
-                checkPageBreak(lines.length * lineHeight + sectionSpacing);
-                doc.setFont('helvetica', 'normal');
+                lines = doc.splitTextToSize(content, 190);
                 doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * lineHeight + sectionSpacing;
+                yOffset += lines.length * 6 + 10;
             } else if (lastResult.type === 'existing_loan') {
                 const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                 let loanType, interestRate;
@@ -1025,12 +1000,10 @@
                     content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
                 }
                 content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, maxWidth);
-                checkPageBreak(lines.length * lineHeight + sectionSpacing);
-                doc.setFont('helvetica', 'normal');
+                lines = doc.splitTextToSize(content, 190);
                 doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * lineHeight + sectionSpacing;
+                yOffset += lines.length * 6 + 10;
             } else if (lastResult.type === 'apply_loan') {
                 let loanType, interestRate;
                 if (lastResult.loanType === 'short') {
@@ -1047,20 +1020,16 @@
                 content += `Loan Details:\n`;
                 content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
                 content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, maxWidth);
-                checkPageBreak(lines.length * lineHeight + sectionSpacing);
-                doc.setFont('helvetica', 'normal');
+                lines = doc.splitTextToSize(content, 190);
                 doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * lineHeight + sectionSpacing;
+                yOffset += lines.length * 6 + 10;
 
                 if (lastResult.amortization && lastResult.amortization.length > 0) {
-                    const tableHeight = 10 + lastResult.amortization.length * 5;
-                    checkPageBreak(tableHeight + sectionSpacing);
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(10);
                     doc.text('Amortization Schedule:', margin, yOffset);
-                    yOffset += lineHeight;
+                    yOffset += 10;
 
                     const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
                     const tableData = lastResult.amortization.map(row => [
@@ -1074,50 +1043,24 @@
                         head: [headers],
                         body: tableData,
                         startY: yOffset,
-                        styles: {
-                            fontSize: 8,
-                            cellPadding: 1.5,
-                            lineColor: [26, 115, 232],
-                            lineWidth: 0.2,
-                            textColor: [44, 62, 80],
-                            overflow: 'linebreak',
-                            cellWidth: 'auto'
-                        },
-                        headStyles: {
-                            fillColor: [26, 115, 232],
-                            textColor: [255, 255, 255],
-                            fontStyle: 'bold'
-                        },
-                        alternateRowStyles: {
-                            fillColor: [245, 247, 250]
-                        },
-                        margin: { left: margin, right: margin },
-                        columnStyles: {
-                            0: { cellWidth: 20 },
-                            1: { cellWidth: 40 },
-                            2: { cellWidth: 40 },
-                            3: { cellWidth: 40 },
-                            4: { cellWidth: 40 }
-                        },
-                        didDrawPage: (data) => {
-                            yOffset = data.table.finalY + sectionSpacing;
-                        }
+                        styles: { fontSize: 10, cellPadding: 2 },
+                        headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255] },
+                        alternateRowStyles: { fillColor: [245, 247, 250] }
                     });
-                    yOffset += sectionSpacing;
+                    yOffset = doc.lastAutoTable.finalY + 10;
                 }
             }
 
-            checkPageBreak(lineHeight * 3);
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(9);
             content = `Kindly update your account to help i-8 Ltd grow and serve you better.`;
-            lines = doc.splitTextToSize(content, maxWidth);
+            lines = doc.splitTextToSize(content, 190);
             doc.text(lines, margin, yOffset);
-            yOffset += lines.length * lineHeight;
+            yOffset += lines.length * 6;
 
             doc.setFont('helvetica', 'bold');
             doc.text('Regards,', margin, yOffset);
-            yOffset += lineHeight;
+            yOffset += 6;
             doc.setFont('helvetica', 'italic');
             doc.text('i-8 Ltd. (insightfuleightcoltd@gmail.com)', margin, yOffset);
 
@@ -1129,16 +1072,14 @@
                 alert('No results available to share. Please calculate first.');
                 return;
             }
-
             try {
                 const pdfBlob = await generatePDF();
                 const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                if (navigator.share) {
                     await navigator.share({
+                        files: [pdfFile],
                         title: 'i-8 SMART BOT Calculation Results',
-                        text: 'View your financial calculation results from i-8 SMART BOT.',
-                        files: [pdfFile]
+                        text: 'View your financial calculation results from i-8 SMART BOT.'
                     });
                 } else {
                     const url = URL.createObjectURL(pdfBlob);
@@ -1162,7 +1103,7 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                alert('PDF downloaded due to sharing error. You can now share it via WhatsApp or email.');
+                alert('Sharing not supported. PDF downloaded for manual sharing.');
             }
         }
 
@@ -1238,7 +1179,7 @@
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount to Pay (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                     `;
-                    resultText += `Type: Repayment Modes\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
+                    resultText += `Type: New Loans\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
                     if (amortization.length > 0) {
                         tableHTML += `
                             <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
