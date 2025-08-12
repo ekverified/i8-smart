@@ -11,6 +11,8 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -61,12 +63,52 @@
             font-weight: 500;
             text-transform: lowercase;
         }
+        .apply-now-section {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .apply-now-section button {
+            background: linear-gradient(135deg, #e74c3c, #ff6b6b, #e74c3c);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
+            animation: bounce 1.5s infinite, shine 3s infinite;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes shine {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .apply-now-section button {
+            background-size: 200% 200%;
+            background-position: 0 0;
+        }
+        .apply-now-section button:hover {
+            background: linear-gradient(135deg, #ff6b6b, #e74c3c);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.6);
+            transform: scale(1.05);
+        }
+        .apply-now-section button:active {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            transform: scale(0.95);
+        }
         label {
             display: block;
             margin: 0.5rem 0 0.3rem;
             color: #2c3e50;
             font-size: clamp(0.8rem, 2.2vw, 0.9rem);
-            font-weight: 500;
+            font-weight: 600;
             animation: fadeIn 0.8s ease-out;
             animation-delay: calc(0.1s * var(--field-index));
         }
@@ -107,6 +149,10 @@
         #contributionFields, #loanFields, #repaymentFields {
             margin-top: 0.5rem;
             display: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #contributionFields.show, #loanFields.show, #repaymentFields.show {
+            opacity: 1;
         }
         .result {
             margin-top: 1rem;
@@ -117,9 +163,10 @@
             font-size: clamp(0.8rem, 2.2vw, 0.9rem);
             line-height: 1.5;
             border: 1px solid #e0e0e0;
-            overflow-x: auto;
             animation: resultEnter 0.5s ease-out;
             position: relative;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         @keyframes resultEnter {
             from { opacity: 0; transform: translateY(-10px); }
@@ -127,14 +174,14 @@
         }
         .result table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+            border-collapse: collapse;
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
         }
         .result th, .result td {
-            padding: 0.6rem;
+            padding: 0.4rem;
             border: 1px solid #d1d1d1;
             text-align: left;
+            white-space: nowrap;
         }
         .result th {
             background: linear-gradient(135deg, #1a73e8, #4285f4);
@@ -148,15 +195,23 @@
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background: none;
+            background: linear-gradient(135deg, #34c759, #4cd964);
             border: none;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
             cursor: pointer;
-            color: #1a73e8;
-            font-size: 1.2rem;
-            transition: color 0.3s;
+            color: #fff;
+            font-size: 1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
         }
         .result .share-button:hover {
-            color: #34c759;
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.5);
         }
         .button-container {
             display: flex;
@@ -274,20 +329,8 @@
             color: #e74c3c;
             transform: scale(1.2);
         }
-        #applyNowButton {
-            background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-            border-radius: 8px;
-            padding: 0.6rem 1.2rem;
-            width: auto;
-            height: auto;
-            font-size: clamp(0.9rem, 2.4vw, 1rem);
-        }
-        #applyNowButton:hover {
-            background: linear-gradient(135deg, #ff6b6b, #e74c3c);
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
-        }
-        #applyNowButton:active {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        .modal .result table {
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
         }
         @media (max-width: 600px) {
             .container {
@@ -307,9 +350,16 @@
                 padding: 1rem;
                 width: 95%;
             }
-            #applyNowButton {
-                padding: 0.5rem 1rem;
-                font-size: 0.8rem;
+            .apply-now-section button {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .result .share-button {
+                top: 0.5rem;
+                right: 0.5rem;
+                width: 1.8rem;
+                height: 1.8rem;
+                font-size: 0.9rem;
             }
         }
         @media (min-width: 601px) and (max-width: 1024px) {
@@ -353,11 +403,16 @@
                 <div class="sub-title">bot</div>
             </div>
         </div>
+        <div class="apply-now-section">
+            <button onclick="window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank')" aria-label="Apply for loan via Google Form">
+                Apply Now
+            </button>
+        </div>
         <label for="type">Type:</label>
-        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or Apply Loan" onchange="toggleFields()">
+        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or Repayment Modes" onchange="toggleFields()">
             <option value="contribution">Deposit</option>
             <option value="existing_loan">Existing Loan</option>
-            <option value="apply_loan">Apply Loan</option>
+            <option value="apply_loan">Repayment Modes</option>
         </select>
         <span id="typeError" class="error"></span>
 
@@ -702,6 +757,7 @@
             const type = elements.type.value;
             const loanType = elements.loanType.value;
             elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
+            elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
             elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
             if (type === 'apply_loan' && loanType) {
                 let options = [];
@@ -725,8 +781,11 @@
         function toggleFields() {
             const type = elements.type.value;
             elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
+            elements.contributionFields.classList.toggle('show', type === 'contribution');
             elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
+            elements.loanFields.classList.toggle('show', type === 'existing_loan' || type === 'apply_loan');
             elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
+            elements.dateFields.classList.toggle('show', type === 'contribution' || type === 'existing_loan');
             elements.dueDate.disabled = type === 'contribution';
             if (type === 'contribution') {
                 populateYears();
@@ -775,33 +834,178 @@
             elements.calcButton.disabled = isCalculating || !isValid;
         }
 
-        function addApplyNowButton() {
-            // Remove existing Apply Now button if it exists
-            const existingButton = document.getElementById('applyNowButton');
-            if (existingButton) existingButton.remove();
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let yOffset = 10;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 10;
+            const maxWidth = pageWidth - 2 * margin;
 
-            // Create Apply Now button
-            const applyNowButton = document.createElement('button');
-            applyNowButton.id = 'applyNowButton';
-            applyNowButton.textContent = 'Apply Now';
-            applyNowButton.setAttribute('aria-label', 'Apply for loan via Google Form');
-            applyNowButton.onclick = () => window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank');
-            elements.buttonContainer.appendChild(applyNowButton);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
+            yOffset += 10;
+
+            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
+            yOffset += 10;
+
+            let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.\n\n`;
+            let lines = doc.splitTextToSize(content, maxWidth);
+            doc.setFontSize(12);
+            doc.text(lines, margin, yOffset);
+            yOffset += lines.length * 7 + 10;
+
+            if (lastResult.type === 'contribution') {
+                const penalty = lastResult.penalty;
+                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                const monthParts = lastResult.month.split('-');
+                const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+                content = `Your deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+                content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
+                content += `Penalty Details:\n`;
+                content += penalty > 0
+                    ? `- Flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
+                    + `- Additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) for delays beyond 7 days.\n`
+                    + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
+                    : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
+                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                lines = doc.splitTextToSize(content, maxWidth);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7 + 10;
+            } else if (lastResult.type === 'existing_loan') {
+                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                let loanType, interestRate;
+                if (lastResult.loanType === 'short') {
+                    loanType = 'Short Term (30 Days)';
+                    interestRate = '5%';
+                } else if (lastResult.loanType === 'medium') {
+                    loanType = 'Medium Term (90 Days)';
+                    interestRate = '10%';
+                } else {
+                    loanType = 'Long Term (365 Days)';
+                    interestRate = '15%';
+                }
+                content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+                content += `Loan Details:\n`;
+                content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                if (lastResult.daysDelayed > 7) {
+                    content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
+                    content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
+                } else {
+                    content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
+                }
+                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                lines = doc.splitTextToSize(content, maxWidth);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7 + 10;
+            } else if (lastResult.type === 'apply_loan') {
+                let loanType, interestRate;
+                if (lastResult.loanType === 'short') {
+                    loanType = 'Short Term (30 Days)';
+                    interestRate = '5%';
+                } else if (lastResult.loanType === 'medium') {
+                    loanType = 'Medium Term (90 Days)';
+                    interestRate = '10%';
+                } else {
+                    loanType = 'Long Term (365 Days)';
+                    interestRate = '15%';
+                }
+                content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+                content += `Loan Details:\n`;
+                content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+                content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                lines = doc.splitTextToSize(content, maxWidth);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text(lines, margin, yOffset);
+                yOffset += lines.length * 7 + 10;
+
+                if (lastResult.amortization && lastResult.amortization.length > 0) {
+                    if (yOffset + 20 > pageHeight - margin) {
+                        doc.addPage();
+                        yOffset = margin;
+                    }
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Amortization Schedule:', margin, yOffset);
+                    yOffset += 7;
+                    const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                    const tableData = lastResult.amortization.map(row => [
+                        row.month.toString(),
+                        row.payment,
+                        row.interest,
+                        row.principal,
+                        row.balance
+                    ]);
+                    doc.autoTable({
+                        head: [headers],
+                        body: tableData,
+                        startY: yOffset,
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 2,
+                            lineColor: [26, 115, 232],
+                            lineWidth: 0.3,
+                            textColor: [44, 62, 80]
+                        },
+                        headStyles: {
+                            fillColor: [26, 115, 232],
+                            textColor: [255, 255, 255],
+                            fontStyle: 'bold'
+                        },
+                        alternateRowStyles: {
+                            fillColor: [245, 247, 250]
+                        },
+                        margin: { left: margin, right: margin }
+                    });
+                    yOffset = doc.lastAutoTable.finalY + 10;
+                }
+            }
+
+            if (yOffset + 20 > pageHeight - margin) {
+                doc.addPage();
+                yOffset = margin;
+            }
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            content = `Kindly update your account to help i-8 Ltd grow and serve you better.\n\n`;
+            lines = doc.splitTextToSize(content, maxWidth);
+            doc.text(lines, margin, yOffset);
+            yOffset += lines.length * 7;
+
+            doc.setFont('helvetica', 'bold');
+            doc.text('Regards,', margin, yOffset);
+            yOffset += 7;
+            doc.setFont('helvetica', 'italic');
+            doc.text('i-8 Ltd. (info@i8ltd.co.ke)', margin, yOffset);
+
+            return doc.output('blob');
         }
 
-        function removeApplyNowButton() {
-            const applyNowButton = document.getElementById('applyNowButton');
-            if (applyNowButton) applyNowButton.remove();
-        }
-
-        function shareResults() {
-            if (navigator.share && lastResultText) {
-                navigator.share({
+        async function shareResults() {
+            if (navigator.share && lastResult) {
+                const pdfBlob = await generatePDF();
+                const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
+                await navigator.share({
                     title: 'i-8 SMART BOT Calculation Results',
-                    text: lastResultText,
-                }).catch((error) => console.error('Error sharing', error));
+                    files: [pdfFile],
+                }).catch(error => {
+                    logError('Sharing failed', error);
+                    alert('Sharing not supported or failed. Please download the PDF manually.');
+                });
             } else {
-                alert('Sharing not supported in this browser. Please copy the results manually.');
+                alert('Sharing not supported in this browser. Please download the PDF manually.');
             }
         }
 
@@ -809,7 +1013,6 @@
             const validationError = validateInputs();
             if (validationError) {
                 elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
-                removeApplyNowButton();
                 return;
             }
 
@@ -847,7 +1050,6 @@
                     tableHTML += '</table>';
                     lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
                     resultText += `Type: Deposit\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
-                    removeApplyNowButton();
                     saveCalculation(lastResult);
                 } else if (type === 'existing_loan') {
                     const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
@@ -870,7 +1072,6 @@
                         resultText += `\nRoll-over Interest: ${rollOverInterest.toFixed(2)} KES\nPenalty: ${penalty.toFixed(2)} KES`;
                     }
                     resultText += `\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
-                    removeApplyNowButton();
                     saveCalculation(lastResult);
                 } else if (type === 'apply_loan') {
                     const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
@@ -880,7 +1081,7 @@
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount to Pay (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                     `;
-                    resultText += `Type: Apply Loan\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
+                    resultText += `Type: Repayment Modes\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
                     if (amortization.length > 0) {
                         tableHTML += `
                             <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
@@ -907,7 +1108,6 @@
                     tableHTML += '</table>';
                     lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
                     saveCalculation(lastResult);
-                    addApplyNowButton();
                 }
                 lastResultText = resultText;
 
@@ -922,7 +1122,6 @@
             } catch (error) {
                 logError('Calculation failed', error);
                 elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation. Please try again.</span>`;
-                removeApplyNowButton();
             } finally {
                 resetButton();
                 hideProgress();
@@ -938,7 +1137,6 @@
         function closeResultModal() {
             elements.resultModal.style.display = 'none';
             elements.result.innerHTML = '';
-            removeApplyNowButton();
         }
 
         elements.calcButton.addEventListener('keypress', e => {
