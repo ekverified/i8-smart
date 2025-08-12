@@ -38,6 +38,7 @@
             box-shadow: 0 8px 24px rgba(0, 52, 89, 0.15);
             border: 1px solid #e0e0e0;
             animation: containerEnter 0.8s ease-out;
+            position: relative; /* For positioning refresh button */
         }
         @keyframes containerEnter {
             from { opacity: 0; transform: translateY(-20px) scale(0.98); }
@@ -66,21 +67,57 @@
         .apply-now-section {
             text-align: center;
             margin-bottom: 1.5rem;
+            position: relative;
         }
         .apply-now-section button {
-            background: linear-gradient(135deg, #e74c3c, #ff6b6b, #e74c3c);
-            color: #fff;
+            background: linear-gradient(135deg, #ffd700, #ffa500, #ffd700); /* Gold splash effect */
+            color: #2c3e50; /* Darker text for contrast */
             border: none;
             border-radius: 8px;
             padding: 0.8rem 1.5rem;
-            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            font-size: clamp(0.9rem, 2.2vw, 1rem); /* Adjusted font size for fit */
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
+            box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
             animation: bounce 1.5s infinite, shine 3s infinite;
             text-transform: uppercase;
             letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        .apply-now-section button::before,
+        .apply-now-section button::after,
+        .apply-now-section button > .star-top-left,
+        .apply-now-section button > .star-top-right,
+        .apply-now-section button > .star-bottom-left,
+        .apply-now-section button > .star-bottom-right {
+            content: '★';
+            position: absolute;
+            color: #ffffff;
+            text-shadow: 0 0 5px #ffd700, 0 0 10px #ffffff;
+            font-size: 0.6rem; /* Small stars */
+            animation: twinkle 1.5s infinite;
+        }
+        .apply-now-section button::before {
+            top: 5px;
+            left: 5px;
+        }
+        .apply-now-section button::after {
+            top: 5px;
+            right: 5px;
+        }
+        .apply-now-section button > .star-bottom-left {
+            bottom: 5px;
+            left: 5px;
+        }
+        .apply-now-section button > .star-bottom-right {
+            bottom: 5px;
+            right: 5px;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
@@ -95,13 +132,40 @@
             background-position: 0 0;
         }
         .apply-now-section button:hover {
-            background: linear-gradient(135deg, #ff6b6b, #e74c3c);
-            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.6);
+            background: linear-gradient(135deg, #ffa500, #ffd700);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
             transform: scale(1.05);
         }
         .apply-now-section button:active {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            background: linear-gradient(135deg, #ff8c00, #ffa500);
             transform: scale(0.95);
+        }
+        .refresh-button {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: clamp(2.5rem, 10vw, 3rem);
+            height: clamp(2.5rem, 10vw, 3rem);
+            cursor: pointer;
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+            font-weight: 500;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .refresh-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+            background: linear-gradient(135deg, #34c759, #4cd964);
+        }
+        .refresh-button:active {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, #e74c3c, #ff6b6b);
         }
         label {
             display: block;
@@ -361,6 +425,12 @@
                 height: 1.8rem;
                 font-size: 0.9rem;
             }
+            .refresh-button {
+                top: 1rem;
+                right: 1rem;
+                width: 2.5rem;
+                height: 2.5rem;
+            }
         }
         @media (min-width: 601px) and (max-width: 1024px) {
             .container {
@@ -403,9 +473,16 @@
                 <div class="sub-title">bot</div>
             </div>
         </div>
+        <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear results">
+            <i class="fas fa-sync-alt"></i>
+        </button>
         <div class="apply-now-section">
             <button onclick="window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank')" aria-label="Apply for loan via Google Form">
-                Apply Now
+                Apply Loan
+                <span class="star-top-left"></span>
+                <span class="star-top-right"></span>
+                <span class="star-bottom-left"></span>
+                <span class="star-bottom-right"></span>
             </button>
         </div>
         <label for="type">Type:</label>
@@ -834,6 +911,36 @@
             elements.calcButton.disabled = isCalculating || !isValid;
         }
 
+        function refreshForm() {
+            // Clear input fields
+            elements.type.value = 'contribution';
+            elements.amount.value = '';
+            elements.year.value = '';
+            elements.month.value = '';
+            elements.dueDate.value = '';
+            elements.checkDate.value = '';
+            elements.loanType.value = 'short';
+            elements.repaymentPeriod.value = '';
+            
+            // Clear error messages
+            Object.values(elements.errors).forEach(error => {
+                error.textContent = '';
+                error.style.display = 'none';
+            });
+
+            // Clear results
+            elements.result.innerHTML = '';
+            elements.modalResult.innerHTML = '';
+            elements.resultModal.style.display = 'none';
+            lastResult = null;
+            lastResultText = '';
+
+            // Reset field visibility and state
+            toggleFields();
+            populateYears();
+            updateButtonState();
+        }
+
         async function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -842,26 +949,38 @@
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 10;
             const maxWidth = pageWidth - 2 * margin;
+            const lineHeight = 6;
+            const sectionSpacing = 8;
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(12);
 
-            doc.setFontSize(16);
+            function checkPageBreak(requiredHeight) {
+                if (yOffset + requiredHeight > pageHeight - margin) {
+                    doc.addPage();
+                    yOffset = margin;
+                    return true;
+                }
+                return false;
+            }
+
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('i-8 SMART BOT Financial Report', pageWidth / 2, yOffset, { align: 'center' });
-            yOffset += 10;
+            yOffset += lineHeight + sectionSpacing;
 
             const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-            doc.setFontSize(10);
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.text(`Generated on: ${today}`, pageWidth - margin, yOffset, { align: 'right' });
-            yOffset += 10;
+            yOffset += lineHeight;
 
-            let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.\n\n`;
+            let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.`;
             let lines = doc.splitTextToSize(content, maxWidth);
-            doc.setFontSize(12);
+            checkPageBreak(lines.length * lineHeight + sectionSpacing);
+            doc.setFontSize(10);
             doc.text(lines, margin, yOffset);
-            yOffset += lines.length * 7 + 10;
+            yOffset += lines.length * lineHeight + sectionSpacing;
 
             if (lastResult.type === 'contribution') {
                 const penalty = lastResult.penalty;
@@ -876,12 +995,13 @@
                     + `- Additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) for delays beyond 7 days.\n`
                     + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
                     : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
-                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
                 lines = doc.splitTextToSize(content, maxWidth);
+                checkPageBreak(lines.length * lineHeight + sectionSpacing);
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(11);
+                doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 7 + 10;
+                yOffset += lines.length * lineHeight + sectionSpacing;
             } else if (lastResult.type === 'existing_loan') {
                 const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                 let loanType, interestRate;
@@ -904,12 +1024,13 @@
                 } else {
                     content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
                 }
-                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
                 lines = doc.splitTextToSize(content, maxWidth);
+                checkPageBreak(lines.length * lineHeight + sectionSpacing);
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(11);
+                doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 7 + 10;
+                yOffset += lines.length * lineHeight + sectionSpacing;
             } else if (lastResult.type === 'apply_loan') {
                 let loanType, interestRate;
                 if (lastResult.loanType === 'short') {
@@ -925,21 +1046,20 @@
                 content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
                 content += `Loan Details:\n`;
                 content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
-                content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.\n`;
+                content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.`;
                 lines = doc.splitTextToSize(content, maxWidth);
+                checkPageBreak(lines.length * lineHeight + sectionSpacing);
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(11);
+                doc.setFontSize(9);
                 doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 7 + 10;
+                yOffset += lines.length * lineHeight + sectionSpacing;
 
                 if (lastResult.amortization && lastResult.amortization.length > 0) {
-                    if (yOffset + 20 > pageHeight - margin) {
-                        doc.addPage();
-                        yOffset = margin;
-                    }
+                    checkPageBreak(20 + lastResult.amortization.length * 10);
                     doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
                     doc.text('Amortization Schedule:', margin, yOffset);
-                    yOffset += 7;
+                    yOffset += lineHeight;
                     const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
                     const tableData = lastResult.amortization.map(row => [
                         row.month.toString(),
@@ -954,9 +1074,9 @@
                         startY: yOffset,
                         styles: {
                             fontSize: 8,
-                            cellPadding: 2,
+                            cellPadding: 1.5,
                             lineColor: [26, 115, 232],
-                            lineWidth: 0.3,
+                            lineWidth: 0.2,
                             textColor: [44, 62, 80]
                         },
                         headStyles: {
@@ -967,28 +1087,28 @@
                         alternateRowStyles: {
                             fillColor: [245, 247, 250]
                         },
-                        margin: { left: margin, right: margin }
+                        margin: { left: margin, right: margin },
+                        didDrawPage: (data) => {
+                            yOffset = data.table.finalY + sectionSpacing;
+                        }
                     });
-                    yOffset = doc.lastAutoTable.finalY + 10;
+                    yOffset += sectionSpacing;
                 }
             }
 
-            if (yOffset + 20 > pageHeight - margin) {
-                doc.addPage();
-                yOffset = margin;
-            }
+            checkPageBreak(lineHeight * 3);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            content = `Kindly update your account to help i-8 Ltd grow and serve you better.\n\n`;
+            doc.setFontSize(9);
+            content = `Kindly update your account to help i-8 Ltd grow and serve you better.`;
             lines = doc.splitTextToSize(content, maxWidth);
             doc.text(lines, margin, yOffset);
-            yOffset += lines.length * 7;
+            yOffset += lines.length * lineHeight;
 
             doc.setFont('helvetica', 'bold');
             doc.text('Regards,', margin, yOffset);
-            yOffset += 7;
+            yOffset += lineHeight;
             doc.setFont('helvetica', 'italic');
-            doc.text('i-8 Ltd. (info@i8ltd.co.ke)', margin, yOffset);
+            doc.text('i-8 Ltd. (insightfuleightcoltd@gmail.com)', margin, yOffset);
 
             return doc.output('blob');
         }
