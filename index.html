@@ -38,7 +38,7 @@
             box-shadow: 0 8px 24px rgba(0, 52, 89, 0.15);
             border: 1px solid #e0e0e0;
             animation: containerEnter 0.8s ease-out;
-            position: relative; /* For positioning refresh button */
+            position: relative;
         }
         @keyframes containerEnter {
             from { opacity: 0; transform: translateY(-20px) scale(0.98); }
@@ -70,12 +70,12 @@
             position: relative;
         }
         .apply-now-section button {
-            background: linear-gradient(135deg, #ffd700, #ffa500, #ffd700); /* Gold splash effect */
-            color: #2c3e50; /* Darker text for contrast */
+            background: linear-gradient(135deg, #ffd700, #ffa500, #ffd700);
+            color: #2c3e50;
             border: none;
             border-radius: 8px;
             padding: 0.8rem 1.5rem;
-            font-size: clamp(0.9rem, 2.2vw, 1rem); /* Adjusted font size for fit */
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
@@ -96,7 +96,7 @@
             position: absolute;
             color: #ffffff;
             text-shadow: 0 0 5px #ffd700, 0 0 10px #ffffff;
-            font-size: 0.6rem; /* Small stars */
+            font-size: 0.6rem;
             animation: twinkle 1.5s infinite;
         }
         .apply-now-section button::before {
@@ -912,7 +912,6 @@
         }
 
         function refreshForm() {
-            // Clear input fields
             elements.type.value = 'contribution';
             elements.amount.value = '';
             elements.year.value = '';
@@ -922,20 +921,17 @@
             elements.loanType.value = 'short';
             elements.repaymentPeriod.value = '';
             
-            // Clear error messages
             Object.values(elements.errors).forEach(error => {
                 error.textContent = '';
                 error.style.display = 'none';
             });
 
-            // Clear results
             elements.result.innerHTML = '';
             elements.modalResult.innerHTML = '';
             elements.resultModal.style.display = 'none';
             lastResult = null;
             lastResultText = '';
 
-            // Reset field visibility and state
             toggleFields();
             populateYears();
             updateButtonState();
@@ -943,7 +939,11 @@
 
         async function generatePDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
             let yOffset = 10;
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -1055,11 +1055,14 @@
                 yOffset += lines.length * lineHeight + sectionSpacing;
 
                 if (lastResult.amortization && lastResult.amortization.length > 0) {
-                    checkPageBreak(20 + lastResult.amortization.length * 10);
+                    // Estimate table height: 10mm for header + 5mm per row
+                    const tableHeight = 10 + lastResult.amortization.length * 5;
+                    checkPageBreak(tableHeight + sectionSpacing);
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(10);
                     doc.text('Amortization Schedule:', margin, yOffset);
                     yOffset += lineHeight;
+
                     const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
                     const tableData = lastResult.amortization.map(row => [
                         row.month.toString(),
@@ -1077,7 +1080,9 @@
                             cellPadding: 1.5,
                             lineColor: [26, 115, 232],
                             lineWidth: 0.2,
-                            textColor: [44, 62, 80]
+                            textColor: [44, 62, 80],
+                            overflow: 'linebreak', // Wrap text to prevent overflow
+                            cellWidth: 'auto' // Adjust column widths dynamically
                         },
                         headStyles: {
                             fillColor: [26, 115, 232],
@@ -1088,6 +1093,13 @@
                             fillColor: [245, 247, 250]
                         },
                         margin: { left: margin, right: margin },
+                        columnStyles: {
+                            0: { cellWidth: 20 }, // Month
+                            1: { cellWidth: 40 }, // Payment
+                            2: { cellWidth: 40 }, // Interest
+                            3: { cellWidth: 40 }, // Principal
+                            4: { cellWidth: 40 }  // Balance
+                        },
                         didDrawPage: (data) => {
                             yOffset = data.table.finalY + sectionSpacing;
                         }
@@ -1114,18 +1126,44 @@
         }
 
         async function shareResults() {
-            if (navigator.share && lastResult) {
+            if (!lastResult) {
+                alert('No results available to share. Please calculate first.');
+                return;
+            }
+
+            try {
                 const pdfBlob = await generatePDF();
                 const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
-                await navigator.share({
-                    title: 'i-8 SMART BOT Calculation Results',
-                    files: [pdfFile],
-                }).catch(error => {
-                    logError('Sharing failed', error);
-                    alert('Sharing not supported or failed. Please download the PDF manually.');
-                });
-            } else {
-                alert('Sharing not supported in this browser. Please download the PDF manually.');
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    await navigator.share({
+                        title: 'i-8 SMART BOT Calculation Results',
+                        text: 'View your financial calculation results from i-8 SMART BOT.',
+                        files: [pdfFile]
+                    });
+                } else {
+                    // Fallback: Download the PDF
+                    const url = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'i8-smart-bot-result.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert('Sharing not supported. The PDF has been downloaded instead.');
+                }
+            } catch (error) {
+                logError('Sharing failed', error);
+                alert('An error occurred while sharing. The PDF has been downloaded instead.');
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'i8-smart-bot-result.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
         }
 
