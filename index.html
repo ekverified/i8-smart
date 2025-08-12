@@ -1055,7 +1055,6 @@
                 yOffset += lines.length * lineHeight + sectionSpacing;
 
                 if (lastResult.amortization && lastResult.amortization.length > 0) {
-                    // Estimate table height: 10mm for header + 5mm per row
                     const tableHeight = 10 + lastResult.amortization.length * 5;
                     checkPageBreak(tableHeight + sectionSpacing);
                     doc.setFont('helvetica', 'bold');
@@ -1081,8 +1080,8 @@
                             lineColor: [26, 115, 232],
                             lineWidth: 0.2,
                             textColor: [44, 62, 80],
-                            overflow: 'linebreak', // Wrap text to prevent overflow
-                            cellWidth: 'auto' // Adjust column widths dynamically
+                            overflow: 'linebreak',
+                            cellWidth: 'auto'
                         },
                         headStyles: {
                             fillColor: [26, 115, 232],
@@ -1094,11 +1093,11 @@
                         },
                         margin: { left: margin, right: margin },
                         columnStyles: {
-                            0: { cellWidth: 20 }, // Month
-                            1: { cellWidth: 40 }, // Payment
-                            2: { cellWidth: 40 }, // Interest
-                            3: { cellWidth: 40 }, // Principal
-                            4: { cellWidth: 40 }  // Balance
+                            0: { cellWidth: 20 },
+                            1: { cellWidth: 40 },
+                            2: { cellWidth: 40 },
+                            3: { cellWidth: 40 },
+                            4: { cellWidth: 40 }
                         },
                         didDrawPage: (data) => {
                             yOffset = data.table.finalY + sectionSpacing;
@@ -1135,36 +1134,38 @@
                 const pdfBlob = await generatePDF();
                 const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
 
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                    await navigator.share({
-                        title: 'i-8 SMART BOT Calculation Results',
-                        text: 'View your financial calculation results from i-8 SMART BOT.',
-                        files: [pdfFile]
-                    });
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'i-8 SMART BOT Calculation Results',
+                            text: 'View your financial calculation results from i-8 SMART BOT.',
+                            files: [pdfFile]
+                        });
+                        console.log('Successfully shared PDF');
+                    } catch (error) {
+                        console.warn('Web Share API failed, attempting fallback', error);
+                        triggerManualShare(pdfBlob);
+                    }
                 } else {
-                    // Fallback: Download the PDF
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'i8-smart-bot-result.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    alert('Sharing not supported. The PDF has been downloaded instead.');
+                    console.warn('Web Share API not supported, using fallback');
+                    triggerManualShare(pdfBlob);
                 }
             } catch (error) {
                 logError('Sharing failed', error);
-                alert('An error occurred while sharing. The PDF has been downloaded instead.');
-                const url = URL.createObjectURL(pdfBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'i8-smart-bot-result.pdf';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                triggerManualShare(pdfBlob);
             }
+        }
+
+        function triggerManualShare(pdfBlob) {
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'i8-smart-bot-result.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('PDF has been downloaded. You can now share it via WhatsApp, email, or other apps from your device.');
         }
 
         async function calculate() {
