@@ -1,0 +1,9 @@
+{
+  "name": "i-8 SMART BOT",
+  "short_name": "i-8 Bot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#1a73e8",
+  "icons": []
+}

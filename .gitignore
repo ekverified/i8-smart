@@ -1,0 +1,7 @@
+# Ignore temporary files
+*.log
+*.tmp
+# Ignore IDE files
+.vscode/
+# Ignore node modules (if any)
+node_modules/
