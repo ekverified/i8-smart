@@ -6,9 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     window.chartsLoaded = true;
 
-    fetch("js/data.json")
+    // Google Apps Script Web app URL with CORS proxy
+    const apiUrl = 'js/data.json';
+
+    fetch(apiUrl)
         .then(response => {
-            console.log("Fetching data.json: Status", response.status);
+            console.log("Fetching API: Status", response.status);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -16,6 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .then(data => {
             console.log("Data loaded:", data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
             document.getElementById("totalBalance").textContent = `Total Balance: KES ${data.total_balance.toFixed(2)}`;
             console.log("Total Balance set");
             try {
@@ -30,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         datasets: [{
                             label: "Member Contributions (KES)",
                             data: data.member_contributions.map(item => item.amount),
-                            backgroundColor: ["#1a73e8", "#34c759", "#4285f4", "#ffd700"],
+                            backgroundColor: ["#1a73e8", "#34c759", "#4285f4", "#ffd700", "#ff6f61", "#6b7280", "#ec4899", "#10b981", "#f59e0b", "#8b5cf6"],
                             borderColor: "#ffffff",
                             borderWidth: 2
                         }]

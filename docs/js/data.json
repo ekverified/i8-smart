@@ -1,31 +1,17 @@
 {
-  "total_balance": 7400,
-  "inflows": 15500,
-  "outflows": 8100,
+  "total_balance": 334023.77,
+  "inflows": 364147.27,
+  "outflows": 68413.35,
   "member_contributions": [
-    {
-      "member_name": "Joseph Kinyua",
-      "amount": 15000,
-      "shares": 50,
-      "last_contribution_date": "2025-07-01"
-    },
-    {
-      "member_name": "Mary Wambui",
-      "amount": 20000,
-      "shares": 75,
-      "last_contribution_date": "2025-07-15"
-    },
-    {
-      "member_name": "John Mwangi",
-      "amount": 10000,
-      "shares": 30,
-      "last_contribution_date": "2025-08-01"
-    },
-    {
-      "member_name": "Anne Njeri",
-      "amount": 25000,
-      "shares": 90,
-      "last_contribution_date": "2025-08-10cd E:\\I8 smart bot"
-    }
+    {"member_name": "JOHN NJERI", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "JAMES KAMAU", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "JOSEPH WAITHAKA", "amount": 52000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "GEOFREY MUGI", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "HEMPSTONE ISAAC", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "ENOCH THUMBI", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "PAUL MUCHIRI", "amount": 47000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "JOHN IRAGU", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
+    {"member_name": "ISAACK MAINA", "amount": 20500, "shares": 0, "last_contribution_date": "2025-07-29"},
+    {"member_name": "NEPHAT MUTHEE", "amount": 10000, "shares": 0, "last_contribution_date": "2025-07-29"}
   ]
 }
