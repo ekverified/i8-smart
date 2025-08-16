@@ -1,7 +1,7 @@
 {
   "total_balance": 334023.77,
   "inflows": 364147.27,
-  "outflows": 68413.35,
+  "outflows": 30123.35,
   "member_contributions": [
     {"member_name": "JOHN NJERI", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
     {"member_name": "JAMES KAMAU", "amount": 43000, "shares": 125, "last_contribution_date": "2025-07-29"},
