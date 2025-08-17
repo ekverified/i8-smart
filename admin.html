@@ -484,7 +484,8 @@
 
         async function fetchData() {
             try {
-                const response = await fetch('/api/data');
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const jsonData = await response.json();
                 // Populate members from data.json if available, else use MEMBERS array
                 const members = jsonData.member_contributions?.length > 0
@@ -555,7 +556,7 @@
             data.total_balance = data.kcb_balance + data.lofty_balance;
 
             try {
-                const response = await fetch('/api/update-data', {
+                const response = await fetch('data.json', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'updateBalanceSheet', month, data })
@@ -570,7 +571,7 @@
                 }
             } catch (error) {
                 console.error('Error updating financial data:', error);
-                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating financial data. Please try again.</span>';
+                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating financial data. Client-side updates to static files are not supported. Please use a server.</span>';
             }
         }
 
@@ -592,7 +593,7 @@
             };
 
             try {
-                const response = await fetch('/api/update-data', {
+                const response = await fetch('data.json', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'addMemberContribution', month, data })
@@ -607,13 +608,16 @@
                 }
             } catch (error) {
                 console.error('Error updating contribution:', error);
-                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating contribution. Please try again.</span>';
+                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating contribution. Client-side updates to static files are not supported. Please use a server.</span>';
             }
         }
 
         function downloadData() {
-            fetch('/api/data')
-                .then(response => response.json())
+            fetch('data.json')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
                 .then(data => {
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
