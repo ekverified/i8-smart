@@ -1,7 +1,42 @@
-# Ignore temporary files
+# i-8 SMART BOT .gitignore
+# This file specifies files and directories to be ignored by Git to keep the repository clean.
+
+# Temporary files
 *.log
 *.tmp
-# Ignore IDE files
+*.bak
+*.swp
+
+# IDE and editor files
 .vscode/
-# Ignore node modules (if any)
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node.js dependencies
 node_modules/
+package-lock.json
+
+# Sensitive data
+.env
+.env.local
+.env.development
+.env.production
+
+# Backup files
+data-backup*.json
+
+# Build and test artifacts
+/dist/
+/build/
+/coverage/
+
+# Documentation drafts
+*.pdf
+!public/docs/*.pdf  # Include specific documentation files if needed (e.g., admin-guide.pdf)
+
+# macOS-specific files
+.DS_Store
+
+# Windows-specific files
+Thumbs.db

@@ -1,22 +1,24 @@
 # i-8 SMART BOT
 
-A web-based financial tool for calculating deposit penalties, loan interest, and tracking SACCO financial data in KES.
+A web application for calculating deposit penalties, loan interest, and tracking financial data for Insightful Eight Co. Ltd. Uses a local `data.json` file, managed via a password-protected admin dashboard with balance sheet functionality.
 
 ## Features
 
-- **Deposit Penalty Calculator**: Calculate penalties for late deposits.
-- **Loan Interest Calculator**: Compute interest for existing and new loans with amortization schedules.
-- **Financial Tracking**:
-  - Display total balance.
-  - Pie chart for member contributions.
-  - Bar chart for inflows vs. outflows.
-  - Member search by name.
-- **PDF Generation**: Export calculation results as PDF.
-- **Responsive Design**: Optimized for mobile and desktop.
+- Calculate penalties for late deposits and interest for loans (short, medium, long-term).
+- Display balance sheet with monthly inflows, outflows, and balances (KCB and Lofty accounts).
+- Paginated member contributions table with loan limits (90% of contributions).
+- Admin dashboard to update balance sheet and member contributions.
+- Generate and share PDF reports of calculations.
+- Progressive Web App (PWA) support.
 
-## Project Structure
+## Setup
 
-## Author
+### Local Testing
 
-- **Name**: i8 ltd. (Insightful Eight Co. Ltd.)
-- **Email**: insightfuleightcoltd@gmail.com
+1. **Install Node.js**: Download from [nodejs.org](https://nodejs.org).
+2. **Install Dependencies**:
+   ```bash
+   cd E:\I8 Sart Bot
+   npm init -y
+   npm install express
+   ```

@@ -14,100 +14,187 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <script src="js/charts.js"></script>
 </head>
 <body>
     <div class="container">
-        <div class="title-container">
-            <div>
-                <div class="main-title">i-8 SMART</div>
-                <div class="sub-title">bot</div>
+        <!-- Page 1: Calculator Section -->
+        <div class="main-page" id="page1">
+            <div class="title-container">
+                <div>
+                    <div class="main-title">i-8 SMART</div>
+                    <div class="sub-title">bot</div>
+                </div>
             </div>
-        </div>
-        <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear results">
-            <i class="fas fa-sync-alt"></i>
-        </button>
-        <div class="apply-now-section">
-            <button onclick="window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank')" aria-label="Apply for loan via Google Form">
-                Apply Loan
-                <span class="star-top-left"></span>
-                <span class="star-top-right"></span>
-                <span class="star-bottom-left"></span>
-                <span class="star-bottom-right"></span>
+            <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear results">
+                <i class="fas fa-sync-alt"></i>
             </button>
-        </div>
-        <label for="type">Type:</label>
-        <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loans" onchange="toggleFields()">
-            <option value="contribution">Deposit</option>
-            <option value="existing_loan">Existing Loan</option>
-            <option value="apply_loan">New Loans</option>
-        </select>
-        <span id="typeError" class="error"></span>
-
-        <label for="amount">Amount (KES):</label>
-        <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
-        <span id="amountError" class="error"></span>
-
-        <div id="contributionFields">
-            <label for="year">Contribution Year:</label>
-            <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
-            <span id="yearError" class="error"></span>
-
-            <label for="month">Contribution Month:</label>
-            <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
-            <span id="monthError" class="error"></span>
-        </div>
-
-        <div id="dateFields">
-            <label for="dueDate">Due Date:</label>
-            <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
-            <span id="dueDateError" class="error"></span>
-
-            <label for="checkDate">Check Date:</label>
-            <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
-            <span id="checkDateError" class="error"></span>
-        </div>
-
-        <div id="loanFields">
-            <label for="loanType">Loan Type:</label>
-            <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
-                <option value="short">Short Term (30 Days)</option>
-                <option value="medium">Medium Term (90 Days)</option>
-                <option value="long">Long Term (365 Days)</option>
+            <div class="apply-now-section">
+                <button onclick="window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank')" aria-label="Apply for loan via Google Form">
+                    Apply Loan
+                    <span class="star-top-left"></span>
+                    <span class="star-top-right"></span>
+                    <span class="star-bottom-left"></span>
+                    <span class="star-bottom-right"></span>
+                </button>
+            </div>
+            <label for="type">Type:</label>
+            <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loans" onchange="toggleFields()">
+                <option value="contribution">Deposit</option>
+                <option value="existing_loan">Existing Loan</option>
+                <option value="apply_loan">New Loans</option>
             </select>
-            <span id="loanTypeError" class="error"></span>
+            <span id="typeError" class="error"></span>
 
-            <div id="repaymentFields">
-                <label for="repaymentPeriod">Repayment Period (Months):</label>
-                <select id="repaymentPeriod" aria-label="Select repayment period">
-                    <option value="">Select months</option>
+            <label for="amount">Amount (KES):</label>
+            <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
+            <span id="amountError" class="error"></span>
+
+            <div id="contributionFields">
+                <label for="year">Contribution Year:</label>
+                <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
+                <span id="yearError" class="error"></span>
+
+                <label for="month">Contribution Month:</label>
+                <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
+                <span id="monthError" class="error"></span>
+            </div>
+
+            <div id="dateFields">
+                <label for="dueDate">Due Date:</label>
+                <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+                <span id="dueDateError" class="error"></span>
+
+                <label for="checkDate">Check Date:</label>
+                <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+                <span id="checkDateError" class="error"></span>
+            </div>
+
+            <div id="loanFields">
+                <label for="loanType">Loan Type:</label>
+                <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
+                    <option value="short">Short Term (30 Days)</option>
+                    <option value="medium">Medium Term (90 Days)</option>
+                    <option value="long">Long Term (365 Days)</option>
                 </select>
-                <span id="repaymentPeriodError" class="error"></span>
+                <span id="loanTypeError" class="error"></span>
+
+                <div id="repaymentFields">
+                    <label for="repaymentPeriod">Repayment Period (Months):</label>
+                    <select id="repaymentPeriod" aria-label="Select repayment period">
+                        <option value="">Select months</option>
+                    </select>
+                    <span id="repaymentPeriodError" class="error"></span>
+                </div>
+            </div>
+
+            <div class="button-container" id="buttonContainer">
+                <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+            </div>
+            <div class="progress-bar" id="progressBar">
+                <div id="progressFill"></div>
+            </div>
+            <div id="result" class="result"></div>
+        </div>
+
+        <!-- Page 2: Financial Overview -->
+        <div class="main-page" id="page2" style="display: none;">
+            <div class="financial-section">
+                <h2>Financial Overview</h2>
+                <form id="periodSelectForm">
+                    <label for="reportPeriod">Select Period:</label>
+                    <select id="reportPeriod" aria-label="Select report period" onchange="populateReportPeriods()">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <label for="reportMonth">Select Month/Quarter/Year:</label>
+                    <select id="reportMonth" aria-label="Select report month, quarter, or year"></select>
+                </form>
+                <div id="balanceSheet">
+                    <h3>Balance Sheet</h3>
+                    <table class="balance-sheet-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Amount (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="balanceSheetBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="button-container" id="buttonContainer">
-            <button onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+        <!-- Page 3: Member Contributions -->
+        <div class="main-page" id="page3" style="display: none;">
+            <div class="financial-section">
+                <h2>Member Contributions</h2>
+                <div id="memberContributions">
+                    <table class="member-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contribution (KES)</th>
+                                <th>Shares</th>
+                                <th>Last Contribution</th>
+                                <th>Loan Limit (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memberTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="progress-bar" id="progressBar">
-            <div id="progressFill"></div>
-        </div>
-        <div id="result" class="result"></div>
 
-        <div class="financial-section">
-            <h2>Financial Overview</h2>
-            <p id="totalBalance">Loading...</p>
-            <h2>Company Growth (Member Contributions)</h2>
-            <canvas id="memberPieChart" style="max-height: 300px; display: block;"></canvas>
-            <h2>Inflows vs Outflows</h2>
-            <canvas id="inflowsOutflowsChart" style="max-height: 300px; display: block;"></canvas>
-            <h2>Search Member</h2>
-            <form id="searchForm">
-                <input type="text" id="memberName" placeholder="Enter member name (e.g., Joseph Kinyua)" aria-label="Search for member by name">
-                <button type="submit" aria-label="Search member">Search</button>
-            </form>
-            <div id="searchResult"></div>
+        <!-- Page 4: Company Behavior Report -->
+        <div class="main-page" id="page4" style="display: none;">
+            <div class="financial-section">
+                <h2>Company Behavior Report</h2>
+                <form id="behaviorReportForm">
+                    <label for="behaviorPeriod">Select Period:</label>
+                    <select id="behaviorPeriod" aria-label="Select report period" onchange="populateBehaviorPeriods()">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <label for="behaviorMonth">Select Month/Quarter/Year:</label>
+                    <select id="behaviorMonth" aria-label="Select report month, quarter, or year"></select>
+                </form>
+                <div id="behaviorReport">
+                    <h3>Financial Summary</h3>
+                    <table class="balance-sheet-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="behaviorReportBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 5: Search Member -->
+        <div class="main-page" id="page5" style="display: none;">
+            <div class="financial-section">
+                <h2>Search Member</h2>
+                <form id="searchForm">
+                    <input type="text" id="memberName" placeholder="Enter member name (e.g., Joseph Kinyua)" aria-label="Search for member by name">
+                    <button type="submit" aria-label="Search member">Search</button>
+                </form>
+                <div id="searchResult"></div>
+            </div>
+        </div>
+
+        <div class="pagination-controls">
+            <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="mainPageInfo">Page 1 of 5</span>
+            <button id="nextMainPage" onclick="changeMainPage(1)" aria-label="Next page">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
 
         <div id="resultModal" class="modal">
@@ -168,6 +255,8 @@
         let isCalculating = false;
         let lastResult = null;
         let lastResultText = '';
+        let currentMainPage = 1;
+        let currentMembers = [];
 
         function sanitizeInput(input) {
             const div = document.createElement('div');
@@ -377,7 +466,7 @@
             const currentMonth = currentDate.getMonth();
             const startMonth = year === 2024 ? 0 : 0;
             const maxMonth = year === currentYear ? currentMonth : 11;
-            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
             for (let month = startMonth; month <= maxMonth; month++) {
                 const monthName = monthAbbr[month];
@@ -395,6 +484,112 @@
                 monthSelect.appendChild(option);
             }
             updateDueDate();
+        }
+
+        function populateReportPeriods() {
+            const periodSelect = document.getElementById('reportPeriod');
+            const monthSelect = document.getElementById('reportMonth');
+            monthSelect.innerHTML = '<option value="">Select a period</option>';
+            fetch('/api/data')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const months = Object.keys(data.monthly_reports || {}).sort();
+                    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    if (periodSelect.value === 'monthly') {
+                        months.forEach(month => {
+                            const [year, monthNum] = month.split('-');
+                            const option = document.createElement('option');
+                            option.value = month;
+                            option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
+                            monthSelect.appendChild(option);
+                        });
+                    } else if (periodSelect.value === 'quarterly') {
+                        const quarters = {};
+                        months.forEach(month => {
+                            const [year, monthNum] = month.split('-').map(Number);
+                            const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
+                            if (!quarters[quarter]) {
+                                quarters[quarter] = true;
+                                const option = document.createElement('option');
+                                option.value = quarter;
+                                option.text = `${quarter}`;
+                                monthSelect.appendChild(option);
+                            }
+                        });
+                    } else if (periodSelect.value === 'yearly') {
+                        const years = [...new Set(months.map(m => m.split('-')[0]))];
+                        years.forEach(year => {
+                            const option = document.createElement('option');
+                            option.value = year;
+                            option.text = year;
+                            monthSelect.appendChild(option);
+                        });
+                    }
+                    if (monthSelect.children.length > 1) {
+                        monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
+                        updateFinancialData();
+                    }
+                })
+                .catch(error => {
+                    logError('Error loading periods', error);
+                    document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
+                });
+        }
+
+        function populateBehaviorPeriods() {
+            const periodSelect = document.getElementById('behaviorPeriod');
+            const monthSelect = document.getElementById('behaviorMonth');
+            monthSelect.innerHTML = '<option value="">Select a period</option>';
+            fetch('/api/data')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const months = Object.keys(data.monthly_reports || {}).sort();
+                    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    if (periodSelect.value === 'monthly') {
+                        months.forEach(month => {
+                            const [year, monthNum] = month.split('-');
+                            const option = document.createElement('option');
+                            option.value = month;
+                            option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
+                            monthSelect.appendChild(option);
+                        });
+                    } else if (periodSelect.value === 'quarterly') {
+                        const quarters = {};
+                        months.forEach(month => {
+                            const [year, monthNum] = month.split('-').map(Number);
+                            const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
+                            if (!quarters[quarter]) {
+                                quarters[quarter] = true;
+                                const option = document.createElement('option');
+                                option.value = quarter;
+                                option.text = `${quarter}`;
+                                monthSelect.appendChild(option);
+                            }
+                        });
+                    } else if (periodSelect.value === 'yearly') {
+                        const years = [...new Set(months.map(m => m.split('-')[0]))];
+                        years.forEach(year => {
+                            const option = document.createElement('option');
+                            option.value = year;
+                            option.text = year;
+                            monthSelect.appendChild(option);
+                        });
+                    }
+                    if (monthSelect.children.length > 1) {
+                        monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
+                        updateBehaviorReport();
+                    }
+                })
+                .catch(error => {
+                    logError('Error loading behavior periods', error);
+                    document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
+                });
         }
 
         function toggleRepaymentFields() {
@@ -804,6 +999,233 @@
             elements.result.innerHTML = '';
         }
 
+        function changeMainPage(direction) {
+            currentMainPage += direction;
+            if (currentMainPage < 1) currentMainPage = 1;
+            if (currentMainPage > 5) currentMainPage = 5;
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
+            }
+            document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
+            document.getElementById('prevMainPage').disabled = currentMainPage === 1;
+            document.getElementById('nextMainPage').disabled = currentMainPage === 5;
+            if (currentMainPage === 2) updateFinancialData();
+            if (currentMainPage === 3) updateFinancialData();
+            if (currentMainPage === 4) updateBehaviorReport();
+        }
+
+        function displayMembers(members) {
+            const memberTableBody = document.getElementById('memberTableBody');
+            memberTableBody.innerHTML = '';
+            if (!members || members.length === 0) {
+                memberTableBody.innerHTML = '<tr><td colspan="5">No members available.</td></tr>';
+            } else {
+                members.forEach(member => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${member.member_name || 'Unknown'}</td>
+                        <td>KES ${(member.amount || 0).toFixed(2)}</td>
+                        <td>${member.shares || 0}</td>
+                        <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+                        <td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
+                    `;
+                    memberTableBody.appendChild(row);
+                });
+            }
+        }
+
+        function updateFinancialData() {
+            fetch('/api/data')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const period = document.getElementById('reportPeriod').value;
+                    const periodValue = document.getElementById('reportMonth').value;
+                    currentMembers = data.member_contributions || [];
+                    if (currentMainPage === 3) {
+                        displayMembers(currentMembers);
+                    }
+
+                    let monthlyData = {};
+                    if (period === 'monthly' && periodValue) {
+                        monthlyData = data.monthly_reports[periodValue] || {};
+                    } else if (period === 'quarterly' && periodValue) {
+                        const [year, quarter] = periodValue.split('-Q');
+                        const quarterMonths = [];
+                        const startMonth = (parseInt(quarter) - 1) * 3 + 1;
+                        for (let i = 0; i < 3; i++) {
+                            const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
+                            if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
+                        }
+                        monthlyData = quarterMonths.reduce((acc, curr) => ({
+                            opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
+                            opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
+                            members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0),
+                            members_loan_repayment_kcb: (acc.members_loan_repayment_kcb || 0) + (curr.members_loan_repayment_kcb || 0),
+                            members_loan_repayment_lofty: (acc.members_loan_repayment_lofty || 0) + (curr.members_loan_repayment_lofty || 0),
+                            interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
+                            interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
+                            other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
+                            other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
+                            total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                            loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
+                            bank_charges: (acc.bank_charges || 0) + (curr.bank_charges || 0),
+                            petty_cash_utilized: (acc.petty_cash_utilized || 0) + (curr.petty_cash_utilized || 0),
+                            agm_facilitation: (acc.agm_facilitation || 0) + (curr.agm_facilitation || 0),
+                            welfare_kitty_utilized: (acc.welfare_kitty_utilized || 0) + (curr.welfare_kitty_utilized || 0),
+                            other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
+                            total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                            total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
+                            kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
+                            lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0)
+                        }), {});
+                    } else if (period === 'yearly' && periodValue) {
+                        const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
+                        monthlyData = yearMonths.reduce((acc, month) => {
+                            const curr = data.monthly_reports[month];
+                            return {
+                                opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
+                                opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
+                                members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0),
+                                members_loan_repayment_kcb: (acc.members_loan_repayment_kcb || 0) + (curr.members_loan_repayment_kcb || 0),
+                                members_loan_repayment_lofty: (acc.members_loan_repayment_lofty || 0) + (curr.members_loan_repayment_lofty || 0),
+                                interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
+                                interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
+                                other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
+                                other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
+                                total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                                loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
+                                bank_charges: (acc.bank_charges || 0) + (curr.bank_charges || 0),
+                                petty_cash_utilized: (acc.petty_cash_utilized || 0) + (curr.petty_cash_utilized || 0),
+                                agm_facilitation: (acc.agm_facilitation || 0) + (curr.agm_facilitation || 0),
+                                welfare_kitty_utilized: (acc.welfare_kitty_utilized || 0) + (curr.welfare_kitty_utilized || 0),
+                                other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
+                                total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                                total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
+                                kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
+                                lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0)
+                            };
+                        }, {});
+                    }
+
+                    const balanceSheetBody = document.getElementById('balanceSheetBody');
+                    if (currentMainPage === 2) {
+                        balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
+                            <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
+                            <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.members_contribution_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.members_loan_repayment_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.members_loan_repayment_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td>Interest on Loans KCB</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Interest on Deposits Lofty</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td>Other Income KCB</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Other Income Lofty</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td><strong>Total Inflows</strong></td><td><strong>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td>Loans Advanced to Members</td><td>KES ${(monthlyData.loans_advanced || 0).toFixed(2)}</td></tr>
+                            <tr><td>Bank Charges</td><td>KES ${(monthlyData.bank_charges || 0).toFixed(2)}</td></tr>
+                            <tr><td>Petty Cash Utilized</td><td>KES ${(monthlyData.petty_cash_utilized || 0).toFixed(2)}</td></tr>
+                            <tr><td>AGM Facilitation</td><td>KES ${(monthlyData.agm_facilitation || 0).toFixed(2)}</td></tr>
+                            <tr><td>Welfare Kitty Utilized</td><td>KES ${(monthlyData.welfare_kitty_utilized || 0).toFixed(2)}</td></tr>
+                            <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
+                            <tr><td><strong>Total Outflows</strong></td><td><strong>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td><strong>Total Balance</strong></td><td><strong>KES ${(monthlyData.total_balance || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td><strong>KCB Balance (as at date)</strong></td><td><strong>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td><strong>Lofty Balance (as at date)</strong></td><td><strong>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</strong></td></tr>
+                        ` : '<tr><td colspan="2">No data available for selected period.</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    logError('Error loading financial data', error);
+                    if (currentMainPage === 2) {
+                        document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data. Please check your connection and try again later.</td></tr>';
+                    }
+                    if (currentMainPage === 3) {
+                        document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="5">Error loading member data. Please check your connection and try again later.</td></tr>';
+                    }
+                });
+        }
+
+        function updateBehaviorReport() {
+            fetch('/api/data')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    const period = document.getElementById('behaviorPeriod').value;
+                    const periodValue = document.getElementById('behaviorMonth').value;
+                    let monthlyData = {};
+                    let analysis = '';
+
+                    if (period === 'monthly' && periodValue) {
+                        monthlyData = data.monthly_reports[periodValue] || {};
+                    } else if (period === 'quarterly' && periodValue) {
+                        const [year, quarter] = periodValue.split('-Q');
+                        const quarterMonths = [];
+                        const startMonth = (parseInt(quarter) - 1) * 3 + 1;
+                        for (let i = 0; i < 3; i++) {
+                            const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
+                            if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
+                        }
+                        monthlyData = quarterMonths.reduce((acc, curr) => ({
+                            total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                            total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                            total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
+                            kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
+                            lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
+                            loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
+                            members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0)
+                        }), {});
+                    } else if (period === 'yearly' && periodValue) {
+                        const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
+                        monthlyData = yearMonths.reduce((acc, month) => {
+                            const curr = data.monthly_reports[month];
+                            return {
+                                total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                                total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                                total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
+                                kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
+                                lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
+                                loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
+                                members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0)
+                            };
+                        }, {});
+                    }
+
+                    // Simple analysis for company behavior
+                    if (monthlyData.total_inflows && monthlyData.total_outflows) {
+                        const netFlow = monthlyData.total_inflows - monthlyData.total_outflows;
+                        analysis = netFlow > 0 ? 'Positive net flow indicates healthy financial growth.' :
+                                  netFlow < 0 ? 'Negative net flow suggests higher expenditure than income.' :
+                                  'Balanced inflows and outflows indicate stable financial performance.';
+                        if (monthlyData.loans_advanced > monthlyData.members_contribution_kcb) {
+                            analysis += ' High loan disbursements relative to contributions may indicate aggressive lending.';
+                        }
+                    } else {
+                        analysis = 'Insufficient data to analyze company behavior.';
+                    }
+
+                    const behaviorReportBody = document.getElementById('behaviorReportBody');
+                    behaviorReportBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
+                        <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
+                        <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
+                        <tr><td>Net Flow</td><td>KES ${((monthlyData.total_inflows || 0) - (monthlyData.total_outflows || 0)).toFixed(2)}</td></tr>
+                        <tr><td>Total Balance</td><td>KES ${(monthlyData.total_balance || 0).toFixed(2)}</td></tr>
+                        <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
+                        <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
+                        <tr><td>Loans Advanced</td><td>KES ${(monthlyData.loans_advanced || 0).toFixed(2)}</td></tr>
+                        <tr><td>Members Contributions</td><td>KES ${(monthlyData.members_contribution_kcb || 0).toFixed(2)}</td></tr>
+                        <tr><td><strong>Analysis</strong></td><td>${analysis}</td></tr>
+                    ` : '<tr><td colspan="2">No data available for selected period.</td></tr>';
+                })
+                .catch(error => {
+                    logError('Error loading behavior report', error);
+                    document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading report. Please check your connection and try again later.</td></tr>';
+                });
+        }
+
         elements.calcButton.addEventListener('keypress', e => {
             if (e.key === 'Enter') calculate();
         });
@@ -811,9 +1233,62 @@
         window.addEventListener('load', () => {
             populateYears();
             toggleFields();
+            populateReportPeriods();
+            populateBehaviorPeriods();
+            changeMainPage(0);
             elements.amount.addEventListener('input', updateButtonState);
             elements.loanType.addEventListener('change', updateButtonState);
             elements.repaymentPeriod.addEventListener('change', updateButtonState);
+            document.getElementById('reportPeriod').addEventListener('change', populateReportPeriods);
+            document.getElementById('behaviorPeriod').addEventListener('change', populateBehaviorPeriods);
+            document.getElementById('searchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const searchTerm = document.getElementById('memberName').value.toLowerCase();
+                fetch('/api/data')
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        const members = data.member_contributions || [];
+                        const results = members.filter(member => member.member_name.toLowerCase().includes(searchTerm));
+                        const resultDiv = document.getElementById('searchResult');
+                        resultDiv.innerHTML = '';
+                        if (results.length === 0) {
+                            resultDiv.innerHTML = '<p>No members found.</p>';
+                        } else {
+                            const table = document.createElement('table');
+                            table.className = 'member-table';
+                            table.innerHTML = `
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contribution (KES)</th>
+                                        <th>Shares</th>
+                                        <th>Last Contribution</th>
+                                        <th>Loan Limit (KES)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${results.map(member => `
+                                        <tr>
+                                            <td>${member.member_name || 'Unknown'}</td>
+                                            <td>KES ${(member.amount || 0).toFixed(2)}</td>
+                                            <td>${member.shares || 0}</td>
+                                            <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+                                            <td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            `;
+                            resultDiv.appendChild(table);
+                        }
+                    })
+                    .catch(error => {
+                        logError('Error searching members', error);
+                        document.getElementById('searchResult').innerHTML = '<p>Error searching members. Please check your connection and try again later.</p>';
+                    });
+            });
         });
     </script>
 </body>

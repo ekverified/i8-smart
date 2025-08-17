@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="i-8 SMART BOT Admin: Update financial data and member contributions for the SACCO.">
+    <meta name="author" content="Insightful Eight Co. Ltd.">
+    <title>i-8 SMART BOT Admin</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container" id="authContainer">
+        <div class="title-container">
+            <div>
+                <div class="main-title">i-8 SMART</div>
+                <div class="sub-title">admin</div>
+            </div>
+        </div>
+        <div id="loginForm" class="financial-section">
+            <h2>Admin Login</h2>
+            <form id="adminLoginForm">
+                <label for="adminEmail">Email:</label>
+                <input type="email" id="adminEmail" placeholder="Enter admin email" aria-label="Admin email" required>
+                <span id="adminEmailError" class="error"></span>
+
+                <label for="adminPassword">Password:</label>
+                <input type="password" id="adminPassword" placeholder="Enter password" aria-label="Admin password" required>
+                <span id="adminPasswordError" class="error"></span>
+
+                <div class="button-container">
+                    <button type="submit" aria-label="Login">Login</button>
+                    <button type="button" onclick="showRegisterForm()" aria-label="Register new admin">Register</button>
+                    <button type="button" onclick="showResetForm()" aria-label="Reset password">Reset Password</button>
+                </div>
+            </form>
+            <div id="authResult" class="result"></div>
+        </div>
+        <div id="registerForm" class="financial-section" style="display: none;">
+            <h2>Register Admin</h2>
+            <form id="adminRegisterForm">
+                <label for="registerEmail">Email:</label>
+                <input type="email" id="registerEmail" placeholder="Enter admin email" aria-label="New admin email" required>
+                <span id="registerEmailError" class="error"></span>
+
+                <label for="registerPassword">Password:</label>
+                <input type="password" id="registerPassword" placeholder="Enter password" aria-label="New admin password" required>
+                <span id="registerPasswordError" class="error"></span>
+
+                <div class="button-container">
+                    <button type="submit" aria-label="Register">Register</button>
+                    <button type="button" onclick="showLoginForm()" aria-label="Back to login">Back</button>
+                </div>
+            </form>
+        </div>
+        <div id="resetForm" class="financial-section" style="display: none;">
+            <h2>Reset Password</h2>
+            <form id="adminResetForm">
+                <label for="resetEmail">Email:</label>
+                <input type="email" id="resetEmail" placeholder="Enter admin email" aria-label="Admin email for reset" required>
+                <span id="resetEmailError" class="error"></span>
+
+                <label for="resetCode">Reset Code (check email):</label>
+                <input type="text" id="resetCode" placeholder="Enter reset code" aria-label="Reset code" required>
+                <span id="resetCodeError" class="error"></span>
+
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" aria-label="New password" required>
+                <span id="newPasswordError" class="error"></span>
+
+                <div class="button-container">
+                    <button type="submit" aria-label="Reset Password">Reset</button>
+                    <button type="button" onclick="showLoginForm()" aria-label="Back to login">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="container" id="adminContainer" style="display: none;">
+        <div class="title-container">
+            <div>
+                <div class="main-title">i-8 SMART</div>
+                <div class="sub-title">admin</div>
+            </div>
+        </div>
+        <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear inputs">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+        <button class="logout-button" onclick="logout()" aria-label="Logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+        <button class="backup-button" onclick="downloadData()" aria-label="Download data backup">
+            <i class="fas fa-download"></i> Download Backup
+        </button>
+        <div class="financial-section">
+            <h2>Update Financial Data</h2>
+            <form id="adminForm">
+                <label for="month">Select Month:</label>
+                <select id="month" aria-label="Select month for financial data" required>
+                    <option value="">Select Month</option>
+                </select>
+                <span id="monthError" class="error"></span>
+
+                <h2>Inflows</h2>
+                <label for="opening_kcb_balance">Opening KCB Balance (KES):</label>
+                <input type="number" id="opening_kcb_balance" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening KCB balance in KES">
+                <span id="openingKcbError" class="error"></span>
+
+                <label for="opening_lofty_balance">Opening Lofty Balance (KES):</label>
+                <input type="number" id="opening_lofty_balance" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening Lofty balance in KES">
+                <span id="openingLoftyError" class="error"></span>
+
+                <label for="members_contribution_kcb">Members Contribution KCB (KES):</label>
+                <input type="number" id="members_contribution_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
+                <span id="membersContributionKcbError" class="error"></span>
+
+                <label for="members_loan_repayment_kcb">Members Loan Repayment KCB (KES):</label>
+                <input type="number" id="members_loan_repayment_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
+                <span id="membersLoanRepaymentKcbError" class="error"></span>
+
+                <label for="members_loan_repayment_lofty">Members Loan Repayment Lofty (KES):</label>
+                <input type="number" id="members_loan_repayment_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
+                <span id="membersLoanRepaymentLoftyError" class="error"></span>
+
+                <label for="interest_on_loans_kcb">Interest on Loans KCB (KES):</label>
+                <input type="number" id="interest_on_loans_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
+                <span id="interestOnLoansKcbError" class="error"></span>
+
+                <label for="interest_on_deposits_lofty">Interest on Deposits Lofty (KES):</label>
+                <input type="number" id="interest_on_deposits_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
+                <span id="interestOnDepositsLoftyError" class="error"></span>
+
+                <label for="other_income_kcb">Other Income KCB (KES):</label>
+                <input type="number" id="other_income_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income KCB in KES">
+                <span id="otherIncomeKcbError" class="error"></span>
+
+                <label for="other_income_lofty">Other Income Lofty (KES):</label>
+                <input type="number" id="other_income_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income Lofty in KES">
+                <span id="otherIncomeLoftyError" class="error"></span>
+
+                <h2>Outflows</h2>
+                <label for="loans_advanced">Loans Advanced to Members (KES):</label>
+                <select id="loans_advanced_account" aria-label="Select account for loans advanced">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
+                <input type="number" id="loans_advanced" min="0" step="0.01" placeholder="Enter amount" aria-label="Loans advanced to members in KES">
+                <span id="loansAdvancedError" class="error"></span>
+
+                <label for="bank_charges">Bank Charges (KES):</label>
+                <input type="number" id="bank_charges" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
+                <span id="bankChargesError" class="error"></span>
+
+                <label for="petty_cash_utilized">Petty Cash Utilized (KES):</label>
+                <select id="petty_cash_utilized_account" aria-label="Select account for petty cash utilized">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
+                <input type="number" id="petty_cash_utilized" min="0" step="0.01" placeholder="Enter amount" aria-label="Petty cash utilized in KES">
+                <span id="pettyCashUtilizedError" class="error"></span>
+
+                <label for="agm_facilitation">AGM Facilitation (KES):</label>
+                <select id="agm_facilitation_account" aria-label="Select account for AGM facilitation">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
+                <input type="number" id="agm_facilitation" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM facilitation in KES">
+                <span id="agmFacilitationError" class="error"></span>
+
+                <label for="welfare_kitty_utilized">Welfare Kitty Utilized (KES):</label>
+                <select id="welfare_kitty_utilized_account" aria-label="Select account for welfare kitty utilized">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
+                <input type="number" id="welfare_kitty_utilized" min="0" step="0.01" placeholder="Enter amount" aria-label="Welfare kitty utilized in KES">
+                <span id="welfareKittyUtilizedError" class="error"></span>
+
+                <label for="other_expenses">Other Expenses (KES):</label>
+                <input type="number" id="other_expenses" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
+                <span id="otherExpensesError" class="error"></span>
+
+                <div class="button-container">
+                    <button type="submit" id="submitFinancialButton" aria-label="Submit financial data">Submit Financial Data</button>
+                </div>
+            </form>
+            <h2>Update Member Contributions</h2>
+            <form id="memberContributionForm">
+                <label for="memberSelect">Select Member:</label>
+                <select id="memberSelect" aria-label="Select member for contribution" required>
+                    <option value="">Select Member</option>
+                </select>
+                <span id="memberSelectError" class="error"></span>
+
+                <label for="contributionMonth">Select Month:</label>
+                <select id="contributionMonth" aria-label="Select month for contribution" required>
+                    <option value="">Select Month</option>
+                </select>
+                <span id="contributionMonthError" class="error"></span>
+
+                <label for="contributionAmount">Contribution Amount (KES):</label>
+                <input type="number" id="contributionAmount" min="0" step="0.01" placeholder="Enter amount" aria-label="Member contribution amount in KES" required>
+                <span id="contributionAmountError" class="error"></span>
+
+                <div class="button-container">
+                    <button type="submit" id="submitContributionButton" aria-label="Submit member contribution">Submit Contribution</button>
+                </div>
+            </form>
+            <div id="result" class="result"></div>
+            <h2>Admin Logs</h2>
+            <div id="adminLogs" class="log-section"></div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication Logic
+        async function login(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const authResult = document.getElementById('authResult');
+            document.getElementById('adminEmailError').style.display = 'none';
+            document.getElementById('adminPasswordError').style.display = 'none';
+
+            try {
+                const admin = JSON.parse(localStorage.getItem('admin') || '{}');
+                if (!admin.email) {
+                    authResult.innerHTML = '<span style="color: #e74c3c;">No admin registered. Please register.</span>';
+                    return;
+                }
+                if (admin.email !== email || admin.password !== btoa(password)) {
+                    authResult.innerHTML = '<span style="color: #e74c3c;">Invalid email or password.</span>';
+                    return;
+                }
+                localStorage.setItem('adminSession', JSON.stringify({ isAuthenticated: true, email }));
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                logAction('Login', `Admin ${email} logged in`);
+                fetchData();
+            } catch (error) {
+                console.error('Login error:', error);
+                authResult.innerHTML = '<span style="color: #e74c3c;">Login failed. Please try again.</span>';
+            }
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const authResult = document.getElementById('authResult');
+            document.getElementById('registerEmailError').style.display = 'none';
+            document.getElementById('registerPasswordError').style.display = 'none';
+
+            if (!email || !password) {
+                authResult.innerHTML = '<span style="color: #e74c3c;">Please fill in all fields.</span>';
+                return;
+            }
+            if (localStorage.getItem('admin')) {
+                authResult.innerHTML = '<span style="color: #e74c3c;">An admin is already registered.</span>';
+                return;
+            }
+            try {
+                localStorage.setItem('admin', JSON.stringify({ email, password: btoa(password) }));
+                authResult.innerHTML = '<span style="color: #34c759;">Registration successful! Please login.</span>';
+                logAction('Register', `Admin ${email} registered`);
+                showLoginForm();
+            } catch (error) {
+                console.error('Registration error:', error);
+                authResult.innerHTML = '<span style="color: #e74c3c;">Registration failed. Please try again.</span>';
+            }
+        }
+
+        async function resetPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value;
+            const code = document.getElementById('resetCode').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const authResult = document.getElementById('authResult');
+            document.getElementById('resetEmailError').style.display = 'none';
+            document.getElementById('resetCodeError').style.display = 'none';
+            document.getElementById('newPasswordError').style.display = 'none';
+
+            try {
+                const admin = JSON.parse(localStorage.getItem('admin') || '{}');
+                if (!admin.email || admin.email !== email) {
+                    authResult.innerHTML = '<span style="color: #e74c3c;">No admin found with this email.</span>';
+                    return;
+                }
+                const storedCode = localStorage.getItem('resetCode');
+                if (!storedCode || storedCode !== code) {
+                    authResult.innerHTML = '<span style="color: #e74c3c;">Invalid reset code.</span>';
+                    return;
+                }
+                localStorage.setItem('admin', JSON.stringify({ email, password: btoa(newPassword) }));
+                localStorage.removeItem('resetCode');
+                authResult.innerHTML = '<span style="color: #34c759;">Password reset successful! Please login.</span>';
+                logAction('Password Reset', `Admin ${email} reset password`);
+                showLoginForm();
+            } catch (error) {
+                console.error('Reset error:', error);
+                authResult.innerHTML = '<span style="color: #e74c3c;">Reset failed. Please try again.</span>';
+            }
+        }
+
+        function sendResetCode() {
+            const email = document.getElementById('resetEmail').value;
+            if (email) {
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('resetCode', code);
+                console.log(`Reset code for ${email}: ${code}`);
+                document.getElementById('authResult').innerHTML = '<span style="color: #34c759;">Reset code sent to email (check console).</span>';
+            }
+        }
+
+        // Admin Functionality
+        const MEMBERS = [
+            "John Waweru Njeri", "Geoffrey Mugi Gicini", "James Njoroge Kamau",
+            "Joseph Wachira Waithaka", "Enoch Kamau Thumbi", "Hermstone Mwangi Isaac",
+            "Paul Macharia Muchiri", "John Gatheru Iragu", "Isaac Thuku Maina",
+            "Nephat Njeru Muthee"
+        ];
+
+        function populateMonths(selectId) {
+            const monthSelect = document.getElementById(selectId);
+            monthSelect.innerHTML = '<option value="">Select Month</option>';
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth();
+            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            for (let year = 2024; year <= currentYear; year++) {
+                const maxMonth = year === currentYear ? currentMonth : 11;
+                for (let month = 0; month <= maxMonth; month++) {
+                    const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                    const option = document.createElement('option');
+                    option.value = monthValue;
+                    option.text = `${monthAbbr[month]} ${year}`;
+                    monthSelect.appendChild(option);
+                }
+            }
+        }
+
+        function populateMembers(memberList = MEMBERS) {
+            const memberSelect = document.getElementById('memberSelect');
+            memberSelect.innerHTML = '<option value="">Select Member</option>';
+            memberList.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member;
+                option.text = member;
+                memberSelect.appendChild(option);
+            });
+        }
+
+        function validateFinancialInputs() {
+            const errors = [];
+            const inputs = [
+                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
+                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
+                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
+                { id: 'members_contribution_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
+                { id: 'members_loan_repayment_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
+                { id: 'members_loan_repayment_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
+                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
+                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
+                { id: 'other_income_kcb', errorId: 'otherIncomeKcbError', message: 'Please enter a valid other income amount.' },
+                { id: 'other_income_lofty', errorId: 'otherIncomeLoftyError', message: 'Please enter a valid other income amount.' },
+                { id: 'loans_advanced', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
+                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
+                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
+                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
+                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
+                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
+            ];
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                const errorElement = document.getElementById(input.errorId);
+                errorElement.style.display = 'none';
+                if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
+                    errorElement.textContent = input.message;
+                    errorElement.style.display = 'block';
+                    errors.push(input.message);
+                }
+            });
+
+            return errors.length === 0 ? null : errors.join(', ');
+        }
+
+        function validateContributionInputs() {
+            const errors = [];
+            const inputs = [
+                { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please select a member.' },
+                { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
+                { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
+            ];
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                const errorElement = document.getElementById(input.errorId);
+                errorElement.style.display = 'none';
+                if (!element.value || (element.type === 'number' && parseFloat(element.value) <= 0)) {
+                    errorElement.textContent = input.message;
+                    errorElement.style.display = 'block';
+                    errors.push(input.message);
+                }
+            });
+
+            return errors.length === 0 ? null : errors.join(', ');
+        }
+
+        function logAction(action, details) {
+            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+            logs.push({ timestamp: new Date().toISOString(), action, details });
+            localStorage.setItem('adminLogs', JSON.stringify(logs));
+            displayLogs();
+        }
+
+        function displayLogs() {
+            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+            const logSection = document.getElementById('adminLogs');
+            logSection.innerHTML = logs.length > 0 ? `
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.map(log => `
+                            <tr>
+                                <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
+                                <td>${log.action}</td>
+                                <td>${log.details}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : '<p>No logs available.</p>';
+        }
+
+        function refreshForm() {
+            document.getElementById('adminForm').reset();
+            document.getElementById('memberContributionForm').reset();
+            document.querySelectorAll('.error').forEach(error => {
+                error.textContent = '';
+                error.style.display = 'none';
+            });
+            document.getElementById('result').innerHTML = '';
+            populateMonths('month');
+            populateMonths('contributionMonth');
+            fetchData();
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('resetForm').style.display = 'none';
+            document.getElementById('authResult').innerHTML = '';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('resetForm').style.display = 'none';
+            document.getElementById('authResult').innerHTML = '';
+        }
+
+        function showResetForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('resetForm').style.display = 'block';
+            document.getElementById('authResult').innerHTML = '';
+        }
+
+        function logout() {
+            localStorage.removeItem('adminSession');
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('adminContainer').style.display = 'none';
+            showLoginForm();
+            logAction('Logout', 'Admin logged out');
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                const jsonData = await response.json();
+                // Populate members from data.json if available, else use MEMBERS array
+                const members = jsonData.member_contributions?.length > 0
+                    ? [...new Set(jsonData.member_contributions.map(m => m.member_name))]
+                    : MEMBERS;
+                populateMembers(members);
+                displayLogs();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Failed to load data. Using default members.</span>';
+                populateMembers(MEMBERS);
+            }
+        }
+
+        async function submitFinancialForm(e) {
+            e.preventDefault();
+            const validationError = validateFinancialInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                return;
+            }
+
+            const month = document.getElementById('month').value;
+            const data = {
+                opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
+                opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
+                members_contribution_kcb: parseFloat(document.getElementById('members_contribution_kcb').value || 0),
+                members_loan_repayment_kcb: parseFloat(document.getElementById('members_loan_repayment_kcb').value || 0),
+                members_loan_repayment_lofty: parseFloat(document.getElementById('members_loan_repayment_lofty').value || 0),
+                interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
+                interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
+                other_income_kcb: parseFloat(document.getElementById('other_income_kcb').value || 0),
+                other_income_lofty: parseFloat(document.getElementById('other_income_lofty').value || 0),
+                loans_advanced: parseFloat(document.getElementById('loans_advanced').value || 0),
+                loans_advanced_account: document.getElementById('loans_advanced_account').value,
+                bank_charges: parseFloat(document.getElementById('bank_charges').value || 0),
+                petty_cash_utilized: parseFloat(document.getElementById('petty_cash_utilized').value || 0),
+                petty_cash_utilized_account: document.getElementById('petty_cash_utilized_account').value,
+                agm_facilitation: parseFloat(document.getElementById('agm_facilitation').value || 0),
+                agm_facilitation_account: document.getElementById('agm_facilitation_account').value,
+                welfare_kitty_utilized: parseFloat(document.getElementById('welfare_kitty_utilized').value || 0),
+                welfare_kitty_utilized_account: document.getElementById('welfare_kitty_utilized_account').value,
+                other_expenses: parseFloat(document.getElementById('other_expenses').value || 0),
+                total_inflows: 0,
+                total_outflows: 0,
+                kcb_balance: 0,
+                lofty_balance: 0,
+                total_balance: 0
+            };
+
+            // Calculate totals
+            data.total_inflows = data.members_contribution_kcb + data.members_loan_repayment_kcb + data.members_loan_repayment_lofty +
+                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
+            data.total_outflows = data.loans_advanced + data.bank_charges + data.petty_cash_utilized + data.agm_facilitation +
+                                  data.welfare_kitty_utilized + data.other_expenses;
+            data.kcb_balance = data.opening_kcb_balance + data.members_contribution_kcb + data.members_loan_repayment_kcb +
+                               data.interest_on_loans_kcb + data.other_income_kcb;
+            data.lofty_balance = data.opening_lofty_balance + data.members_loan_repayment_lofty + data.interest_on_deposits_lofty +
+                                 data.other_income_lofty;
+
+            ['loans_advanced', 'petty_cash_utilized', 'agm_facilitation', 'welfare_kitty_utilized'].forEach(field => {
+                if (data[`${field}_account`] === 'kcb') {
+                    data.kcb_balance -= data[field];
+                } else {
+                    data.lofty_balance -= data[field];
+                }
+            });
+            data.total_balance = data.kcb_balance + data.lofty_balance;
+
+            try {
+                const response = await fetch('/api/update-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'updateBalanceSheet', month, data })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('result').innerHTML = '<span style="color: #34c759;">Financial data updated successfully!</span>';
+                    logAction('Financial Update', `Updated financial data for ${month}`);
+                    refreshForm();
+                } else {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${result.error}</span>`;
+                }
+            } catch (error) {
+                console.error('Error updating financial data:', error);
+                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating financial data. Please try again.</span>';
+            }
+        }
+
+        async function submitContributionForm(e) {
+            e.preventDefault();
+            const validationError = validateContributionInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                return;
+            }
+
+            const member = document.getElementById('memberSelect').value;
+            const month = document.getElementById('contributionMonth').value;
+            const amount = parseFloat(document.getElementById('contributionAmount').value);
+            const data = {
+                member_name: member,
+                amount: amount,
+                contributions: { [month]: amount }
+            };
+
+            try {
+                const response = await fetch('/api/update-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'addMemberContribution', month, data })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('result').innerHTML = '<span style="color: #34c759;">Member contribution updated successfully!</span>';
+                    logAction('Contribution Update', `Updated contribution of ${amount} KES for ${member} in ${month}`);
+                    refreshForm();
+                } else {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${result.error}</span>`;
+                }
+            } catch (error) {
+                console.error('Error updating contribution:', error);
+                document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Error updating contribution. Please try again.</span>';
+            }
+        }
+
+        function downloadData() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'data-backup.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    logAction('Backup', 'Downloaded data backup');
+                })
+                .catch(error => {
+                    console.error('Error downloading data:', error);
+                    document.getElementById('result').innerHTML = '<span style="color: #e74c3c;">Failed to download backup. Please try again.</span>';
+                });
+        }
+
+        window.addEventListener('load', () => {
+            const session = JSON.parse(localStorage.getItem('adminSession') || '{}');
+            if (session.isAuthenticated) {
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                fetchData();
+            } else {
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('adminContainer').style.display = 'none';
+            }
+            document.getElementById('adminLoginForm').addEventListener('submit', login);
+            document.getElementById('adminRegisterForm').addEventListener('submit', register);
+            document.getElementById('adminResetForm').addEventListener('submit', resetPassword);
+            document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
+            document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
+            document.getElementById('resetEmail').addEventListener('input', sendResetCode);
+        });
+    </script>
+</body>
+</html>
