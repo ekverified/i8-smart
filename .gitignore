@@ -33,10 +33,13 @@ data-backup*.json
 
 # Documentation drafts
 *.pdf
-!public/docs/*.pdf  # Include specific documentation files if needed (e.g., admin-guide.pdf)
+!public/docs/*.pdf
 
 # macOS-specific files
 .DS_Store
 
 # Windows-specific files
 Thumbs.db
+
+# Financial data
+data.json
