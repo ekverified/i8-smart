@@ -490,7 +490,7 @@
             const periodSelect = document.getElementById('reportPeriod');
             const monthSelect = document.getElementById('reportMonth');
             monthSelect.innerHTML = '<option value="">Select a period</option>';
-            fetch('data.json')
+            fetch('https://i8-smart-backend.onrender.com/api/data')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     return response.json();
@@ -543,7 +543,7 @@
             const periodSelect = document.getElementById('behaviorPeriod');
             const monthSelect = document.getElementById('behaviorMonth');
             monthSelect.innerHTML = '<option value="">Select a period</option>';
-            fetch('data.json')
+            fetch('https://i8-smart-backend.onrender.com/api/data')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     return response.json();
@@ -1035,7 +1035,7 @@
         }
 
         function updateFinancialData() {
-            fetch('data.json')
+            fetch('https://i8-smart-backend.onrender.com/api/data')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     return response.json();
@@ -1062,24 +1062,14 @@
                         monthlyData = quarterMonths.reduce((acc, curr) => ({
                             opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
                             opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
-                            members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0),
-                            members_loan_repayment_kcb: (acc.members_loan_repayment_kcb || 0) + (curr.members_loan_repayment_kcb || 0),
-                            members_loan_repayment_lofty: (acc.members_loan_repayment_lofty || 0) + (curr.members_loan_repayment_lofty || 0),
-                            interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
-                            interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
-                            other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
-                            other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
-                            total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                            loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
-                            bank_charges: (acc.bank_charges || 0) + (curr.bank_charges || 0),
-                            petty_cash_utilized: (acc.petty_cash_utilized || 0) + (curr.petty_cash_utilized || 0),
-                            agm_facilitation: (acc.agm_facilitation || 0) + (curr.agm_facilitation || 0),
-                            welfare_kitty_utilized: (acc.welfare_kitty_utilized || 0) + (curr.welfare_kitty_utilized || 0),
-                            other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
-                            total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                            total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                            kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
-                            lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0)
+                            total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                            total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                            total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
+                            bank_charges_kcb: (acc.bank_charges_kcb || 0) + (curr.bank_charges_kcb || 0),
+                            bank_charges_lofty: (acc.bank_charges_lofty || 0) + (curr.bank_charges_lofty || 0),
+                            total_member_contributions_lofty: (acc.total_member_contributions_lofty || 0) + (curr.total_member_contributions_lofty || 0),
+                            total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
+                            total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0)
                         }), {});
                     } else if (period === 'yearly' && periodValue) {
                         const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
@@ -1088,24 +1078,14 @@
                             return {
                                 opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
                                 opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
-                                members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0),
-                                members_loan_repayment_kcb: (acc.members_loan_repayment_kcb || 0) + (curr.members_loan_repayment_kcb || 0),
-                                members_loan_repayment_lofty: (acc.members_loan_repayment_lofty || 0) + (curr.members_loan_repayment_lofty || 0),
-                                interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
-                                interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
-                                other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
-                                other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
-                                total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                                loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
-                                bank_charges: (acc.bank_charges || 0) + (curr.bank_charges || 0),
-                                petty_cash_utilized: (acc.petty_cash_utilized || 0) + (curr.petty_cash_utilized || 0),
-                                agm_facilitation: (acc.agm_facilitation || 0) + (curr.agm_facilitation || 0),
-                                welfare_kitty_utilized: (acc.welfare_kitty_utilized || 0) + (curr.welfare_kitty_utilized || 0),
-                                other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
-                                total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                                total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                                kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
-                                lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0)
+                                total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                                total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                                total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
+                                bank_charges_kcb: (acc.bank_charges_kcb || 0) + (curr.bank_charges_kcb || 0),
+                                bank_charges_lofty: (acc.bank_charges_lofty || 0) + (curr.bank_charges_lofty || 0),
+                                total_member_contributions_lofty: (acc.total_member_contributions_lofty || 0) + (curr.total_member_contributions_lofty || 0),
+                                total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
+                                total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0)
                             };
                         }, {});
                     }
@@ -1115,24 +1095,14 @@
                         balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
                             <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
                             <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
-                            <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.members_contribution_kcb || 0).toFixed(2)}</td></tr>
-                            <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.members_loan_repayment_kcb || 0).toFixed(2)}</td></tr>
-                            <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.members_loan_repayment_lofty || 0).toFixed(2)}</td></tr>
-                            <tr><td>Interest on Loans KCB</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
-                            <tr><td>Interest on Deposits Lofty</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
-                            <tr><td>Other Income KCB</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
-                            <tr><td>Other Income Lofty</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
-                            <tr><td><strong>Total Inflows</strong></td><td><strong>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td>Loans Advanced to Members</td><td>KES ${(monthlyData.loans_advanced || 0).toFixed(2)}</td></tr>
-                            <tr><td>Bank Charges</td><td>KES ${(monthlyData.bank_charges || 0).toFixed(2)}</td></tr>
-                            <tr><td>Petty Cash Utilized</td><td>KES ${(monthlyData.petty_cash_utilized || 0).toFixed(2)}</td></tr>
-                            <tr><td>AGM Facilitation</td><td>KES ${(monthlyData.agm_facilitation || 0).toFixed(2)}</td></tr>
-                            <tr><td>Welfare Kitty Utilized</td><td>KES ${(monthlyData.welfare_kitty_utilized || 0).toFixed(2)}</td></tr>
-                            <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
-                            <tr><td><strong>Total Outflows</strong></td><td><strong>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td><strong>Total Balance</strong></td><td><strong>KES ${(monthlyData.total_balance || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td><strong>KCB Balance (as at date)</strong></td><td><strong>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td><strong>Lofty Balance (as at date)</strong></td><td><strong>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td>Members Contribution Lofty</td><td>KES ${(monthlyData.total_member_contributions_lofty || 0).toFixed(2)}</td></tr>
+                            <tr><td>Loans Disbursed KCB</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                            <tr><td>Loans Disbursed Lofty</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
                         ` : '<tr><td colspan="2">No data available for selected period.</td></tr>';
                     }
                 })
@@ -1148,7 +1118,7 @@
         }
 
         function updateBehaviorReport() {
-            fetch('data.json')
+            fetch('https://i8-smart-backend.onrender.com/api/data')
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     return response.json();
@@ -1170,26 +1140,26 @@
                             if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
                         }
                         monthlyData = quarterMonths.reduce((acc, curr) => ({
-                            total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                            total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                            total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                            kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
-                            lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
-                            loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
-                            members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0)
+                            total_inflows: (acc.total_inflows || 0) + (curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                            total_outflows: (acc.total_outflows || 0) + (curr.total_loan_disbursements_kcb || 0) + (curr.bank_charges_kcb || 0),
+                            total_balance: (acc.total_balance || 0) + ((curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0) - (curr.total_loan_disbursements_kcb || 0) - (curr.bank_charges_kcb || 0)),
+                            kcb_balance: (acc.kcb_balance || 0) + (curr.opening_kcb_balance || 0) + (curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0) - (curr.total_loan_disbursements_kcb || 0) - (curr.bank_charges_kcb || 0),
+                            lofty_balance: (acc.lofty_balance || 0) + (curr.opening_lofty_balance || 0) + (curr.total_member_contributions_lofty || 0) - (curr.total_loan_disbursements_lofty || 0) - (curr.bank_charges_lofty || 0),
+                            loans_advanced: (acc.loans_advanced || 0) + (curr.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_lofty || 0),
+                            total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0)
                         }), {});
                     } else if (period === 'yearly' && periodValue) {
                         const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
                         monthlyData = yearMonths.reduce((acc, month) => {
                             const curr = data.monthly_reports[month];
                             return {
-                                total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                                total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                                total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                                kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
-                                lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
-                                loans_advanced: (acc.loans_advanced || 0) + (curr.loans_advanced || 0),
-                                members_contribution_kcb: (acc.members_contribution_kcb || 0) + (curr.members_contribution_kcb || 0)
+                                total_inflows: (acc.total_inflows || 0) + (curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                                total_outflows: (acc.total_outflows || 0) + (curr.total_loan_disbursements_kcb || 0) + (curr.bank_charges_kcb || 0),
+                                total_balance: (acc.total_balance || 0) + ((curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0) - (curr.total_loan_disbursements_kcb || 0) - (curr.bank_charges_kcb || 0)),
+                                kcb_balance: (acc.kcb_balance || 0) + (curr.opening_kcb_balance || 0) + (curr.total_member_contributions_kcb || 0) + (curr.total_loan_repayments_kcb || 0) - (curr.total_loan_disbursements_kcb || 0) - (curr.bank_charges_kcb || 0),
+                                lofty_balance: (acc.lofty_balance || 0) + (curr.opening_lofty_balance || 0) + (curr.total_member_contributions_lofty || 0) - (curr.total_loan_disbursements_lofty || 0) - (curr.bank_charges_lofty || 0),
+                                loans_advanced: (acc.loans_advanced || 0) + (curr.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_lofty || 0),
+                                total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0)
                             };
                         }, {});
                     }
@@ -1200,7 +1170,7 @@
                         analysis = netFlow > 0 ? 'Positive net flow indicates healthy financial growth.' :
                                   netFlow < 0 ? 'Negative net flow suggests higher expenditure than income.' :
                                   'Balanced inflows and outflows indicate stable financial performance.';
-                        if (monthlyData.loans_advanced > monthlyData.members_contribution_kcb) {
+                        if (monthlyData.loans_advanced > monthlyData.total_member_contributions_kcb) {
                             analysis += ' High loan disbursements relative to contributions may indicate aggressive lending.';
                         }
                     } else {
@@ -1216,7 +1186,7 @@
                         <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
                         <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
                         <tr><td>Loans Advanced</td><td>KES ${(monthlyData.loans_advanced || 0).toFixed(2)}</td></tr>
-                        <tr><td>Members Contributions</td><td>KES ${(monthlyData.members_contribution_kcb || 0).toFixed(2)}</td></tr>
+                        <tr><td>Members Contributions</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
                         <tr><td><strong>Analysis</strong></td><td>${analysis}</td></tr>
                     ` : '<tr><td colspan="2">No data available for selected period.</td></tr>';
                 })
@@ -1244,7 +1214,7 @@
             document.getElementById('searchForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const searchTerm = document.getElementById('memberName').value.toLowerCase();
-                fetch('data.json')
+                fetch('https://i8-smart-backend.onrender.com/api/data')
                     .then(response => {
                         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                         return response.json();
