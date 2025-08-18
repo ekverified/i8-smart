@@ -3,15 +3,20 @@
 
 # Temporary files
 *.log
+*.log.*
 *.tmp
 *.bak
+*~
 *.swp
+*.swo
 
 # IDE and editor files
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
+.emacs*
+*.code-workspace
 
 # Node.js dependencies
 node_modules/
@@ -22,14 +27,21 @@ package-lock.json
 .env.local
 .env.development
 .env.production
+data.json
+*.json
+!package.json
+!data-backup.json
 
 # Backup files
-data-backup*.json
+data-backup.json
 
 # Build and test artifacts
 /dist/
 /build/
 /coverage/
+/public/build/
+/test-output/
+*.test.json
 
 # Documentation drafts
 *.pdf
@@ -41,5 +53,8 @@ data-backup*.json
 # Windows-specific files
 Thumbs.db
 
-# Financial data
-data.json
+# Render-specific files
+render_logs/
+
+# Project-specific ignores
+# Add any additional project-specific files or directories here
