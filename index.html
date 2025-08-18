@@ -50,12 +50,6 @@
                 <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
                 <span id="amountError" class="error"></span>
 
-                <div id="memberFields" style="display: none;">
-                    <label for="memberName">Member Name:</label>
-                    <input type="text" id="memberName" placeholder="Enter member name (e.g., Joseph Kinyua)" aria-label="Enter member name for contribution">
-                    <span id="memberNameError" class="error"></span>
-                </div>
-
                 <div id="contributionFields">
                     <label for="year">Contribution Year:</label>
                     <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
@@ -248,7 +242,6 @@
         const elements = {
             type: document.getElementById('type'),
             amount: document.getElementById('amount'),
-            memberName: document.getElementById('memberName'),
             contributionFields: document.getElementById('contributionFields'),
             year: document.getElementById('year'),
             month: document.getElementById('month'),
@@ -270,7 +263,6 @@
             errors: {
                 type: document.getElementById('typeError'),
                 amount: document.getElementById('amountError'),
-                memberName: document.getElementById('memberNameError'),
                 year: document.getElementById('yearError'),
                 month: document.getElementById('monthError'),
                 dueDate: document.getElementById('dueDateError'),
@@ -355,7 +347,6 @@
             const errors = [];
             const type = elements.type.value;
             const amount = parseFloat(elements.amount.value) || 0;
-            const memberName = elements.memberName.value.trim();
             const year = elements.year.value;
             const month = elements.month.value;
             const loanType = elements.loanType.value;
@@ -396,11 +387,6 @@
             }
 
             if (type === 'contribution') {
-                if (!memberName) {
-                    elements.errors.memberName.textContent = 'Please enter a member name.';
-                    elements.errors.memberName.style.display = 'block';
-                    errors.push('Invalid member name');
-                }
                 if (!year) {
                     elements.errors.year.textContent = 'Please select a year.';
                     elements.errors.year.style.display = 'block';
@@ -524,21 +510,20 @@
             }
         }
 
-        async function submitContribution(memberName, amount, month) {
+        async function submitContribution(amount, month) {
             try {
                 const response = await fetchWithRetry(`${CONFIG.API_BASE_URL}/add-contribution`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'addContribution',
-                        memberName: memberName,
                         amount: amount,
                         month: month,
                         contributionDate: new Date().toISOString().split('T')[0]
                     })
                 });
                 if (response.message === 'Contribution added successfully') {
-                    showSuccessMessage(`Contribution of KES ${amount.toFixed(2)} for ${memberName} added successfully.`);
+                    showSuccessMessage(`Contribution of KES ${amount.toFixed(2)} added successfully.`);
                     dataCache = null; // Invalidate cache to fetch updated data
                     if (currentMainPage === 3) updateFinancialData();
                 } else {
@@ -724,8 +709,6 @@
 
         function toggleFields() {
             const type = elements.type.value;
-            elements.memberFields.style.display = type === 'contribution' ? 'block' : 'none';
-            elements.memberFields.classList.toggle('show', type === 'contribution');
             elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
             elements.contributionFields.classList.toggle('show', type === 'contribution');
             elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
@@ -738,7 +721,6 @@
             } else {
                 elements.dueDate.value = '';
                 elements.checkDate.value = '';
-                elements.memberName.value = '';
             }
             toggleRepaymentFields();
             updateButtonState();
@@ -760,7 +742,6 @@
         function updateButtonState() {
             const type = elements.type.value;
             const amount = elements.amount.value;
-            const memberName = elements.memberName.value.trim();
             const year = elements.year.value;
             const month = elements.month.value;
             const dueDate = elements.dueDate.value;
@@ -772,7 +753,7 @@
             let isValid = false;
 
             if (type === 'contribution') {
-                isValid = isAmountValid && memberName && year && month && dueDate && checkDate;
+                isValid = isAmountValid && year && month && dueDate && checkDate;
             } else if (type === 'existing_loan') {
                 isValid = isAmountValid && loanType && dueDate && checkDate;
             } else if (type === 'apply_loan') {
@@ -785,14 +766,13 @@
         function refreshForm() {
             elements.type.value = 'contribution';
             elements.amount.value = '';
-            elements.memberName.value = '';
             elements.year.value = '';
             elements.month.value = '';
             elements.dueDate.value = '';
             elements.checkDate.value = '';
             elements.loanType.value = 'short';
             elements.repaymentPeriod.value = '';
-            
+
             Object.values(elements.errors).forEach(error => {
                 error.textContent = '';
                 error.style.display = 'none';
@@ -837,8 +817,7 @@
                 const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                 const monthParts = lastResult.month.split('-');
                 const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
-                content = `Member: ${lastResult.memberName}\n`;
-                content += `Deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+                content = `Deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
                 content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
                 content += `Penalty Details:\n`;
                 content += penalty > 0
@@ -998,7 +977,6 @@
 
                 const type = elements.type.value;
                 const amount = parseFloat(elements.amount.value);
-                const memberName = elements.memberName.value.trim();
                 let tableHTML = `
                     <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
                     <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
@@ -1016,15 +994,14 @@
                     const penalty = calculateContributionPenalty(amount, daysDelayed);
                     const totalOwed = amount + penalty;
                     tableHTML += `
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Member Name</td><td>${sanitizeInput(memberName)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                     `;
                     tableHTML += '</table>';
-                    lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value, memberName };
-                    resultText += `Type: Deposit\nMember: ${memberName}\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
-                    await submitContribution(memberName, amount, elements.month.value);
+                    lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
+                    resultText += `Type: Deposit\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
+                    await submitContribution(amount, elements.month.value);
                     saveCalculation(lastResult);
                 } else if (type === 'existing_loan') {
                     const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
@@ -1275,7 +1252,7 @@
                     <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
                     <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
                     <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
-                                        <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
+                    <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
                     <tr><td>AGM Facilitation KCB</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
                     <tr><td>AGM Facilitation Lofty</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
                     <tr><td>Welfare Kitty Utilized KCB</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
@@ -1324,95 +1301,138 @@
                     if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
                 }
                 reportData = quarterMonths.reduce((acc, curr) => ({
+                    total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                    total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                    total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
+                    interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
+                    interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
+                    total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
+                    total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0),
                     total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
                     total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                    total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                    total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
-                    total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0)
+                                        total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
                 }), {});
             } else if (period === 'yearly' && periodValue) {
                 const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
                 reportData = yearMonths.reduce((acc, month) => {
                     const curr = data.monthly_reports[month];
                     return {
+                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                        total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                        total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
+                        interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
+                        interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
+                        total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
+                        total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0),
                         total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
                         total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                        total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
-                        total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0)
+                        total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
                     };
                 }, {});
             }
 
             const behaviorReportBody = document.getElementById('behaviorReportBody');
             behaviorReportBody.innerHTML = reportData && Object.keys(reportData).length > 0 ? `
-                <tr><td>Total Inflows</td><td>KES ${(reportData.total_inflows || 0).toFixed(2)}</td></tr>
-                <tr><td>Total Outflows</td><td>KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
-                <tr><td>Total Balance</td><td>KES ${(reportData.total_balance || 0).toFixed(2)}</td></tr>
-                <tr><td>Member Contributions</td><td>KES ${(reportData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Loan Disbursements</td><td>KES ${(reportData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Contribution KCB</td><td>KES ${(reportData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Loan Repayment KCB</td><td>KES ${(reportData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Loan Repayment Lofty</td><td>KES ${(reportData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Loans KCB</td><td>KES ${(reportData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Deposits Lofty</td><td>KES ${(reportData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Loans Disbursed KCB</td><td>KES ${(reportData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loans Disbursed Lofty</td><td>KES ${(reportData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td style="font-weight: bold;">Total Inflows</td><td style="font-weight: bold;">KES ${(reportData.total_inflows || 0).toFixed(2)}</td></tr>
+                <tr><td style="font-weight: bold;">Total Outflows</td><td style="font-weight: bold;">KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
+                <tr><td style="font-weight: bold;">Total Balance</td><td style="font-weight: bold;">KES ${(reportData.total_balance || 0).toFixed(2)}</td></tr>
             ` : '<tr><td colspan="2">No data available for the selected period.</td></tr>';
         }
 
-        function searchMember(event) {
-            event.preventDefault();
-            const memberName = document.getElementById('memberNameSearch').value.trim();
-            if (!memberName) {
-                document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Please enter a member name.</p>';
-                return;
-            }
-            showSpinner(elements.spinners.search);
-            fetchWithRetry(`${CONFIG.API_BASE_URL}/data`)
-                .then(data => {
-                    const members = data.member_contributions || [];
-                    const member = members.find(m => m.member_name.toLowerCase() === memberName.toLowerCase());
+        function searchMember() {
+            const searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const memberName = document.getElementById('memberNameSearch').value.trim();
+                if (!memberName) {
+                    document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Please enter a member name.</p>';
+                    return;
+                }
+
+                showSpinner(elements.spinners.search);
+                try {
+                    const response = await fetchWithRetry(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(memberName)}`);
+                    const members = response.members || [];
                     const searchResult = document.getElementById('searchResult');
-                    if (member) {
-                        searchResult.innerHTML = `
+                    if (members.length === 0) {
+                        searchResult.innerHTML = '<p>No members found.</p>';
+                    } else {
+                        let tableHTML = `
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                                    <th style="padding: 0.4rem;">Field</th>
-                                    <th style="padding: 0.4rem;">Value</th>
+                                    <th>Name</th><th>Contribution (KES)</th><th>Shares</th><th>Last Contribution</th><th>Loan Limit (KES)</th>
                                 </tr>
-                                <tr><td>Name</td><td>${sanitizeInput(member.member_name)}</td></tr>
-                                <tr><td>Contribution (KES)</td><td>${(member.amount || 0).toFixed(2)}</td></tr>
-                                <tr><td>Shares</td><td>${member.shares || 0}</td></tr>
-                                <tr><td>Last Contribution</td><td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB') : 'N/A'}</td></tr>
-                                <tr><td>Loan Limit (KES)</td><td>${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td></tr>
-                            </table>
                         `;
-                    } else {
-                        searchResult.innerHTML = '<p style="color: #e74c3c;">No member found.</p>';
+                        members.forEach(member => {
+                            tableHTML += `
+                                <tr>
+                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${sanitizeInput(member.member_name || 'Unknown')}</td>
+                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">KES ${(member.amount || 0).toFixed(2)}</td>
+                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${member.shares || 0}</td>
+                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+                        tableHTML += '</table>';
+                        searchResult.innerHTML = tableHTML;
                     }
-                })
-                .catch(error => {
-                    logError('Error searching member', error);
-                    document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Error searching member. Please try again later.</p>';
-                })
-                .finally(() => hideSpinner(elements.spinners.search));
+                } catch (error) {
+                    logError('Error searching members', error);
+                    document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Error searching members. Please try again later.</p>';
+                } finally {
+                    hideSpinner(elements.spinners.search);
+                }
+            });
         }
 
-        function debounce(func, wait) {
-            let timeout;
-            return function (...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleFields();
+            populateYears();
+            updateButtonState();
+            searchMember();
+
+            // Add input event listeners for real-time validation
+            elements.amount.addEventListener('input', updateButtonState);
+            elements.year.addEventListener('change', updateButtonState);
+            elements.month.addEventListener('change', updateButtonState);
+            elements.dueDate.addEventListener('change', updateButtonState);
+            elements.checkDate.addEventListener('change', updateButtonState);
+            elements.loanType.addEventListener('change', updateButtonState);
+            elements.repaymentPeriod.addEventListener('change', updateButtonState);
+            elements.type.addEventListener('change', updateButtonState);
+
+            // Initialize financial overview and behavior report
+            document.getElementById('reportPeriod').addEventListener('change', populateReportPeriods);
+            document.getElementById('reportMonth').addEventListener('change', updateFinancialData);
+            document.getElementById('behaviorPeriod').addEventListener('change', populateBehaviorPeriods);
+            document.getElementById('behaviorMonth').addEventListener('change', updateBehaviorReport);
+
+            // Populate initial data for financial overview and behavior report
+            populateReportPeriods();
+            populateBehaviorPeriods();
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
         }
-
-        document.getElementById('calcForm').addEventListener('input', debounce(updateButtonState, 300));
-        document.getElementById('searchForm').addEventListener('submit', searchMember);
-        document.getElementById('reportPeriod').addEventListener('change', populateReportPeriods);
-        document.getElementById('behaviorPeriod').addEventListener('change', populateBehaviorPeriods);
-        document.getElementById('reportMonth').addEventListener('change', updateFinancialData);
-        document.getElementById('behaviorMonth').addEventListener('change', updateBehaviorReport);
-
-        // Initialize
-        toggleFields();
-        populateYears();
-        updateButtonState();
-        populateReportPeriods();
-        populateBehaviorPeriods();
-        </script>
+    </script>
 </body>
 </html>
