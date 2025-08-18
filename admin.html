@@ -63,13 +63,13 @@
                 <input type="number" id="interest_on_deposits_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
                 <span id="interestOnDepositsLoftyError" class="error"></span>
 
-                <label for="other_income_kcb">Other Income KCB (KES):</label>
-                <input type="number" id="other_income_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income KCB in KES">
-                <span id="otherIncomeKcbError" class="error"></span>
-
-                <label for="other_income_lofty">Other Income Lofty (KES):</label>
-                <input type="number" id="other_income_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income Lofty in KES">
-                <span id="otherIncomeLoftyError" class="error"></span>
+                <label for="other_income">Other Income (KES):</label>
+                <select id="other_income_account" aria-label="Select account for other income">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
+                <input type="number" id="other_income" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income in KES">
+                <span id="otherIncomeError" class="error"></span>
 
                 <h2>Outflows</h2>
                 <label for="total_loan_disbursements">Loans Advanced to Members (KES):</label>
@@ -109,6 +109,10 @@
                 <span id="welfareKittyUtilizedError" class="error"></span>
 
                 <label for="other_expenses">Other Expenses (KES):</label>
+                <select id="other_expenses_account" aria-label="Select account for other expenses">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
                 <input type="number" id="other_expenses" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
                 <span id="otherExpensesError" class="error"></span>
 
@@ -194,8 +198,7 @@
                 { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
                 { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
                 { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
-                { id: 'other_income_kcb', errorId: 'otherIncomeKcbError', message: 'Please enter a valid other income amount.' },
-                { id: 'other_income_lofty', errorId: 'otherIncomeLoftyError', message: 'Please enter a valid other income amount.' },
+                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
                 { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
                 { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
                 { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
@@ -310,7 +313,7 @@
         async function submitFinancialForm(e) {
             e.preventDefault();
             const submitButton = document.getElementById('submitFinancialButton');
-            submitButton.disabled = true; // Prevent duplicate submissions
+            submitButton.disabled = true;
             const validationError = validateFinancialInputs();
             if (validationError) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
@@ -327,8 +330,8 @@
                 total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
                 interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
                 interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
-                other_income_kcb: parseFloat(document.getElementById('other_income_kcb').value || 0),
-                other_income_lofty: parseFloat(document.getElementById('other_income_lofty').value || 0),
+                other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
+                other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
                 total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
                 total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
                 bank_charges_kcb: parseFloat(document.getElementById('bank_charges').value || 0),
@@ -339,7 +342,8 @@
                 agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
                 welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
                 welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
-                other_expenses: parseFloat(document.getElementById('other_expenses').value || 0),
+                other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
+                other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
                 total_inflows: 0,
                 total_outflows: 0,
                 kcb_balance: 0,
@@ -351,18 +355,18 @@
                                  data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
             data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb + data.bank_charges_lofty +
                                   data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
-                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses;
+                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
             data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
                                data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges_kcb -
-                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb;
+                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
             data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
                                  data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges_lofty -
-                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty;
+                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
             data.total_balance = data.kcb_balance + data.lofty_balance;
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 const response = await fetch('https://i8-smart-backend.onrender.com/api/update-balance-sheet', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -390,7 +394,7 @@
         async function submitContributionForm(e) {
             e.preventDefault();
             const submitButton = document.getElementById('submitContributionButton');
-            submitButton.disabled = true; // Prevent duplicate submissions
+            submitButton.disabled = true;
             const validationError = validateContributionInputs();
             if (validationError) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
@@ -411,7 +415,7 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
                 const response = await fetch('https://i8-smart-backend.onrender.com/api/add-contribution', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -436,31 +440,28 @@
             }
         }
 
-        function downloadData() {
-            const submitButton = document.getElementById('backupButton') || document.createElement('button');
+        async function downloadData() {
+            const submitButton = document.querySelector('.backup-button');
             submitButton.disabled = true;
-            fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 })
-                .then(response => {
-                    submitButton.disabled = false;
-                    if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Downloaded data:', data);
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'data-backup.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    logAction('Backup', 'Downloaded data backup');
-                })
-                .catch(error => {
-                    console.error('Error downloading data:', error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
-                    submitButton.disabled = false;
-                });
+            try {
+                const response = await fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 });
+                if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                const data = await response.json();
+                console.log('Downloaded data:', data);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'data-backup.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                logAction('Backup', 'Downloaded data backup');
+            } catch (error) {
+                console.error('Error downloading data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
+            } finally {
+                submitButton.disabled = false;
+            }
         }
 
         window.addEventListener('load', () => {
