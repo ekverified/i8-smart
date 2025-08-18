@@ -157,7 +157,17 @@ app.post('/api/add-contribution', async (req, res) => {
     return app._router.handle(req, res); // Forward to /api/update-data
 });
 
+app.get('/api/debug/files', async (req, res) => {
+    try {
+        const files = await fs.readdir(__dirname);
+        res.json({ files });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to list files' });
+    }
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
+
