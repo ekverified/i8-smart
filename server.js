@@ -1,6 +1,5 @@
 const express = require('express');
-const fs = require('fs').promises;
-const path = require('path');
+const { Octokit } = require('@octokit/core');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -10,36 +9,83 @@ const port = process.env.PORT || 10000;
 // Middleware
 app.use(cors({ origin: 'https://ekverified.github.io' }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
-// Data file path
-const dataFile = path.join(__dirname, 'data.json');
+// GitHub API setup
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+const owner = process.env.GITHUB_OWNER || 'ekverified';
+const repo = process.env.GITHUB_REPO || 'i8-smart-backend';
+const path = 'data.json';
 
-// Initialize data.json
+// Initialize data.json in repository if it doesn't exist
 async function initializeDataFile() {
     try {
-        await fs.access(dataFile);
+        console.log(`Initializing data.json in ${owner}/${repo}/${path}`);
+        await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path });
+        console.log('data.json already exists in repository');
     } catch (error) {
-        if (error.code === 'ENOENT') {
-            console.log('Creating new data.json');
-            await fs.writeFile(dataFile, JSON.stringify({ monthly_reports: {}, member_contributions: [] }, null, 2));
+        if (error.status === 404) {
+            console.log('Creating new data.json in repository');
+            const initialData = JSON.stringify({ monthly_reports: {}, member_contributions: [] }, null, 2);
+            await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+                owner,
+                repo,
+                path,
+                message: 'Initialize data.json',
+                content: Buffer.from(initialData).toString('base64')
+            });
+            console.log('Initialized data.json with:', initialData);
         } else {
+            console.error('Failed to initialize data.json:', error.message);
             throw error;
         }
     }
 }
 initializeDataFile();
 
+// Helper to get data.json content
+async function getData() {
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path });
+        const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+        return JSON.parse(content);
+    } catch (error) {
+        console.error('Failed to read data.json:', error.message);
+        throw error;
+    }
+}
+
+// Helper to save data.json
+async function saveData(data, commitMessage) {
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', { owner, repo, path });
+        const sha = response.data.sha;
+        const content = JSON.stringify(data, null, 2);
+        await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo,
+            path,
+            message: commitMessage,
+            content: Buffer.from(content).toString('base64'),
+            sha
+        });
+        console.log(`Saved data.json: ${content}`);
+    } catch (error) {
+        console.error('Failed to save data.json:', error.message);
+        throw error;
+    }
+}
+
 // GET /api/data
 app.get('/api/data', async (req, res) => {
     try {
-        console.log('GET /api/data - Attempting to read file at:', dataFile);
-        const fileContent = await fs.readFile(dataFile, 'utf8');
-        console.log('GET /api/data - File read successfully');
-        res.json(JSON.parse(fileContent));
+        console.log('GET /api/data - Fetching from GitHub');
+        const data = await getData();
+        console.log('GET /api/data - Data fetched:', JSON.stringify(data, null, 2));
+        res.json(data);
     } catch (error) {
         console.error('GET /api/data - Failed:', error.message);
-        res.status(500).json({ error: 'Failed to read data' });
+        res.status(500).json({ error: 'Failed to read data', details: error.message });
     }
 });
 
@@ -50,14 +96,8 @@ async function addMemberContribution(data, month) {
     if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) throw new Error('Valid positive amount is required');
     if (!data.contributions || !data.contributions[month]) throw new Error(`Contribution for ${month} is required`);
 
-    let jsonData = { monthly_reports: {}, member_contributions: [] };
-    try {
-        const fileContent = await fs.readFile(dataFile, 'utf8');
-        jsonData = JSON.parse(fileContent);
-    } catch (error) {
-        console.log('Creating new data.json for contributions');
-        await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
-    }
+    const jsonData = await getData();
+    console.log('addMemberContribution - Current data:', JSON.stringify(jsonData, null, 2));
 
     const memberIndex = jsonData.member_contributions.findIndex(m => m.member_name === data.member_name);
     if (memberIndex >= 0) {
@@ -80,8 +120,8 @@ async function addMemberContribution(data, month) {
         console.log(`Added new contribution for ${data.member_name}`);
     }
 
-    await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
-    console.log(`Successfully wrote contribution for ${data.member_name} to data.json`);
+    console.log('addMemberContribution - Saving to GitHub:', JSON.stringify(jsonData, null, 2));
+    await saveData(jsonData, `Add contribution for ${data.member_name} in ${month}`);
     return { success: true, message: `Contribution added for ${data.member_name}` };
 }
 
@@ -141,19 +181,13 @@ app.post('/api/update-balance-sheet', async (req, res) => {
             }
         }
 
-        let jsonData = { monthly_reports: {}, member_contributions: [] };
-        try {
-            const fileContent = await fs.readFile(dataFile, 'utf8');
-            jsonData = JSON.parse(fileContent);
-        } catch (error) {
-            console.log('POST /api/update-balance-sheet - Creating new data.json');
-            await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
-        }
+        const jsonData = await getData();
+        console.log('POST /api/update-balance-sheet - Current data:', JSON.stringify(jsonData, null, 2));
 
         jsonData.monthly_reports[month] = data;
-        console.log(`POST /api/update-balance-sheet - Updated monthly_reports for ${month}`);
-        await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
-        console.log(`POST /api/update-balance-sheet - Successfully wrote financial data for ${month}`);
+        console.log('POST /api/update-balance-sheet - Saving to GitHub:', JSON.stringify(jsonData, null, 2));
+        await saveData(jsonData, `Update financial data for ${month}`);
+        console.log(`POST /api/update-balance-sheet - Successfully saved financial data for ${month}`);
         res.json({ success: true, message: `Financial data updated for ${month}` });
     } catch (error) {
         console.error('POST /api/update-balance-sheet - Failed:', error.message);
@@ -171,8 +205,8 @@ app.get('/api/search-member', async (req, res) => {
             return res.status(400).json({ error: 'Name query parameter is required' });
         }
 
-        const fileContent = await fs.readFile(dataFile, 'utf8');
-        const jsonData = JSON.parse(fileContent);
+        const jsonData = await getData();
+        console.log('GET /api/search-member - Current data:', JSON.stringify(jsonData, null, 2));
         const members = jsonData.member_contributions.filter(m => m.member_name.toLowerCase().includes(name));
         console.log(`GET /api/search-member - Found ${members.length} members matching "${name}"`);
         res.json({ members });
@@ -183,12 +217,15 @@ app.get('/api/search-member', async (req, res) => {
 });
 
 // Debug endpoint
-app.get('/api/debug/files', async (req, res) => {
+app.get('/api/debug/data', async (req, res) => {
     try {
-        const files = await fs.readdir(__dirname);
-        res.json({ files });
+        console.log('GET /api/debug/data - Fetching from GitHub');
+        const data = await getData();
+        console.log('GET /api/debug/data - Data:', JSON.stringify(data, null, 2));
+        res.json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to list files' });
+        console.error('GET /api/debug/data - Failed:', error.message);
+        res.status(500).json({ error: 'Failed to fetch debug data', details: error.message });
     }
 });
 
