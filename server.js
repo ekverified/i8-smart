@@ -5,17 +5,17 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 10000; // Align with Render’s port
+const port = process.env.PORT || 10000;
 
 // Middleware
-app.use(cors({ origin: 'https://ekverified.github.io' })); // Restrict to GitHub Pages
-app.use(express.json()); // Parse JSON bodies
-app.use(express.static(path.join(__dirname))); // Serve static files from root
+app.use(cors({ origin: 'https://ekverified.github.io' }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname)));
 
 // Data file path
 const dataFile = path.join(__dirname, 'data.json');
 
-// Initialize data.json if it doesn’t exist
+// Initialize data.json
 async function initializeDataFile() {
   try {
     await fs.access(dataFile);
@@ -30,7 +30,7 @@ async function initializeDataFile() {
 }
 initializeDataFile();
 
-// GET endpoint to fetch data.json
+// GET /api/data
 app.get('/api/data', async (req, res) => {
   try {
     console.log('GET /api/data - Attempting to read file at:', dataFile);
@@ -43,20 +43,12 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
-// Shared function to add member contribution
+// Shared function for adding member contributions
 async function addMemberContribution(data, month) {
-  if (!data || typeof data !== 'object') {
-    throw new Error('Invalid data object');
-  }
-  if (!data.member_name || typeof data.member_name !== 'string') {
-    throw new Error('Valid member_name is required');
-  }
-  if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) {
-    throw new Error('Valid positive amount is required');
-  }
-  if (!data.contributions || !data.contributions[month]) {
-    throw new Error(`Contribution for ${month} is required`);
-  }
+  if (!data || typeof data !== 'object') throw new Error('Invalid data object');
+  if (!data.member_name || typeof data.member_name !== 'string') throw new Error('Valid member_name is required');
+  if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) throw new Error('Valid positive amount is required');
+  if (!data.contributions || !data.contributions[month]) throw new Error(`Contribution for ${month} is required`);
 
   let jsonData = { monthly_reports: {}, member_contributions: [] };
   try {
@@ -89,10 +81,11 @@ async function addMemberContribution(data, month) {
   }
 
   await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
+  console.log(`Successfully wrote contribution for ${data.member_name} to data.json`);
   return { success: true, message: `Contribution added for ${data.member_name}` };
 }
 
-// POST endpoint to update data.json (for balance sheet)
+// POST /api/update-data
 app.post('/api/update-data', async (req, res) => {
   try {
     console.log('POST /api/update-data - Received:', JSON.stringify(req.body, null, 2));
@@ -135,6 +128,7 @@ app.post('/api/update-data', async (req, res) => {
       jsonData.monthly_reports[month] = data;
       console.log(`POST /api/update-data - Updated monthly_reports for ${month}`);
       await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
+      console.log(`POST /api/update-data - Successfully wrote financial data for ${month}`);
       res.json({ success: true, message: `Financial data updated for ${month}` });
     } else {
       console.error('POST /api/update-data - Error: Invalid action');
@@ -142,11 +136,11 @@ app.post('/api/update-data', async (req, res) => {
     }
   } catch (error) {
     console.error('POST /api/update-data - Failed:', error.message);
-    res.status(500).json({ error: 'Failed to update data' });
+    res.status(500).json({ error: 'Failed to update data', details: error.message });
   }
 });
 
-// POST endpoint for member contributions
+// POST /api/add-contribution
 app.post('/api/add-contribution', async (req, res) => {
   try {
     console.log('POST /api/add-contribution - Received:', JSON.stringify(req.body, null, 2));
@@ -161,15 +155,61 @@ app.post('/api/add-contribution', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error('POST /api/add-contribution - Failed:', error.message);
-    res.status(500).json({ error: error.message || 'Failed to add contribution' });
+    res.status(500).json({ error: 'Failed to add contribution', details: error.message });
   }
 });
 
-// POST endpoint for balance sheet (for compatibility)
+// POST /api/update-balance-sheet
 app.post('/api/update-balance-sheet', async (req, res) => {
-  console.log('POST /api/update-balance-sheet - Received:', JSON.stringify(req.body, null, 2));
-  req.body.action = 'updateBalanceSheet';
-  return app._router.handle(req, res); // Keep for compatibility, but monitor
+  try {
+    console.log('POST /api/update-balance-sheet - Received:', JSON.stringify(req.body, null, 2));
+    req.body.action = 'updateBalanceSheet';
+
+    // Simulate /api/update-data logic without redirect
+    const { action, month, data } = req.body;
+    if (!action || action !== 'updateBalanceSheet') {
+      console.error('POST /api/update-balance-sheet - Error: Invalid action');
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      console.error('POST /api/update-balance-sheet - Error: Invalid month format');
+      return res.status(400).json({ error: 'Valid month (YYYY-MM) is required' });
+    }
+    if (!data || typeof data !== 'object') {
+      console.error('POST /api/update-balance-sheet - Error: Invalid data object');
+      return res.status(400).json({ error: 'Valid data object is required' });
+    }
+
+    let jsonData = { monthly_reports: {}, member_contributions: [] };
+    try {
+      const fileContent = await fs.readFile(dataFile, 'utf8');
+      jsonData = JSON.parse(fileContent);
+    } catch (error) {
+      console.log('POST /api/update-balance-sheet - Creating new data.json');
+      await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
+    }
+
+    const requiredFields = [
+      'opening_kcb_balance', 'total_member_contributions_kcb', 'total_loan_repayments_kcb',
+      'total_loan_disbursements_kcb', 'bank_charges_kcb', 'opening_lofty_balance',
+      'total_loan_repayments_lofty', 'total_loan_disbursements_lofty', 'bank_charges_lofty'
+    ];
+    for (const field of requiredFields) {
+      if (!(field in data) || typeof data[field] !== 'number' || data[field] < 0) {
+        console.error(`POST /api/update-balance-sheet - Error: Invalid ${field}`);
+        return res.status(400).json({ error: `Valid ${field} is required` });
+      }
+    }
+
+    jsonData.monthly_reports[month] = data;
+    console.log(`POST /api/update-balance-sheet - Updated monthly_reports for ${month}`);
+    await fs.writeFile(dataFile, JSON.stringify(jsonData, null, 2));
+    console.log(`POST /api/update-balance-sheet - Successfully wrote financial data for ${month}`);
+    res.json({ success: true, message: `Financial data updated for ${month}` });
+  } catch (error) {
+    console.error('POST /api/update-balance-sheet - Failed:', error.message);
+    res.status(500).json({ error: 'Failed to update financial data', details: error.message });
+  }
 });
 
 // Debug endpoint
