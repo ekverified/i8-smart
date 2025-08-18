@@ -145,7 +145,6 @@
     </div>
 
     <script>
-        // Admin Functionality
         const MEMBERS = [
             "John Waweru Njeri", "Geoffrey Mugi Gicini", "James Njoroge Kamau",
             "Joseph Wachira Waithaka", "Enoch Kamau Thumbi", "Hermstone Mwangi Isaac",
@@ -281,6 +280,8 @@
                 error.style.display = 'none';
             });
             document.getElementById('result').innerHTML = '';
+            document.getElementById('submitFinancialButton').disabled = false;
+            document.getElementById('submitContributionButton').disabled = false;
             populateMonths('month');
             populateMonths('contributionMonth');
             fetchData();
@@ -288,7 +289,7 @@
 
         async function fetchData() {
             try {
-                const response = await fetch('https://i8-smart-backend.onrender.com/api/data');
+                const response = await fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 });
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                 }
@@ -308,9 +309,12 @@
 
         async function submitFinancialForm(e) {
             e.preventDefault();
+            const submitButton = document.getElementById('submitFinancialButton');
+            submitButton.disabled = true; // Prevent duplicate submissions
             const validationError = validateFinancialInputs();
             if (validationError) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                submitButton.disabled = false;
                 return;
             }
 
@@ -357,31 +361,40 @@
             data.total_balance = data.kcb_balance + data.lofty_balance;
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
                 const response = await fetch('https://i8-smart-backend.onrender.com/api/update-balance-sheet', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'updateBalanceSheet', month, data })
+                    body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
                     logAction('Financial Update', `Updated financial data for ${month}`);
                     refreshForm();
                 } else {
-                    console.error('Error updating financial data:', result.error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data.'}</span>`;
+                    console.error('Error updating financial data:', result.error, result.details);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
+                    submitButton.disabled = false;
                 }
             } catch (error) {
                 console.error('Error updating financial data:', error);
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
+                submitButton.disabled = false;
             }
         }
 
         async function submitContributionForm(e) {
             e.preventDefault();
+            const submitButton = document.getElementById('submitContributionButton');
+            submitButton.disabled = true; // Prevent duplicate submissions
             const validationError = validateContributionInputs();
             if (validationError) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                submitButton.disabled = false;
                 return;
             }
 
@@ -397,32 +410,39 @@
             };
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
                 const response = await fetch('https://i8-smart-backend.onrender.com/api/add-contribution', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ month, data })
+                    body: JSON.stringify({ month, data }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Member contribution updated successfully!'}</span>`;
                     logAction('Contribution Update', `Updated contribution of ${amount} KES for ${member} in ${month}`);
                     refreshForm();
                 } else {
-                    console.error('Error updating contribution:', result.error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution.'}</span>`;
+                    console.error('Error updating contribution:', result.error, result.details);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
+                    submitButton.disabled = false;
                 }
             } catch (error) {
                 console.error('Error updating contribution:', error);
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
+                submitButton.disabled = false;
             }
         }
 
         function downloadData() {
-            fetch('https://i8-smart-backend.onrender.com/api/data')
+            const submitButton = document.getElementById('backupButton') || document.createElement('button');
+            submitButton.disabled = true;
+            fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                    }
+                    submitButton.disabled = false;
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                     return response.json();
                 })
                 .then(data => {
@@ -439,6 +459,7 @@
                 .catch(error => {
                     console.error('Error downloading data:', error);
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
+                    submitButton.disabled = false;
                 });
         }
 
