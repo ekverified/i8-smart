@@ -344,7 +344,6 @@
             }
         }
 
-        // New function to save data to localStorage with timestamp
         function saveDataToStorage(data) {
             try {
                 const cacheData = {
@@ -357,7 +356,6 @@
             }
         }
 
-        // New function to load data from localStorage
         function loadDataFromStorage() {
             try {
                 const cached = localStorage.getItem('financialDataCache');
@@ -375,7 +373,6 @@
             }
         }
 
-        // New function to check if cached data is stale
         async function fetchDataIfStale() {
             const cachedData = loadDataFromStorage();
             if (cachedData) {
@@ -1177,19 +1174,67 @@
         }
 
         function changeMainPage(direction) {
-            currentMainPage += direction;
-            if (currentMainPage < 1) currentMainPage = 1;
-            if (currentMainPage > 5) currentMainPage = 5;
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
+            try {
+                const newPage = currentMainPage + direction;
+                if (newPage < 1 || newPage > 5) {
+                    console.log(`[i-8 SMART BOT] Page change blocked: Attempted to navigate to page ${newPage}`);
+                    return;
+                }
+
+                currentMainPage = newPage;
+
+                // Ensure all page elements exist before toggling visibility
+                for (let i = 1; i <= 5; i++) {
+                    const pageElement = document.getElementById(`page${i}`);
+                    if (pageElement) {
+                        pageElement.style.display = i === currentMainPage ? 'block' : 'none';
+                    } else {
+                        console.error(`[i-8 SMART BOT] Page element page${i} not found in DOM`);
+                    }
+                }
+
+                // Update pagination info and button states
+                const pageInfo = document.getElementById('mainPageInfo');
+                const prevButton = document.getElementById('prevMainPage');
+                const nextButton = document.getElementById('nextMainPage');
+
+                if (pageInfo) {
+                    pageInfo.textContent = `Page ${currentMainPage} of 5`;
+                } else {
+                    console.error('[i-8 SMART BOT] Page info element not found');
+                }
+
+                if (prevButton && nextButton) {
+                    prevButton.disabled = currentMainPage === 1;
+                    nextButton.disabled = currentMainPage === 5;
+                } else {
+                    console.error('[i-8 SMART BOT] Pagination buttons not found');
+                }
+
+                // Fetch data for relevant pages, but don't block pagination
+                if (currentMainPage === 2 || currentMainPage === 3 || currentMainPage === 4) {
+                    fetchDataIfStale().catch(error => {
+                        console.error('[i-8 SMART BOT] Failed to fetch data after page change:', error);
+                        // Display cached data if available
+                        const cachedData = loadDataFromStorage();
+                        if (cachedData) {
+                            if (currentMainPage === 2) processFinancialData(cachedData);
+                            if (currentMainPage === 3) displayMembers(cachedData.member_contributions || []);
+                            if (currentMainPage === 4) processBehaviorReport(cachedData);
+                        }
+                    });
+                }
+
+                // Focus on the new page
+                const currentPageElement = document.getElementById(`page${currentMainPage}`);
+                if (currentPageElement) {
+                    currentPageElement.focus();
+                } else {
+                    console.error(`[i-8 SMART BOT] Cannot focus page${currentMainPage}: Element not found`);
+                }
+            } catch (error) {
+                logError('Page navigation failed', error);
             }
-            document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
-            document.getElementById('prevMainPage').disabled = currentMainPage === 1;
-            document.getElementById('nextMainPage').disabled = currentMainPage === 5;
-            if (currentMainPage === 2 || currentMainPage === 3 || currentMainPage === 4) {
-                fetchDataIfStale();
-            }
-            document.getElementById(`page${currentMainPage}`).focus();
         }
 
         function displayMembers(members) {
@@ -1338,8 +1383,8 @@
                     <tr><td>Loans Disbursed KCB</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
                     <tr><td>Loans Disbursed Lofty</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
                     <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
-                                        <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
+                                        <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
+                    <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
                     <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
                     <tr><td>AGM Facilitation KCB</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
                     <tr><td>AGM Facilitation Lofty</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
@@ -1409,7 +1454,7 @@
                         kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
                         lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
                         total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + CPM(curr.total_member_contributions_kcb || 0),
+                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
                         total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
                         total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0)
                     };
@@ -1493,6 +1538,17 @@
             if (currentMainPage === 4) {
                 populateBehaviorPeriods();
             }
+            // Initialize pagination controls
+            const prevButton = document.getElementById('prevMainPage');
+            const nextButton = document.getElementById('nextMainPage');
+            const pageInfo = document.getElementById('mainPageInfo');
+            if (prevButton && nextButton && pageInfo) {
+                prevButton.disabled = currentMainPage === 1;
+                nextButton.disabled = currentMainPage === 5;
+                pageInfo.textContent = `Page ${currentMainPage} of 5`;
+            } else {
+                console.error('[i-8 SMART BOT] Pagination controls not found during initialization');
+            }
         });
 
         // Periodic check for data updates (every 5 minutes)
@@ -1500,3 +1556,4 @@
     </script>
 </body>
 </html>
+                    
