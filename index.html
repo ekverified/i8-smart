@@ -221,783 +221,812 @@
         </div>
     </div>
 
-    <script>
-        const CONFIG = {
-            CONTRIBUTION_PENALTY: 0.30,
-            CONTRIBUTION_DAILY_PENALTY: 0.01,
-            LOAN_SHORT_INTEREST: 0.05,
-            LOAN_MEDIUM_INTEREST: 0.10,
-            LOAN_LONG_INTEREST: 0.15,
-            LOAN_SHORT_MINIMUM: 2000,
-            LOAN_MEDIUM_MINIMUM: 5000,
-            LOAN_LONG_MINIMUM: 30000,
-            ROLLOVER_INTEREST: 0.05,
-            LOAN_DAILY_PENALTY: 0.005,
-            PENALTY_START_DAY: 1,
-            API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
-            MAX_RETRIES: 3,
-            RETRY_DELAY: 2000,
-            CACHE_VALIDITY: 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-        };
+  <script>
+    const CONFIG = {
+        CONTRIBUTION_PENALTY: 0.30,
+        CONTRIBUTION_DAILY_PENALTY: 0.01,
+        LOAN_SHORT_INTEREST: 0.05,
+        LOAN_MEDIUM_INTEREST: 0.10,
+        LOAN_LONG_INTEREST: 0.15,
+        LOAN_SHORT_MINIMUM: 2000,
+        LOAN_MEDIUM_MINIMUM: 5000,
+        LOAN_LONG_MINIMUM: 30000,
+        ROLLOVER_INTEREST: 0.05,
+        LOAN_DAILY_PENALTY: 0.005,
+        PENALTY_START_DAY: 1,
+        API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+        MAX_RETRIES: 3,
+        RETRY_DELAY: 2000,
+        CACHE_VALIDITY: 24 * 60 * 60 * 1000 // 24 hours
+    };
 
-        const elements = {
-            type: document.getElementById('type'),
-            amount: document.getElementById('amount'),
-            contributionFields: document.getElementById('contributionFields'),
-            year: document.getElementById('year'),
-            month: document.getElementById('month'),
-            dateFields: document.getElementById('dateFields'),
-            dueDate: document.getElementById('dueDate'),
-            checkDate: document.getElementById('checkDate'),
-            loanFields: document.getElementById('loanFields'),
-            loanType: document.getElementById('loanType'),
-            repaymentFields: document.getElementById('repaymentFields'),
-            repaymentPeriod: document.getElementById('repaymentPeriod'),
-            calcButton: document.getElementById('calcButton'),
-            buttonContainer: document.getElementById('buttonContainer'),
-            result: document.getElementById('result'),
-            successMessage: document.getElementById('successMessage'),
-            progressBar: document.getElementById('progressBar'),
-            progressFill: document.getElementById('progressFill'),
-            resultModal: document.getElementById('resultModal'),
-            modalResult: document.getElementById('modalResult'),
-            errors: {
-                type: document.getElementById('typeError'),
-                amount: document.getElementById('amountError'),
-                year: document.getElementById('yearError'),
-                month: document.getElementById('monthError'),
-                dueDate: document.getElementById('dueDateError'),
-                checkDate: document.getElementById('checkDateError'),
-                loanType: document.getElementById('loanTypeError'),
-                repaymentPeriod: document.getElementById('repaymentPeriodError')
-            },
-            spinners: {
-                balanceSheet: document.getElementById('balanceSheetSpinner'),
-                members: document.getElementById('membersSpinner'),
-                behavior: document.getElementById('behaviorSpinner'),
-                search: document.getElementById('searchSpinner')
-            }
-        };
-
-        let isCalculating = false;
-        let lastResult = null;
-        let lastResultText = '';
-        let currentMainPage = 1;
-        let currentMembers = [];
-        let dataCache = null;
-
-        function sanitizeInput(input) {
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
+    const elements = {
+        type: document.getElementById('type'),
+        amount: document.getElementById('amount'),
+        contributionFields: document.getElementById('contributionFields'),
+        year: document.getElementById('year'),
+        month: document.getElementById('month'),
+        dateFields: document.getElementById('dateFields'),
+        dueDate: document.getElementById('dueDate'),
+        checkDate: document.getElementById('checkDate'),
+        loanFields: document.getElementById('loanFields'),
+        loanType: document.getElementById('loanType'),
+        repaymentFields: document.getElementById('repaymentFields'),
+        repaymentPeriod: document.getElementById('repaymentPeriod'),
+        calcButton: document.getElementById('calcButton'),
+        buttonContainer: document.getElementById('buttonContainer'),
+        result: document.getElementById('result'),
+        successMessage: document.getElementById('successMessage'),
+        progressBar: document.getElementById('progressBar'),
+        progressFill: document.getElementById('progressFill'),
+        resultModal: document.getElementById('resultModal'),
+        modalResult: document.getElementById('modalResult'),
+        errors: {
+            type: document.getElementById('typeError'),
+            amount: document.getElementById('amountError'),
+            year: document.getElementById('yearError'),
+            month: document.getElementById('monthError'),
+            dueDate: document.getElementById('dueDateError'),
+            checkDate: document.getElementById('checkDateError'),
+            loanType: document.getElementById('loanTypeError'),
+            repaymentPeriod: document.getElementById('repaymentPeriodError')
+        },
+        spinners: {
+            balanceSheet: document.getElementById('balanceSheetSpinner'),
+            members: document.getElementById('membersSpinner'),
+            behavior: document.getElementById('behaviorSpinner'),
+            search: document.getElementById('searchSpinner')
         }
+    };
 
-        function logError(message, error) {
-            console.error(`[i-8 SMART BOT] ${message}`, error);
-        }
+    let isCalculating = false;
+    let lastResult = null;
+    let lastResultText = '';
+    let currentMainPage = 1;
+    let currentMembers = [];
+    let dataCache = null;
+    let forceRefresh = false; // Added for cache control
 
-        function showProgress() {
-            elements.progressBar.classList.add('active');
-            elements.progressFill.style.width = '0%';
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                elements.progressFill.style.width = `${progress}%`;
-                if (progress >= 100) clearInterval(interval);
-            }, 100);
-        }
+    function sanitizeInput(input) {
+        const div = document.createElement('div');
+        div.textContent = input;
+        return div.innerHTML;
+    }
 
-        function hideProgress() {
-            elements.progressBar.classList.remove('active');
-            elements.progressFill.style.width = '0%';
-        }
+    function logError(message, error) {
+        console.error(`[i-8 SMART BOT] ${message}`, error);
+    }
 
-        function showSpinner(element) {
-            element.style.display = 'block';
-        }
+    function showProgress() {
+        elements.progressBar.classList.add('active');
+        elements.progressFill.style.width = '0%';
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            elements.progressFill.style.width = `${progress}%`;
+            if (progress >= 100) clearInterval(interval);
+        }, 100);
+    }
 
-        function hideSpinner(element) {
-            element.style.display = 'none';
-        }
+    function hideProgress() {
+        elements.progressBar.classList.remove('active');
+        elements.progressFill.style.width = '0%';
+    }
 
-        function showSuccessMessage(message) {
-            elements.successMessage.textContent = message;
-            elements.successMessage.style.display = 'block';
-            setTimeout(() => {
-                elements.successMessage.style.display = 'none';
-            }, 5000);
-        }
+    function showSpinner(element) {
+        element.style.display = 'block';
+    }
 
-        async function fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    return await response.json();
-                } catch (error) {
-                    if (i < retries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
-                        continue;
-                    }
-                    throw error;
-                }
-            }
-        }
+    function hideSpinner(element) {
+        element.style.display = 'none';
+    }
 
-        function saveDataToStorage(data) {
+    function showSuccessMessage(message) {
+        elements.successMessage.textContent = message;
+        elements.successMessage.style.display = 'block';
+        setTimeout(() => {
+            elements.successMessage.style.display = 'none';
+        }, 5000);
+    }
+
+    async function fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+        for (let i = 0; i < retries; i++) {
             try {
-                localStorage.setItem('financialData', JSON.stringify({
-                    data: data,
-                    timestamp: new Date().getTime()
-                }));
-            } catch (error) {
-                logError('Failed to save financial data to storage', error);
-            }
-        }
-
-        function loadDataFromStorage() {
-            try {
-                const stored = localStorage.getItem('financialData');
-                if (!stored) return null;
-                const { data, timestamp } = JSON.parse(stored);
-                const now = new Date().getTime();
-                if (now - timestamp > CONFIG.CACHE_VALIDITY) return null; // Data is stale
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                console.log(`Fetched data from ${url}:`, data); // Debug log
                 return data;
             } catch (error) {
-                logError('Failed to load financial data from storage', error);
+                if (i < retries - 1) {
+                    console.log(`Retrying fetch (${i + 1}/${retries}) for ${url}`);
+                    await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
+                    continue;
+                }
+                throw error;
+            }
+        }
+    }
+
+    function saveDataToStorage(data) {
+        try {
+            localStorage.setItem('financialData', JSON.stringify({
+                data: data,
+                timestamp: new Date().getTime()
+            }));
+            console.log('Saved data to localStorage:', data); // Debug log
+        } catch (error) {
+            logError('Failed to save financial data to storage', error);
+        }
+    }
+
+    function loadDataFromStorage() {
+        try {
+            const stored = localStorage.getItem('financialData');
+            if (!stored) return null;
+            const { data, timestamp } = JSON.parse(stored);
+            const now = new Date().getTime();
+            if (now - timestamp > CONFIG.CACHE_VALIDITY) {
+                console.log('Cached data is stale, discarding');
+                localStorage.removeItem('financialData');
                 return null;
             }
+            console.log('Loaded data from localStorage:', data); // Debug log
+            return data;
+        } catch (error) {
+            logError('Failed to load financial data from storage', error);
+            return null;
+        }
+    }
+
+    async function fetchDataIfStale() {
+        const cachedData = loadDataFromStorage();
+        if (cachedData && !forceRefresh) {
+            dataCache = cachedData;
+            console.log('Using cached data:', dataCache);
+            return;
+        }
+        try {
+            const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
+            if (!data || Object.keys(data).length === 0) {
+                throw new Error('Empty or invalid data received from API');
+            }
+            dataCache = data;
+            saveDataToStorage(data);
+            forceRefresh = false;
+            console.log('Fetched fresh data:', dataCache);
+        } catch (error) {
+            logError('Failed to fetch fresh data', error);
+            dataCache = null;
+            localStorage.removeItem('financialData');
+            throw error;
+        }
+    }
+
+    function debugDataStructure() {
+        fetchDataIfStale().then(() => {
+            console.log('Data structure:', JSON.stringify(dataCache, null, 2));
+            if (dataCache && dataCache.monthly_reports) {
+                console.log('Monthly reports keys:', Object.keys(dataCache.monthly_reports));
+            }
+            if (dataCache && dataCache.member_contributions) {
+                console.log('Member contributions:', dataCache.member_contributions);
+            }
+        }).catch(error => {
+            logError('Failed to debug data structure', error);
+        });
+    }
+
+    function validateInputs() {
+        const errors = [];
+        const type = elements.type.value;
+        const amount = parseFloat(elements.amount.value) || 0;
+        const year = elements.year.value;
+        const month = elements.month.value;
+        const loanType = elements.loanType.value;
+        const repaymentPeriod = elements.repaymentPeriod.value;
+        let dueDate, checkDate;
+
+        if (type !== 'apply_loan') {
+            dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+            checkDate = new Date(elements.checkDate.value + 'T00:00:00');
         }
 
-        async function fetchDataIfStale() {
-            const cachedData = loadDataFromStorage();
-            if (cachedData) {
-                dataCache = cachedData;
-                return;
-            }
-            try {
-                const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
-                dataCache = data;
-                saveDataToStorage(data);
-            } catch (error) {
-                logError('Failed to fetch fresh data', error);
-            }
+        Object.values(elements.errors).forEach(error => error.style.display = 'none');
+
+        if (!type) {
+            elements.errors.type.textContent = 'Please select a type.';
+            elements.errors.type.style.display = 'block';
+            errors.push('Invalid type');
         }
 
-        function validateInputs() {
-            const errors = [];
-            const type = elements.type.value;
-            const amount = parseFloat(elements.amount.value) || 0;
-            const year = elements.year.value;
-            const month = elements.month.value;
-            const loanType = elements.loanType.value;
-            const repaymentPeriod = elements.repaymentPeriod.value;
-            let dueDate, checkDate;
-
-            if (type !== 'apply_loan') {
-                dueDate = new Date(elements.dueDate.value + 'T00:00:00');
-                checkDate = new Date(elements.checkDate.value + 'T00:00:00');
-            }
-
-            Object.values(elements.errors).forEach(error => error.style.display = 'none');
-
-            if (!type) {
-                elements.errors.type.textContent = 'Please select a type.';
-                elements.errors.type.style.display = 'block';
-                errors.push('Invalid type');
-            }
-
-            if (amount <= 0 || isNaN(amount)) {
-                elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
+        if (amount <= 0 || isNaN(amount)) {
+            elements.errors.amount.textContent = 'Amount must be a positive number in KES.';
+            elements.errors.amount.style.display = 'block';
+            errors.push('Invalid amount');
+        } else if (type === 'existing_loan' || type === 'apply_loan') {
+            if (loanType === 'short' && amount < CONFIG.LOAN_SHORT_MINIMUM) {
+                elements.errors.amount.textContent = `Amount for Short Term loan must be at least ${CONFIG.LOAN_SHORT_MINIMUM} KES.`;
                 elements.errors.amount.style.display = 'block';
-                errors.push('Invalid amount');
-            } else if (type === 'existing_loan' || type === 'apply_loan') {
-                if (loanType === 'short' && amount < CONFIG.LOAN_SHORT_MINIMUM) {
-                    elements.errors.amount.textContent = `Amount for Short Term loan must be at least ${CONFIG.LOAN_SHORT_MINIMUM} KES.`;
-                    elements.errors.amount.style.display = 'block';
-                    errors.push('Amount below minimum for Short Term loan');
-                } else if (loanType === 'medium' && amount < CONFIG.LOAN_MEDIUM_MINIMUM) {
-                    elements.errors.amount.textContent = `Amount for Medium Term loan must be at least ${CONFIG.LOAN_MEDIUM_MINIMUM} KES.`;
-                    elements.errors.amount.style.display = 'block';
-                    errors.push('Amount below minimum for Medium Term loan');
-                } else if (loanType === 'long' && amount < CONFIG.LOAN_LONG_MINIMUM) {
-                    elements.errors.amount.textContent = `Amount for Long Term loan must be at least ${CONFIG.LOAN_LONG_MINIMUM} KES.`;
-                    elements.errors.amount.style.display = 'block';
-                    errors.push('Amount below minimum for Long Term loan');
-                }
+                errors.push('Amount below minimum for Short Term loan');
+            } else if (loanType === 'medium' && amount < CONFIG.LOAN_MEDIUM_MINIMUM) {
+                elements.errors.amount.textContent = `Amount for Medium Term loan must be at least ${CONFIG.LOAN_MEDIUM_MINIMUM} KES.`;
+                elements.errors.amount.style.display = 'block';
+                errors.push('Amount below minimum for Medium Term loan');
+            } else if (loanType === 'long' && amount < CONFIG.LOAN_LONG_MINIMUM) {
+                elements.errors.amount.textContent = `Amount for Long Term loan must be at least ${CONFIG.LOAN_LONG_MINIMUM} KES.`;
+                elements.errors.amount.style.display = 'block';
+                errors.push('Amount below minimum for Long Term loan');
             }
-
-            if (type === 'contribution') {
-                if (!year) {
-                    elements.errors.year.textContent = 'Please select a year.';
-                    elements.errors.year.style.display = 'block';
-                    errors.push('Invalid year');
-                }
-                if (!month) {
-                    elements.errors.month.textContent = 'Please select a month.';
-                    elements.errors.month.style.display = 'block';
-                    errors.push('Invalid month');
-                }
-                if (isNaN(dueDate.getTime())) {
-                    elements.errors.dueDate.textContent = 'Invalid due date.';
-                    elements.errors.dueDate.style.display = 'block';
-                    errors.push('Invalid due date');
-                }
-                if (isNaN(checkDate.getTime())) {
-                    elements.errors.checkDate.textContent = 'Invalid check date.';
-                    elements.errors.checkDate.style.display = 'block';
-                    errors.push('Invalid check date');
-                }
-                if (dueDate.getMonth() + 1 !== parseInt(month.split('-')[1]) || dueDate.getFullYear() !== parseInt(year)) {
-                    elements.errors.dueDate.textContent = 'Due date must match selected month and year.';
-                    elements.errors.dueDate.style.display = 'block';
-                    errors.push('Due date mismatch');
-                }
-            }
-
-            if (type === 'existing_loan') {
-                if (!loanType) {
-                    elements.errors.loanType.textContent = 'Please select a loan type.';
-                    elements.errors.loanType.style.display = 'block';
-                    errors.push('Invalid loan type');
-                }
-                if (isNaN(dueDate.getTime())) {
-                    elements.errors.dueDate.textContent = 'Invalid due date.';
-                    elements.errors.dueDate.style.display = 'block';
-                    errors.push('Invalid due date');
-                }
-                if (isNaN(checkDate.getTime())) {
-                    elements.errors.checkDate.textContent = 'Invalid check date.';
-                    elements.errors.checkDate.style.display = 'block';
-                    errors.push('Invalid check date');
-                }
-            }
-
-            if (type === 'apply_loan') {
-                if (!loanType) {
-                    elements.errors.loanType.textContent = 'Please select a loan type.';
-                    elements.errors.loanType.style.display = 'block';
-                    errors.push('Invalid loan type');
-                }
-                if (!repaymentPeriod) {
-                    elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
-                    elements.errors.repaymentPeriod.style.display = 'block';
-                    errors.push('Invalid repayment period');
-                }
-            }
-
-            return errors.length === 0 ? null : errors.join(', ');
         }
 
-        function calculateContributionPenalty(amount, daysDelayed) {
-            if (daysDelayed < CONFIG.PENALTY_START_DAY) return 0;
-            if (daysDelayed <= 7) return amount * CONFIG.CONTRIBUTION_PENALTY;
-            return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
+        if (type === 'contribution') {
+            if (!year) {
+                elements.errors.year.textContent = 'Please select a year.';
+                elements.errors.year.style.display = 'block';
+                errors.push('Invalid year');
+            }
+            if (!month) {
+                elements.errors.month.textContent = 'Please select a month.';
+                elements.errors.month.style.display = 'block';
+                errors.push('Invalid month');
+            }
+            if (isNaN(dueDate.getTime())) {
+                elements.errors.dueDate.textContent = 'Invalid due date.';
+                elements.errors.dueDate.style.display = 'block';
+                errors.push('Invalid due date');
+            }
+            if (isNaN(checkDate.getTime())) {
+                elements.errors.checkDate.textContent = 'Invalid check date.';
+                elements.errors.checkDate.style.display = 'block';
+                errors.push('Invalid check date');
+            }
+            if (dueDate.getMonth() + 1 !== parseInt(month.split('-')[1]) || dueDate.getFullYear() !== parseInt(year)) {
+                elements.errors.dueDate.textContent = 'Due date must match selected month and year.';
+                elements.errors.dueDate.style.display = 'block';
+                errors.push('Due date mismatch');
+            }
         }
 
-        function calculateLoanOwed(amount, daysDelayed, loanType) {
-            let interest;
-            if (loanType === 'short') {
-                interest = amount * CONFIG.LOAN_SHORT_INTEREST;
-            } else if (loanType === 'medium') {
-                interest = amount * CONFIG.LOAN_MEDIUM_INTEREST;
+        if (type === 'existing_loan') {
+            if (!loanType) {
+                elements.errors.loanType.textContent = 'Please select a loan type.';
+                elements.errors.loanType.style.display = 'block';
+                errors.push('Invalid loan type');
+            }
+            if (isNaN(dueDate.getTime())) {
+                elements.errors.dueDate.textContent = 'Invalid due date.';
+                elements.errors.dueDate.style.display = 'block';
+                errors.push('Invalid due date');
+            }
+            if (isNaN(checkDate.getTime())) {
+                elements.errors.checkDate.textContent = 'Invalid check date.';
+                elements.errors.checkDate.style.display = 'block';
+                errors.push('Invalid check date');
+            }
+        }
+
+        if (type === 'apply_loan') {
+            if (!loanType) {
+                elements.errors.loanType.textContent = 'Please select a loan type.';
+                elements.errors.loanType.style.display = 'block';
+                errors.push('Invalid loan type');
+            }
+            if (!repaymentPeriod) {
+                elements.errors.repaymentPeriod.textContent = 'Please select a repayment period.';
+                elements.errors.repaymentPeriod.style.display = 'block';
+                errors.push('Invalid repayment period');
+            }
+        }
+
+        return errors.length === 0 ? null : errors.join(', ');
+    }
+
+    function calculateContributionPenalty(amount, daysDelayed) {
+        if (daysDelayed < CONFIG.PENALTY_START_DAY) return 0;
+        if (daysDelayed <= 7) return amount * CONFIG.CONTRIBUTION_PENALTY;
+        return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
+    }
+
+    function calculateLoanOwed(amount, daysDelayed, loanType) {
+        let interest;
+        if (loanType === 'short') {
+            interest = amount * CONFIG.LOAN_SHORT_INTEREST;
+        } else if (loanType === 'medium') {
+            interest = amount * CONFIG.LOAN_MEDIUM_INTEREST;
+        } else {
+            interest = amount * CONFIG.LOAN_LONG_INTEREST;
+        }
+        let totalOwed = amount + interest;
+        let penalty = 0;
+        let rollOverInterest = 0;
+        if (daysDelayed > 7) {
+            const rolledAmount = amount + interest;
+            rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
+            penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
+            totalOwed = amount + interest + rollOverInterest + penalty;
+        }
+        return { totalOwed, interest, penalty, rollOverInterest };
+    }
+
+    function calculateApplyLoan(amount, loanType, repaymentPeriod) {
+        const interestRate = loanType === 'short' ? CONFIG.LOAN_SHORT_INTEREST :
+                            loanType === 'medium' ? CONFIG.LOAN_MEDIUM_INTEREST :
+                            CONFIG.LOAN_LONG_INTEREST;
+        const interest = amount * interestRate;
+        const totalOwed = amount + interest;
+        const monthlyPayment = totalOwed / repaymentPeriod;
+        const monthlyInterest = interest / repaymentPeriod;
+        const monthlyPrincipal = amount / repaymentPeriod;
+        let balance = totalOwed;
+        let schedule = [];
+        for (let i = 1; i <= repaymentPeriod; i++) {
+            balance -= monthlyPayment;
+            if (balance < 0) balance = 0;
+            schedule.push({
+                month: i,
+                payment: monthlyPayment.toFixed(2),
+                interest: monthlyInterest.toFixed(2),
+                principal: monthlyPrincipal.toFixed(2),
+                balance: balance.toFixed(2)
+            });
+        }
+        return { totalOwed, interest, amortization: schedule, termMonths: repaymentPeriod };
+    }
+
+    function saveCalculation(data) {
+        try {
+            const history = JSON.parse(localStorage.getItem('calculations') || '[]');
+            history.push({ ...data, timestamp: new Date().toISOString() });
+            localStorage.setItem('calculations', JSON.stringify(history));
+        } catch (error) {
+            logError('Failed to save calculation', error);
+        }
+    }
+
+    async function submitContribution(amount, month) {
+        try {
+            const response = await fetchWithRetry(`${CONFIG.API_BASE_URL}/add-contribution`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'addContribution',
+                    amount: amount,
+                    month: month,
+                    contributionDate: new Date().toISOString().split('T')[0]
+                })
+            });
+            if (response.message === 'Contribution added successfully') {
+                showSuccessMessage(`Contribution of KES ${amount.toFixed(2)} added successfully.`);
+                dataCache = null;
+                localStorage.removeItem('financialData');
+                forceRefresh = true;
+                if (currentMainPage === 3) updateFinancialData();
             } else {
-                interest = amount * CONFIG.LOAN_LONG_INTEREST;
+                throw new Error('Unexpected response from server');
             }
-            let totalOwed = amount + interest;
-            let penalty = 0;
-            let rollOverInterest = 0;
-            if (daysDelayed > 7) {
-                const rolledAmount = amount + interest;
-                rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
-                penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
-                totalOwed = amount + interest + rollOverInterest + penalty;
-            }
-            return { totalOwed, interest, penalty, rollOverInterest };
+        } catch (error) {
+            logError('Failed to submit contribution', error);
+            elements.result.innerHTML = `<span style="color: #e74c3c;">Error submitting contribution: ${error.message}. Please try again.</span>`;
+        }
+    }
+
+    function populateYears() {
+        const yearSelect = elements.year;
+        yearSelect.innerHTML = '';
+        const currentYear = new Date().getFullYear();
+        for (let year = 2024; year <= currentYear + 1; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.text = year;
+            yearSelect.appendChild(option);
+        }
+        yearSelect.value = currentYear;
+        populateMonths();
+    }
+
+    function populateMonths() {
+        const year = parseInt(elements.year.value);
+        const monthSelect = elements.month;
+        monthSelect.innerHTML = '';
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+        const startMonth = year === 2024 ? 0 : 0;
+        const maxMonth = year === currentYear ? currentMonth + 1 : 11;
+        const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        for (let month = startMonth; month <= maxMonth; month++) {
+            const monthName = monthAbbr[month];
+            const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+            const option = document.createElement('option');
+            option.value = optionValue;
+            option.text = `${monthName} ${year}`;
+            monthSelect.appendChild(option);
         }
 
-        function calculateApplyLoan(amount, loanType, repaymentPeriod) {
-            const interestRate = loanType === 'short' ? CONFIG.LOAN_SHORT_INTEREST :
-                                loanType === 'medium' ? CONFIG.LOAN_MEDIUM_INTEREST :
-                                CONFIG.LOAN_LONG_INTEREST;
-            const interest = amount * interestRate;
-            const totalOwed = amount + interest;
-            const monthlyPayment = totalOwed / repaymentPeriod;
-            const monthlyInterest = interest / repaymentPeriod;
-            const monthlyPrincipal = amount / repaymentPeriod;
-            let balance = totalOwed;
-            let schedule = [];
-            for (let i = 1; i <= repaymentPeriod; i++) {
-                balance -= monthlyPayment;
-                if (balance < 0) balance = 0;
-                schedule.push({
-                    month: i,
-                    payment: monthlyPayment.toFixed(2),
-                    interest: monthlyInterest.toFixed(2),
-                    principal: monthlyPrincipal.toFixed(2),
-                    balance: balance.toFixed(2)
-                });
-            }
-            return { totalOwed, interest, amortization: schedule, termMonths: repaymentPeriod };
+        if (monthSelect.children.length === 0) {
+            const option = document.createElement('option');
+            option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+            option.text = `${monthAbbr[currentMonth]} ${currentYear}`;
+            monthSelect.appendChild(option);
         }
+        updateDueDate();
+    }
 
-        function saveCalculation(data) {
-            try {
-                const history = JSON.parse(localStorage.getItem('calculations') || '[]');
-                history.push({ ...data, timestamp: new Date().toISOString() });
-                localStorage.setItem('calculations', JSON.stringify(history));
-            } catch (error) {
-                logError('Failed to save calculation', error);
-            }
-        }
-
-        async function submitContribution(amount, month) {
-            try {
-                const response = await fetchWithRetry(`${CONFIG.API_BASE_URL}/add-contribution`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'addContribution',
-                        amount: amount,
-                        month: month,
-                        contributionDate: new Date().toISOString().split('T')[0]
-                    })
-                });
-                if (response.message === 'Contribution added successfully') {
-                    showSuccessMessage(`Contribution of KES ${amount.toFixed(2)} added successfully.`);
-                    dataCache = null; // Invalidate cache
-                    localStorage.removeItem('financialData'); // Clear stored data to force refresh
-                    if (currentMainPage === 3) updateFinancialData();
-                } else {
-                    throw new Error('Unexpected response from server');
-                }
-            } catch (error) {
-                logError('Failed to submit contribution', error);
-                elements.result.innerHTML = `<span style="color: #e74c3c;">Error submitting contribution: ${error.message}. Please try again.</span>`;
-            }
-        }
-
-        function populateYears() {
-            const yearSelect = elements.year;
-            yearSelect.innerHTML = '';
-            const currentYear = new Date().getFullYear();
-            for (let year = 2024; year <= currentYear + 1; year++) {
-                const option = document.createElement('option');
-                option.value = year;
-                option.text = year;
-                yearSelect.appendChild(option);
-            }
-            yearSelect.value = currentYear;
-            populateMonths();
-        }
-
-        function populateMonths() {
-            const year = parseInt(elements.year.value);
-            const monthSelect = elements.month;
-            monthSelect.innerHTML = '';
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentMonth = currentDate.getMonth();
-            const startMonth = year === 2024 ? 0 : 0;
-            const maxMonth = year === currentYear ? currentMonth + 1 : 11;
-            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-            for (let month = startMonth; month <= maxMonth; month++) {
-                const monthName = monthAbbr[month];
-                const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-                const option = document.createElement('option');
-                option.value = optionValue;
-                option.text = `${monthName} ${year}`;
-                monthSelect.appendChild(option);
-            }
-
-            if (monthSelect.children.length === 0) {
-                const option = document.createElement('option');
-                option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
-                option.text = `${monthAbbr[currentMonth]} ${currentYear}`;
-                monthSelect.appendChild(option);
-            }
-            updateDueDate();
-        }
-
-        function populateReportPeriods() {
-            const periodSelect = document.getElementById('reportPeriod');
-            const monthSelect = document.getElementById('reportMonth');
-            monthSelect.innerHTML = '<option value="">Select a period</option>';
-            showSpinner(elements.spinners.balanceSheet);
-            fetchDataIfStale().then(() => {
-                const data = dataCache || loadDataFromStorage();
-                if (!data) {
-                    document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
-                    hideSpinner(elements.spinners.balanceSheet);
-                    return;
-                }
-                const months = Object.keys(data.monthly_reports || {}).sort();
-                const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                if (periodSelect.value === 'monthly') {
-                    months.forEach(month => {
-                        const [year, monthNum] = month.split('-');
-                        const option = document.createElement('option');
-                        option.value = month;
-                        option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
-                        monthSelect.appendChild(option);
-                    });
-                } else if (periodSelect.value === 'quarterly') {
-                    const quarters = {};
-                    months.forEach(month => {
-                        const [year, monthNum] = month.split('-').map(Number);
-                        const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
-                        if (!quarters[quarter]) {
-                            quarters[quarter] = true;
-                            const option = document.createElement('option');
-                            option.value = quarter;
-                            option.text = `${quarter}`;
-                            monthSelect.appendChild(option);
-                        }
-                    });
-                } else if (periodSelect.value === 'yearly') {
-                    const years = [...new Set(months.map(m => m.split('-')[0]))];
-                    years.forEach(year => {
-                        const option = document.createElement('option');
-                        option.value = year;
-                        option.text = year;
-                        monthSelect.appendChild(option);
-                    });
-                }
-                if (monthSelect.children.length > 1) {
-                    monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
-                    updateFinancialData();
-                }
-                hideSpinner(elements.spinners.balanceSheet);
-            }).catch(error => {
-                logError('Error loading periods', error);
+    function populateReportPeriods() {
+        const periodSelect = document.getElementById('reportPeriod');
+        const monthSelect = document.getElementById('reportMonth');
+        monthSelect.innerHTML = '<option value="">Select a period</option>';
+        showSpinner(elements.spinners.balanceSheet);
+        fetchDataIfStale().then(() => {
+            const data = dataCache || loadDataFromStorage();
+            if (!data || !data.monthly_reports) {
+                console.log('No monthly_reports data available:', data);
                 document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
                 hideSpinner(elements.spinners.balanceSheet);
-            });
-        }
-
-        function populateBehaviorPeriods() {
-            const periodSelect = document.getElementById('behaviorPeriod');
-            const monthSelect = document.getElementById('behaviorMonth');
-            monthSelect.innerHTML = '<option value="">Select a period</option>';
-            showSpinner(elements.spinners.behavior);
-            fetchDataIfStale().then(() => {
-                const data = dataCache || loadDataFromStorage();
-                if (!data) {
-                    document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
-                    hideSpinner(elements.spinners.behavior);
-                    return;
-                }
-                const months = Object.keys(data.monthly_reports || {}).sort();
-                const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                if (periodSelect.value === 'monthly') {
-                    months.forEach(month => {
-                        const [year, monthNum] = month.split('-');
-                        const option = document.createElement('option');
-                        option.value = month;
-                        option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
-                        monthSelect.appendChild(option);
-                    });
-                } else if (periodSelect.value === 'quarterly') {
-                    const quarters = {};
-                    months.forEach(month => {
-                        const [year, monthNum] = month.split('-').map(Number);
-                        const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
-                        if (!quarters[quarter]) {
-                            quarters[quarter] = true;
-                            const option = document.createElement('option');
-                            option.value = quarter;
-                            option.text = `${quarter}`;
-                            monthSelect.appendChild(option);
-                        }
-                    });
-                } else if (periodSelect.value === 'yearly') {
-                    const years = [...new Set(months.map(m => m.split('-')[0]))];
-                    years.forEach(year => {
-                        const option = document.createElement('option');
-                        option.value = year;
-                        option.text = year;
-                        monthSelect.appendChild(option);
-                    });
-                }
-                if (monthSelect.children.length > 1) {
-                    monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
-                    updateBehaviorReport();
-                }
-                hideSpinner(elements.spinners.behavior);
-            }).catch(error => {
-                logError('Error loading behavior periods', error);
-                document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
-                hideSpinner(elements.spinners.behavior);
-            });
-        }
-
-        function toggleRepaymentFields() {
-            const type = elements.type.value;
-            const loanType = elements.loanType.value;
-            elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
-            elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
-            elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
-            if (type === 'apply_loan' && loanType) {
-                let options = [];
-                if (loanType === 'short') {
-                    options = [1];
-                } else if (loanType === 'medium') {
-                    options = [2, 3];
-                } else if (loanType === 'long') {
-                    options = [4, 5, 6, 7, 8, 9, 10, 11, 12];
-                }
-                options.forEach(months => {
+                return;
+            }
+            const months = Object.keys(data.monthly_reports || {}).sort();
+            console.log('Available periods:', months);
+            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            if (periodSelect.value === 'monthly') {
+                months.forEach(month => {
+                    const [year, monthNum] = month.split('-');
                     const option = document.createElement('option');
-                    option.value = months;
-                    option.text = months;
-                    elements.repaymentPeriod.appendChild(option);
+                    option.value = month;
+                    option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
+                    monthSelect.appendChild(option);
+                });
+            } else if (periodSelect.value === 'quarterly') {
+                const quarters = {};
+                months.forEach(month => {
+                    const [year, monthNum] = month.split('-').map(Number);
+                    const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
+                    if (!quarters[quarter]) {
+                        quarters[quarter] = true;
+                        const option = document.createElement('option');
+                        option.value = quarter;
+                        option.text = `${quarter}`;
+                        monthSelect.appendChild(option);
+                    }
+                });
+            } else if (periodSelect.value === 'yearly') {
+                const years = [...new Set(months.map(m => m.split('-')[0]))];
+                years.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.text = year;
+                    monthSelect.appendChild(option);
                 });
             }
-            updateButtonState();
-        }
-
-        function toggleFields() {
-            const type = elements.type.value;
-            elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
-            elements.contributionFields.classList.toggle('show', type === 'contribution');
-            elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
-            elements.loanFields.classList.toggle('show', type === 'existing_loan' || type === 'apply_loan');
-            elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
-            elements.dateFields.classList.toggle('show', type === 'contribution' || type === 'existing_loan');
-            elements.dueDate.disabled = type === 'contribution';
-            if (type === 'contribution') {
-                populateYears();
-            } else {
-                elements.dueDate.value = '';
-                elements.checkDate.value = '';
+            if (months.includes('2024-01')) {
+                monthSelect.value = '2024-01';
+            } else if (monthSelect.children.length > 1) {
+                monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
             }
-            toggleRepaymentFields();
-            updateButtonState();
-        }
+            if (monthSelect.value) updateFinancialData();
+            hideSpinner(elements.spinners.balanceSheet);
+        }).catch(error => {
+            logError('Error loading periods', error);
+            document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
+            hideSpinner(elements.spinners.balanceSheet);
+        });
+    }
 
-        function updateDueDate() {
-            const type = elements.type.value;
-            if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
-                const selectedMonth = elements.month.value.split('-');
-                const year = parseInt(selectedMonth[0]);
-                const month = parseInt(selectedMonth[1]) - 1;
-                let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
-                dueDate.setUTCDate(10);
-                elements.dueDate.value = isNaN(dueDate.getTime()) ? new Date().toISOString().split('T')[0] : new Date(dueDate).toISOString().split('T')[0];
+    function populateBehaviorPeriods() {
+        const periodSelect = document.getElementById('behaviorPeriod');
+        const monthSelect = document.getElementById('behaviorMonth');
+        monthSelect.innerHTML = '<option value="">Select a period</option>';
+        showSpinner(elements.spinners.behavior);
+        fetchDataIfStale().then(() => {
+            const data = dataCache || loadDataFromStorage();
+            if (!data || !data.monthly_reports) {
+                console.log('No monthly_reports data available:', data);
+                document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
+                hideSpinner(elements.spinners.behavior);
+                return;
             }
-            updateButtonState();
-        }
-
-        function updateButtonState() {
-            const type = elements.type.value;
-            const amount = elements.amount.value;
-            const year = elements.year.value;
-            const month = elements.month.value;
-            const dueDate = elements.dueDate.value;
-            const checkDate = elements.checkDate.value;
-            const loanType = elements.loanType.value;
-            const repaymentPeriod = elements.repaymentPeriod.value;
-
-            const isAmountValid = amount && parseFloat(amount) > 0;
-            let isValid = false;
-
-            if (type === 'contribution') {
-                isValid = isAmountValid && year && month && dueDate && checkDate;
-            } else if (type === 'existing_loan') {
-                isValid = isAmountValid && loanType && dueDate && checkDate;
-            } else if (type === 'apply_loan') {
-                isValid = isAmountValid && loanType && repaymentPeriod;
+            const months = Object.keys(data.monthly_reports || {}).sort();
+            console.log('Available periods:', months);
+            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            if (periodSelect.value === 'monthly') {
+                months.forEach(month => {
+                    const [year, monthNum] = month.split('-');
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.text = `${monthAbbr[parseInt(monthNum) - 1]} ${year}`;
+                    monthSelect.appendChild(option);
+                });
+            } else if (periodSelect.value === 'quarterly') {
+                const quarters = {};
+                months.forEach(month => {
+                    const [year, monthNum] = month.split('-').map(Number);
+                    const quarter = `${year}-Q${Math.ceil(monthNum / 3)}`;
+                    if (!quarters[quarter]) {
+                        quarters[quarter] = true;
+                        const option = document.createElement('option');
+                        option.value = quarter;
+                        option.text = `${quarter}`;
+                        monthSelect.appendChild(option);
+                    }
+                });
+            } else if (periodSelect.value === 'yearly') {
+                const years = [...new Set(months.map(m => m.split('-')[0]))];
+                years.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.text = year;
+                    monthSelect.appendChild(option);
+                });
             }
+            if (months.includes('2024-01')) {
+                monthSelect.value = '2024-01';
+            } else if (monthSelect.children.length > 1) {
+                monthSelect.value = monthSelect.children[monthSelect.children.length - 1].value;
+            }
+            if (monthSelect.value) updateBehaviorReport();
+            hideSpinner(elements.spinners.behavior);
+        }).catch(error => {
+            logError('Error loading behavior periods', error);
+            document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading periods. Please check your connection and try again later.</td></tr>';
+            hideSpinner(elements.spinners.behavior);
+        });
+    }
 
-            elements.calcButton.disabled = isCalculating || !isValid;
+    function toggleRepaymentFields() {
+        const type = elements.type.value;
+        const loanType = elements.loanType.value;
+        elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
+        elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
+        elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
+        if (type === 'apply_loan' && loanType) {
+            let options = [];
+            if (loanType === 'short') {
+                options = [1];
+            } else if (loanType === 'medium') {
+                options = [2, 3];
+            } else if (loanType === 'long') {
+                options = [4, 5, 6, 7, 8, 9, 10, 11, 12];
+            }
+            options.forEach(months => {
+                const option = document.createElement('option');
+                option.value = months;
+                option.text = months;
+                elements.repaymentPeriod.appendChild(option);
+            });
         }
+        updateButtonState();
+    }
 
-        function refreshForm() {
-            elements.type.value = 'contribution';
-            elements.amount.value = '';
-            elements.year.value = '';
-            elements.month.value = '';
+    function toggleFields() {
+        const type = elements.type.value;
+        elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
+        elements.contributionFields.classList.toggle('show', type === 'contribution');
+        elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
+        elements.loanFields.classList.toggle('show', type === 'existing_loan' || type === 'apply_loan');
+        elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
+        elements.dateFields.classList.toggle('show', type === 'contribution' || type === 'existing_loan');
+        elements.dueDate.disabled = type === 'contribution';
+        if (type === 'contribution') {
+            populateYears();
+        } else {
             elements.dueDate.value = '';
             elements.checkDate.value = '';
-            elements.loanType.value = 'short';
-            elements.repaymentPeriod.value = '';
+        }
+        toggleRepaymentFields();
+        updateButtonState();
+    }
 
-            Object.values(elements.errors).forEach(error => {
-                error.textContent = '';
-                error.style.display = 'none';
-            });
+    function updateDueDate() {
+        const type = elements.type.value;
+        if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
+            const selectedMonth = elements.month.value.split('-');
+            const year = parseInt(selectedMonth[0]);
+            const month = parseInt(selectedMonth[1]) - 1;
+            let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
+            dueDate.setUTCDate(10);
+            elements.dueDate.value = isNaN(dueDate.getTime()) ? new Date().toISOString().split('T')[0] : new Date(dueDate).toISOString().split('T')[0];
+        }
+        updateButtonState();
+    }
 
-            elements.result.innerHTML = '';
-            elements.modalResult.innerHTML = '';
-            elements.successMessage.style.display = 'none';
-            elements.resultModal.style.display = 'none';
-            lastResult = null;
-            lastResultText = '';
+    function updateButtonState() {
+        const type = elements.type.value;
+        const amount = elements.amount.value;
+        const year = elements.year.value;
+        const month = elements.month.value;
+        const dueDate = elements.dueDate.value;
+        const checkDate = elements.checkDate.value;
+        const loanType = elements.loanType.value;
+        const repaymentPeriod = elements.repaymentPeriod.value;
 
-            toggleFields();
-            populateYears();
-            updateButtonState();
+        const isAmountValid = amount && parseFloat(amount) > 0;
+        let isValid = false;
+
+        if (type === 'contribution') {
+            isValid = isAmountValid && year && month && dueDate && checkDate;
+        } else if (type === 'existing_loan') {
+            isValid = isAmountValid && loanType && dueDate && checkDate;
+        } else if (type === 'apply_loan') {
+            isValid = isAmountValid && loanType && repaymentPeriod;
         }
 
-        async function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            let yOffset = 10;
-            const margin = 10;
+        elements.calcButton.disabled = isCalculating || !isValid;
+    }
 
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(14);
-            doc.text('i-8 SMART BOT Financial Report', 105, yOffset, { align: 'center' });
-            yOffset += 10;
+    function refreshForm() {
+        elements.type.value = 'contribution';
+        elements.amount.value = '';
+        elements.year.value = '';
+        elements.month.value = '';
+        elements.dueDate.value = '';
+        elements.checkDate.value = '';
+        elements.loanType.value = 'short';
+        elements.repaymentPeriod.value = '';
 
-            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        Object.values(elements.errors).forEach(error => {
+            error.textContent = '';
+            error.style.display = 'none';
+        });
+
+        elements.result.innerHTML = '';
+        elements.modalResult.innerHTML = '';
+        elements.successMessage.style.display = 'none';
+        elements.resultModal.style.display = 'none';
+        lastResult = null;
+        lastResultText = '';
+
+        toggleFields();
+        populateYears();
+        updateButtonState();
+    }
+
+    async function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let yOffset = 10;
+        const margin = 10;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text('i-8 SMART BOT Financial Report', 105, yOffset, { align: 'center' });
+        yOffset += 10;
+
+        const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated on: ${today}`, 200, yOffset, { align: 'right' });
+        yOffset += 10;
+
+        let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.`;
+        let lines = doc.splitTextToSize(content, 190);
+        doc.text(lines, margin, yOffset);
+        yOffset += lines.length * 6 + 10;
+
+        if (lastResult.type === 'contribution') {
+            const penalty = lastResult.penalty;
+            const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            const monthParts = lastResult.month.split('-');
+            const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+            content = `Deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+            content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
+            content += `Penalty Details:\n`;
+            content += penalty > 0
+                ? `- Flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
+                + `- Additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) for delays beyond 7 days.\n`
+                + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
+                : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
+            content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
+            lines = doc.splitTextToSize(content, 190);
             doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Generated on: ${today}`, 200, yOffset, { align: 'right' });
-            yOffset += 10;
-
-            let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.`;
-            let lines = doc.splitTextToSize(content, 190);
+            doc.text(lines, margin, yOffset);
+            yOffset += lines.length * 6 + 10;
+        } else if (lastResult.type === 'existing_loan') {
+            const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+            let loanType, interestRate;
+            if (lastResult.loanType === 'short') {
+                loanType = 'Short Term (30 Days)';
+                interestRate = '5%';
+            } else if (lastResult.loanType === 'medium') {
+                loanType = 'Medium Term (90 Days)';
+                interestRate = '10%';
+            } else {
+                loanType = 'Long Term (365 Days)';
+                interestRate = '15%';
+            }
+            content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+            content += `Loan Details:\n`;
+            content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+            if (lastResult.daysDelayed > 7) {
+                content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
+                content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
+            } else {
+                content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
+            }
+            content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
+            lines = doc.splitTextToSize(content, 190);
+            doc.setFontSize(9);
+            doc.text(lines, margin, yOffset);
+            yOffset += lines.length * 6 + 10;
+        } else if (lastResult.type === 'apply_loan') {
+            let loanType, interestRate;
+            if (lastResult.loanType === 'short') {
+                loanType = 'Short Term (30 Days)';
+                interestRate = '5%';
+            } else if (lastResult.loanType === 'medium') {
+                loanType = 'Medium Term (90 Days)';
+                interestRate = '10%';
+            } else {
+                loanType = 'Long Term (365 Days)';
+                interestRate = '15%';
+            }
+            content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+            content += `Loan Details:\n`;
+            content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+            content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.`;
+            lines = doc.splitTextToSize(content, 190);
+            doc.setFontSize(9);
             doc.text(lines, margin, yOffset);
             yOffset += lines.length * 6 + 10;
 
-            if (lastResult.type === 'contribution') {
-                const penalty = lastResult.penalty;
-                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                const monthParts = lastResult.month.split('-');
-                const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
-                content = `Deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
-                content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
-                content += `Penalty Details:\n`;
-                content += penalty > 0
-                    ? `- Flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
-                    + `- Additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) for delays beyond 7 days.\n`
-                    + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
-                    : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
-                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, 190);
-                doc.setFontSize(9);
-                doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 6 + 10;
-            } else if (lastResult.type === 'existing_loan') {
-                const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                let loanType, interestRate;
-                if (lastResult.loanType === 'short') {
-                    loanType = 'Short Term (30 Days)';
-                    interestRate = '5%';
-                } else if (lastResult.loanType === 'medium') {
-                    loanType = 'Medium Term (90 Days)';
-                    interestRate = '10%';
-                } else {
-                    loanType = 'Long Term (365 Days)';
-                    interestRate = '15%';
-                }
-                content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
-                content += `Loan Details:\n`;
-                content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
-                if (lastResult.daysDelayed > 7) {
-                    content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
-                    content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
-                } else {
-                    content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
-                }
-                content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, 190);
-                doc.setFontSize(9);
-                doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 6 + 10;
-            } else if (lastResult.type === 'apply_loan') {
-                let loanType, interestRate;
-                if (lastResult.loanType === 'short') {
-                    loanType = 'Short Term (30 Days)';
-                    interestRate = '5%';
-                } else if (lastResult.loanType === 'medium') {
-                    loanType = 'Medium Term (90 Days)';
-                    interestRate = '10%';
-                } else {
-                    loanType = 'Long Term (365 Days)';
-                    interestRate = '15%';
-                }
-                content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
-                content += `Loan Details:\n`;
-                content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
-                content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.`;
-                lines = doc.splitTextToSize(content, 190);
-                doc.setFontSize(9);
-                doc.text(lines, margin, yOffset);
-                yOffset += lines.length * 6 + 10;
+            if (lastResult.amortization && lastResult.amortization.length > 0) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.text('Amortization Schedule:', margin, yOffset);
+                yOffset += 10;
 
-                if (lastResult.amortization && lastResult.amortization.length > 0) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(10);
-                    doc.text('Amortization Schedule:', margin, yOffset);
-                    yOffset += 10;
-
-                    const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
-                    const tableData = lastResult.amortization.map(row => [
-                        row.month.toString(),
-                        row.payment,
-                        row.interest,
-                        row.principal,
-                        row.balance
-                    ]);
-                    doc.autoTable({
-                        head: [headers],
-                        body: tableData,
-                        startY: yOffset,
-                        styles: { fontSize: 10, cellPadding: 2 },
-                        headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255] },
-                        alternateRowStyles: { fillColor: [245, 247, 250] }
-                    });
-                    yOffset = doc.lastAutoTable.finalY + 10;
-                }
+                const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+                const tableData = lastResult.amortization.map(row => [
+                    row.month.toString(),
+                    row.payment,
+                    row.interest,
+                    row.principal,
+                    row.balance
+                ]);
+                doc.autoTable({
+                    head: [headers],
+                    body: tableData,
+                    startY: yOffset,
+                    styles: { fontSize: 10, cellPadding: 2 },
+                    headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [245, 247, 250] }
+                });
+                yOffset = doc.lastAutoTable.finalY + 10;
             }
-
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            content = `Kindly update your account to help i-8 Ltd grow and serve you better.`;
-            lines = doc.splitTextToSize(content, 190);
-            doc.text(lines, margin, yOffset);
-            yOffset += lines.length * 6;
-
-            doc.setFont('helvetica', 'bold');
-            doc.text('Regards,', margin, yOffset);
-            yOffset += 6;
-            doc.setFont('helvetica', 'italic');
-            doc.text('i-8 Ltd. (insightfuleightcoltd@gmail.com)', margin, yOffset);
-
-            return doc.output('blob');
         }
 
-        async function shareResults() {
-            if (!lastResult) {
-                alert('No results available to share. Please calculate first.');
-                return;
-            }
-            try {
-                const pdfBlob = await generatePDF();
-                const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
-                if (navigator.share) {
-                    await navigator.share({
-                        files: [pdfFile],
-                        title: 'i-8 SMART BOT Calculation Results',
-                        text: 'View your financial calculation results from i-8 SMART BOT.'
-                    });
-                } else {
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'i8-smart-bot-result.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    alert('PDF downloaded. You can now share it via WhatsApp or email.');
-                }
-            } catch (error) {
-                logError('Sharing failed', error);
-                const pdfBlob = await generatePDF();
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        content = `Kindly update your account to help i-8 Ltd grow and serve you better.`;
+        lines = doc.splitTextToSize(content, 190);
+        doc.text(lines, margin, yOffset);
+        yOffset += lines.length * 6;
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Regards,', margin, yOffset);
+        yOffset += 6;
+        doc.setFont('helvetica', 'italic');
+        doc.text('i-8 Ltd. (insightfuleightcoltd@gmail.com)', margin, yOffset);
+
+        return doc.output('blob');
+    }
+
+    async function shareResults() {
+        if (!lastResult) {
+            alert('No results available to share. Please calculate first.');
+            return;
+        }
+        try {
+            const pdfBlob = await generatePDF();
+            const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
+            if (navigator.share) {
+                await navigator.share({
+                    files: [pdfFile],
+                    title: 'i-8 SMART BOT Calculation Results',
+                    text: 'View your financial calculation results from i-8 SMART BOT.'
+                });
+            } else {
                 const url = URL.createObjectURL(pdfBlob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1006,196 +1035,198 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                alert('Sharing not supported. PDF downloaded for manual sharing.');
+                alert('PDF downloaded. You can now share it via WhatsApp or email.');
             }
+        } catch (error) {
+            logError('Sharing failed', error);
+            const pdfBlob = await generatePDF();
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'i8-smart-bot-result.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('Sharing not supported. PDF downloaded for manual sharing.');
+        }
+    }
+
+    async function calculate() {
+        const validationError = validateInputs();
+        if (validationError) {
+            elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+            return;
         }
 
-        async function calculate() {
-            const validationError = validateInputs();
-            if (validationError) {
-                elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
-                return;
-            }
+        isCalculating = true;
+        elements.calcButton.classList.add('loading');
+        elements.calcButton.disabled = true;
+        showProgress();
 
-            isCalculating = true;
-            elements.calcButton.classList.add('loading');
-            elements.calcButton.disabled = true;
-            showProgress();
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            const type = elements.type.value;
+            const amount = parseFloat(elements.amount.value);
+            let tableHTML = `
+                <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
+                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Field</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
+                    </tr>
+            `;
+            let resultText = 'i-8 SMART BOT Calculation Results\n\n';
 
-                const type = elements.type.value;
-                const amount = parseFloat(elements.amount.value);
-                let tableHTML = `
-                    <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
-                    <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
-                        <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                            <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Field</th>
-                            <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
-                        </tr>
+            if (type === 'contribution') {
+                const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+                const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+                const penalty = calculateContributionPenalty(amount, daysDelayed);
+                const totalOwed = amount + penalty;
+                tableHTML += `
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
                 `;
-                let resultText = 'i-8 SMART BOT Calculation Results\n\n';
-
-                if (type === 'contribution') {
-                    const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
-                    const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
-                    const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
-                    const penalty = calculateContributionPenalty(amount, daysDelayed);
-                    const totalOwed = amount + penalty;
-                    tableHTML += `
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+                tableHTML += '</table>';
+                lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
+                resultText += `Type: Deposit\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
+                await submitContribution(amount, elements.month.value);
+                saveCalculation(lastResult);
+            } else if (type === 'existing_loan') {
+                const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+                const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+                const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+                const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
+                tableHTML += `
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                    ${daysDelayed > 7 ? `
+                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
                         <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
-                    `;
-                    tableHTML += '</table>';
-                    lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
-                    resultText += `Type: Deposit\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
-                    await submitContribution(amount, elements.month.value);
-                    saveCalculation(lastResult);
-                } else if (type === 'existing_loan') {
-                    const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
-                    const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
-                    const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
-                    const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
+                    ` : ''}
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                `;
+                tableHTML += '</table>';
+                lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
+                resultText += `Type: Existing Loan\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nInitial Interest: ${interest.toFixed(2)} KES`;
+                if (daysDelayed > 7) {
+                    resultText += `\nRoll-over Interest: ${rollOverInterest.toFixed(2)} KES\nPenalty: ${penalty.toFixed(2)} KES`;
+                }
+                resultText += `\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
+                saveCalculation(lastResult);
+            } else if (type === 'apply_loan') {
+                const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
+                const loanType = elements.loanType.value;
+                const { totalOwed, interest, amortization, termMonths } = calculateApplyLoan(amount, loanType, repaymentPeriod);
+                tableHTML += `
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
+                    <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount to Pay (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
+                `;
+                resultText += `Type: New Loans\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
+                if (amortization.length > 0) {
                     tableHTML += `
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Days Delayed</td><td>${daysDelayed}</td></tr>
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Initial Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
-                        ${daysDelayed > 7 ? `
-                            <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Roll-over Interest (KES)</td><td>${rollOverInterest.toFixed(2)}</td></tr>
-                            <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Penalty (KES)</td><td>${penalty.toFixed(2)}</td></tr>
-                        ` : ''}
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount Owed (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
-                    `;
-                    tableHTML += '</table>';
-                    lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
-                    resultText += `Type: Existing Loan\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nInitial Interest: ${interest.toFixed(2)} KES`;
-                    if (daysDelayed > 7) {
-                        resultText += `\nRoll-over Interest: ${rollOverInterest.toFixed(2)} KES\nPenalty: ${penalty.toFixed(2)} KES`;
-                    }
-                    resultText += `\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
-                    saveCalculation(lastResult);
-                } else if (type === 'apply_loan') {
-                    const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
-                    const loanType = elements.loanType.value;
-                    const { totalOwed, interest, amortization, termMonths } = calculateApplyLoan(amount, loanType, repaymentPeriod);
-                    tableHTML += `
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8;">Interest (KES)</td><td>${interest.toFixed(2)}</td></tr>
-                        <tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Total Amount to Pay (KES)</td><td style="font-weight: bold;">${totalOwed.toFixed(2)}</td></tr>
-                    `;
-                    resultText += `Type: New Loans\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
-                    if (amortization.length > 0) {
-                        tableHTML += `
-                            <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
-                            <tr><td colspan="2">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                                        <th>Month</th><th>Payment (KES)</th><th>Interest (KES)</th><th>Principal (KES)</th><th>Balance (KES)</th>
-                                    </tr>
-                        `;
-                        amortization.forEach(row => {
-                            tableHTML += `
-                                <tr>
-                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.month}</td>
-                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.payment}</td>
-                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.interest}</td>
-                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.principal}</td>
-                                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.balance}</td>
+                        <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
+                        <tr><td colspan="2">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                                    <th>Month</th><th>Payment (KES)</th><th>Interest (KES)</th><th>Principal (KES)</th><th>Balance (KES)</th>
                                 </tr>
-                            `;
-                            resultText += `Month ${row.month}: Payment ${row.payment} KES, Interest ${row.interest} KES, Principal ${row.principal} KES, Balance ${row.balance} KES\n`;
-                        });
-                        tableHTML += '</table></td></tr>';
-                    }
-                    tableHTML += '</table>';
-                    lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
-                    saveCalculation(lastResult);
-                }
-                lastResultText = resultText;
-
-                if (window.innerHeight < 600) {
-                    elements.modalResult.innerHTML = tableHTML;
-                    elements.resultModal.style.display = 'flex';
-                } else {
-                    elements.result.innerHTML = tableHTML;
-                    elements.resultModal.style.display = 'none';
-                }
-
-            } catch (error) {
-                logError('Calculation failed', error);
-                elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation: ${error.message}. Please try again.</span>`;
-            } finally {
-                resetButton();
-                hideProgress();
-            }
-        }
-
-        function resetButton() {
-            isCalculating = false;
-            elements.calcButton.classList.remove('loading');
-            updateButtonState();
-        }
-
-        function closeResultModal() {
-            elements.resultModal.style.display = 'none';
-            elements.result.innerHTML = '';
-        }
-
-        function changeMainPage(direction) {
-            currentMainPage += direction;
-            if (currentMainPage < 1) currentMainPage = 1;
-            if (currentMainPage > 5) currentMainPage = 5;
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
-            }
-            document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
-            document.getElementById('prevMainPage').disabled = currentMainPage === 1;
-            document.getElementById('nextMainPage').disabled = currentMainPage === 5;
-            if (currentMainPage === 2) updateFinancialData();
-            if (currentMainPage === 3) updateFinancialData();
-            if (currentMainPage === 4) updateBehaviorReport();
-            document.getElementById(`page${currentMainPage}`).focus();
-        }
-
-        function displayMembers(members) {
-            const memberTableBody = document.getElementById('memberTableBody');
-            memberTableBody.innerHTML = '';
-            if (!members || members.length === 0) {
-                memberTableBody.innerHTML = '<tr><td colspan="5">No members available.</td></tr>';
-            } else {
-                members.forEach(member => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${sanitizeInput(member.member_name || 'Unknown')}</td>
-                        <td>KES ${(member.amount || 0).toFixed(2)}</td>
-                        <td>${member.shares || 0}</td>
-                        <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
-                        <td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
                     `;
-                    memberTableBody.appendChild(row);
-                });
-            }
-        }
-
-        function updateFinancialData() {
-            showSpinner(elements.spinners.balanceSheet);
-            showSpinner(elements.spinners.members);
-            fetchDataIfStale().then(() => {
-                const data = dataCache || loadDataFromStorage();
-                if (!data) {
-                    if (currentMainPage === 2) {
-                        document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data. Please check your connection and try again later.</td></tr>';
-                    }
-                    if (currentMainPage === 3) {
-                        document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="5">Error loading member data. Please check your connection and try again later.</td></tr>';
-                    }
-                    hideSpinner(elements.spinners.balanceSheet);
-                    hideSpinner(elements.spinners.members);
-                    return;
+                    amortization.forEach(row => {
+                        tableHTML += `
+                            <tr>
+                                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.month}</td>
+                                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.payment}</td>
+                                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.interest}</td>
+                                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.principal}</td>
+                                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.balance}</td>
+                            </tr>
+                        `;
+                        resultText += `Month ${row.month}: Payment ${row.payment} KES, Interest ${row.interest} KES, Principal ${row.principal} KES, Balance ${row.balance} KES\n`;
+                    });
+                    tableHTML += '</table></td></tr>';
                 }
-                processFinancialData(data);
-            }).catch(error => {
-                logError('Error loading financial data', error);
+                tableHTML += '</table>';
+                lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
+                saveCalculation(lastResult);
+            }
+            lastResultText = resultText;
+
+            if (window.innerHeight < 600) {
+                elements.modalResult.innerHTML = tableHTML;
+                elements.resultModal.style.display = 'flex';
+            } else {
+                elements.result.innerHTML = tableHTML;
+                elements.resultModal.style.display = 'none';
+            }
+
+        } catch (error) {
+            logError('Calculation failed', error);
+            elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation: ${error.message}. Please try again.</span>`;
+        } finally {
+            resetButton();
+            hideProgress();
+        }
+    }
+
+    function resetButton() {
+        isCalculating = false;
+        elements.calcButton.classList.remove('loading');
+        updateButtonState();
+    }
+
+    function closeResultModal() {
+        elements.resultModal.style.display = 'none';
+        elements.result.innerHTML = '';
+    }
+
+    function changeMainPage(direction) {
+        currentMainPage += direction;
+        if (currentMainPage < 1) currentMainPage = 1;
+        if (currentMainPage > 5) currentMainPage = 5;
+        for (let i = 1; i <= 5; i++) {
+            document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
+        }
+        document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
+        document.getElementById('prevMainPage').disabled = currentMainPage === 1;
+        document.getElementById('nextMainPage').disabled = currentMainPage === 5;
+        if (currentMainPage === 2) updateFinancialData();
+        if (currentMainPage === 3) updateFinancialData();
+        if (currentMainPage === 4) updateBehaviorReport();
+        document.getElementById(`page${currentMainPage}`).focus();
+    }
+
+    function displayMembers(members) {
+        const memberTableBody = document.getElementById('memberTableBody');
+        memberTableBody.innerHTML = '';
+        console.log('Members data:', members);
+        if (!members || members.length === 0) {
+            memberTableBody.innerHTML = '<tr><td colspan="5">No members available.</td></tr>';
+        } else {
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${sanitizeInput(member.member_name || 'Unknown')}</td>
+                    <td>KES ${(member.amount || 0).toFixed(2)}</td>
+                    <td>${member.shares || 0}</td>
+                    <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+                    <td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
+                `;
+                memberTableBody.appendChild(row);
+            });
+        }
+    }
+
+    function updateFinancialData() {
+        showSpinner(elements.spinners.balanceSheet);
+        showSpinner(elements.spinners.members);
+        fetchDataIfStale().then(() => {
+            const data = dataCache || loadDataFromStorage();
+            if (!data) {
+                console.log('No data available in cache or storage');
                 if (currentMainPage === 2) {
                     document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data. Please check your connection and try again later.</td></tr>';
                 }
@@ -1204,30 +1235,83 @@
                 }
                 hideSpinner(elements.spinners.balanceSheet);
                 hideSpinner(elements.spinners.members);
-            });
+                return;
+            }
+            processFinancialData(data);
+        }).catch(error => {
+            logError('Error loading financial data', error);
+            if (currentMainPage === 2) {
+                document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data: ${error.message}. Please try again later.</td></tr>';
+            }
+            if (currentMainPage === 3) {
+                document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="5">Error loading member data: ${error.message}. Please try again later.</td></tr>';
+            }
+            hideSpinner(elements.spinners.balanceSheet);
+            hideSpinner(elements.spinners.members);
+        });
+    }
+
+    function processFinancialData(data) {
+        console.log('Processing data:', JSON.stringify(data, null, 2));
+        currentMembers = data.member_contributions || [];
+        if (currentMainPage === 3) {
+            displayMembers(currentMembers);
         }
 
-        function processFinancialData(data) {
-            currentMembers = data.member_contributions || [];
-            if (currentMainPage === 3) {
-                displayMembers(currentMembers);
+        const period = document.getElementById('reportPeriod').value;
+        const periodValue = document.getElementById('reportMonth').value;
+        let monthlyData = {};
+
+        if (!data.monthly_reports) {
+            console.log('No monthly_reports available');
+            document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">No financial data available.</td></tr>';
+            hideSpinner(elements.spinners.balanceSheet);
+            hideSpinner(elements.spinners.members);
+            return;
+        }
+
+        if (period === 'monthly' && periodValue) {
+            monthlyData = data.monthly_reports[periodValue] || {};
+        } else if (period === 'quarterly' && periodValue) {
+            const [year, quarter] = periodValue.split('-Q');
+            const quarterMonths = [];
+            const startMonth = (parseInt(quarter) - 1) * 3 + 1;
+            for (let i = 0; i < 3; i++) {
+                const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
+                if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
             }
-
-            const period = document.getElementById('reportPeriod').value;
-            const periodValue = document.getElementById('reportMonth').value;
-            let monthlyData = {};
-
-            if (period === 'monthly' && periodValue) {
-                monthlyData = data.monthly_reports[periodValue] || {};
-            } else if (period === 'quarterly' && periodValue) {
-                const [year, quarter] = periodValue.split('-Q');
-                const quarterMonths = [];
-                const startMonth = (parseInt(quarter) - 1) * 3 + 1;
-                for (let i = 0; i < 3; i++) {
-                    const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
-                    if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
-                }
-                monthlyData = quarterMonths.reduce((acc, curr) => ({
+            monthlyData = quarterMonths.reduce((acc, curr) => ({
+                opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
+                opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
+                total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
+                total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
+                interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
+                interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
+                other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
+                other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
+                total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
+                total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0),
+                bank_charges_kcb: (acc.bank_charges_kcb || 0) + (curr.bank_charges_kcb || 0),
+                bank_charges_lofty: (acc.bank_charges_lofty || 0) + (curr.bank_charges_lofty || 0),
+                petty_cash_utilized_kcb: (acc.petty_cash_utilized_kcb || 0) + (curr.petty_cash_utilized_kcb || 0),
+                petty_cash_utilized_lofty: (acc.petty_cash_utilized_lofty || 0) + (curr.petty_cash_utilized_lofty || 0),
+                agm_facilitation_kcb: (acc.agm_facilitation_kcb || 0) + (curr.agm_facilitation_kcb || 0),
+                agm_facilitation_lofty: (acc.agm_facilitation_lofty || 0) + (curr.agm_facilitation_lofty || 0),
+                welfare_kitty_utilized_kcb: (acc.welfare_kitty_utilized_kcb || 0) + (curr.welfare_kitty_utilized_kcb || 0),
+                welfare_kitty_utilized_lofty: (acc.welfare_kitty_utilized_lofty || 0) + (curr.welfare_kitty_utilized_lofty || 0),
+                other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
+                total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
+                lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
+                total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
+            }), {});
+        } else if (period === 'yearly' && periodValue) {
+            const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
+            monthlyData = yearMonths.reduce((acc, month) => {
+                const curr = data.monthly_reports[month];
+                return {
                     opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
                     opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
                     total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
@@ -1253,74 +1337,43 @@
                     kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
                     lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
                     total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
-                }), {});
-            } else if (period === 'yearly' && periodValue) {
-                const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
-                monthlyData = yearMonths.reduce((acc, month) => {
-                    const curr = data.monthly_reports[month];
-                    return {
-                        opening_kcb_balance: (acc.opening_kcb_balance || 0) + (curr.opening_kcb_balance || 0),
-                        opening_lofty_balance: (acc.opening_lofty_balance || 0) + (curr.opening_lofty_balance || 0),
-                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
-                        total_loan_repayments_kcb: (acc.total_loan_repayments_kcb || 0) + (curr.total_loan_repayments_kcb || 0),
-                        total_loan_repayments_lofty: (acc.total_loan_repayments_lofty || 0) + (curr.total_loan_repayments_lofty || 0),
-                        interest_on_loans_kcb: (acc.interest_on_loans_kcb || 0) + (curr.interest_on_loans_kcb || 0),
-                        interest_on_deposits_lofty: (acc.interest_on_deposits_lofty || 0) + (curr.interest_on_deposits_lofty || 0),
-                        other_income_kcb: (acc.other_income_kcb || 0) + (curr.other_income_kcb || 0),
-                        other_income_lofty: (acc.other_income_lofty || 0) + (curr.other_income_lofty || 0),
-                        total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
-                        total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0),
-                        bank_charges_kcb: (acc.bank_charges_kcb || 0) + (curr.bank_charges_kcb || 0),
-                        bank_charges_lofty: (acc.bank_charges_lofty || 0) + (curr.bank_charges_lofty || 0),
-                        petty_cash_utilized_kcb: (acc.petty_cash_utilized_kcb || 0) + (curr.petty_cash_utilized_kcb || 0),
-                        petty_cash_utilized_lofty: (acc.petty_cash_utilized_lofty || 0) + (curr.petty_cash_utilized_lofty || 0),
-                        agm_facilitation_kcb: (acc.agm_facilitation_kcb || 0) + (curr.agm_facilitation_kcb || 0),
-                        agm_facilitation_lofty: (acc.agm_facilitation_lofty || 0) + (curr.agm_facilitation_lofty || 0),
-                        welfare_kitty_utilized_kcb: (acc.welfare_kitty_utilized_kcb || 0) + (curr.welfare_kitty_utilized_kcb || 0),
-                        welfare_kitty_utilized_lofty: (acc.welfare_kitty_utilized_lofty || 0) + (curr.welfare_kitty_utilized_lofty || 0),
-                        other_expenses: (acc.other_expenses || 0) + (curr.other_expenses || 0),
-                        total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                        total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                        kcb_balance: (acc.kcb_balance || 0) + (curr.kcb_balance || 0),
-                        lofty_balance: (acc.lofty_balance || 0) + (curr.lofty_balance || 0),
-                        total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
-                    };
-                }, {});
-            }
-
-            if (currentMainPage === 2) {
-                const balanceSheetBody = document.getElementById('balanceSheetBody');
-                balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
-                                       <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
-                    <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
-                    <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Interest on Loans KCB</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Interest on Deposits Lofty</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Other Income KCB</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Other Income Lofty</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Loans Disbursed KCB</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Loans Disbursed Lofty</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>AGM Facilitation KCB</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>AGM Facilitation Lofty</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Welfare Kitty Utilized KCB</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Welfare Kitty Utilized Lofty</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
-                    <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
-                    <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
-                    <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
-                    <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
-                    <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
-                    <tr><td><strong>Total Balance</strong></td><td><strong>KES ${(monthlyData.total_balance || 0).toFixed(2)}</strong></td></tr>
-                ` : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
-                hideSpinner(elements.spinners.balanceSheet);
-                hideSpinner(elements.spinners.members);
-            }
+                };
+            }, {});
         }
+
+        if (currentMainPage === 2) {
+            const balanceSheetBody = document.getElementById('balanceSheetBody');
+            balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
+                <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Loans KCB</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Deposits Lofty</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income KCB</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income Lofty</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Loans Disbursed KCB</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loans Disbursed Lofty</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation KCB</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation Lofty</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized KCB</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized Lofty</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
+                <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
+                <tr><td><strong>Total Balance</strong></td><td><strong>KES ${(monthlyData.total_balance || 0).toFixed(2)}</strong></td></tr>
+            ` : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
+            hideSpinner(elements.spinners.balanceSheet);
+            hideSpinner(elements.spinners.members);
+        }
+    }
 
         function updateBehaviorReport() {
             showSpinner(elements.spinners.behavior);
