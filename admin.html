@@ -150,11 +150,22 @@
 
     <script>
         const MEMBERS = [
-            "John Waweru Njeri", "Geoffrey Mugi Gicini", "James Njoroge Kamau",
-            "Joseph Wachira Waithaka", "Enoch Kamau Thumbi", "Hermstone Mwangi Isaac",
-            "Paul Macharia Muchiri", "John Gatheru Iragu", "Isaac Thuku Maina",
+            "Enoch Kamau Thumbi",
+            "John Waweru Njeri",
+            "Geoffrey Mugi Gicini",
+            "John Gatheru Iragu",
+            "James Njoroge Kamau",
+            "Joseph Wachira Waithaka",
+            "Paul Masharia Muchiri",
+            "Hempstone Mwangi Isaac",
+            "Isaac Thuku Maina",
             "Nephat Njeru Muthee"
         ];
+
+        const CONFIG = {
+            API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+            FETCH_TIMEOUT: 10000
+        };
 
         function populateMonths(selectId) {
             const monthSelect = document.getElementById(selectId);
@@ -285,6 +296,8 @@
             document.getElementById('result').innerHTML = '';
             document.getElementById('submitFinancialButton').disabled = false;
             document.getElementById('submitContributionButton').disabled = false;
+            localStorage.removeItem('financialData'); // Clear stale financial data
+            localStorage.removeItem('adminLogs'); // Clear stale admin logs
             populateMonths('month');
             populateMonths('contributionMonth');
             fetchData();
@@ -292,7 +305,12 @@
 
         async function fetchData() {
             try {
-                const response = await fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                 }
@@ -367,7 +385,7 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
-                const response = await fetch('https://i8-smart-backend.onrender.com/api/update-balance-sheet', {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
@@ -409,14 +427,14 @@
                 member_name: member,
                 amount: amount,
                 last_contribution_date: new Date().toISOString().split('T')[0],
-                shares: Math.floor(amount / 1000),
+                shares: MEMBERS.indexOf(member) < 8 ? 125 : 0, // Assign 125 shares to first 8 members, 0 to others
                 contributions: { [month]: amount }
             };
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                const response = await fetch('https://i8-smart-backend.onrender.com/api/add-contribution', {
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ month, data }),
@@ -444,7 +462,12 @@
             const submitButton = document.querySelector('.backup-button');
             submitButton.disabled = true;
             try {
-                const response = await fetch('https://i8-smart-backend.onrender.com/api/data', { timeout: 10000 });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
                 if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                 const data = await response.json();
                 console.log('Downloaded data:', data);
