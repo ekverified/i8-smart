@@ -1304,24 +1304,51 @@
 }
 
 function displayMembers(members) {
-    const memberTableBody = document.getElementById('memberTableBody');
-    if (!members || members.length === 0) {
-        memberTableBody.innerHTML = '<tr><td colspan="5">No member data available.</td></tr>';
-        return;
+        const memberTableBody = document.getElementById('memberTableBody');
+        memberTableBody.innerHTML = '';
+        console.log('Members data:', members);
+
+        // Hardcoded company members
+        const hardcodedMembers = [
+            { member_name: 'Enoch Kamau Thumbi', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'John Waweru Njeri', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Geoffrey Mugi Gicini', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'John Gatheru Iragu', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'James Njoroge Kamau', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Joseph Wachira Waithaka', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Paul Masharia Muchiri', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Hempstone Mwangi Isaac', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Isaac Thuku Maina', amount: 0, shares: 0, last_contribution_date: null },
+            { member_name: 'Nephat Njeru Muthee', amount: 0, shares: 0, last_contribution_date: null }
+        ];
+
+        // Merge API data with hardcoded members
+        const combinedMembers = hardcodedMembers.map(hardcoded => {
+            const apiMember = members.find(m => m.member_name === hardcoded.member_name);
+            return {
+                member_name: hardcoded.member_name,
+                amount: apiMember ? apiMember.amount || 0 : 0,
+                shares: hardcoded.shares,
+                last_contribution_date: apiMember ? apiMember.last_contribution_date : null
+            };
+        });
+
+        if (!combinedMembers || combinedMembers.length === 0) {
+            memberTableBody.innerHTML = '<tr><td colspan="5">No members available.</td></tr>';
+        } else {
+            combinedMembers.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${sanitizeInput(member.member_name || 'Unknown')}</td>
+                    <td>KES ${(member.amount || 0).toFixed(2)}</td>
+                    <td>${member.shares || 0}</td>
+                    <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+                    <td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td>
+                `;
+                memberTableBody.appendChild(row);
+            });
+        }
     }
-    memberTableBody.innerHTML = '';
-    members.forEach(member => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${sanitizeInput(member.name)}</td>
-            <td>KES ${(member.contribution || 0).toFixed(2)}</td>
-            <td>${(member.shares || 0).toFixed(2)}</td>
-            <td>${member.lastContribution ? new Date(member.lastContribution).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
-            <td>KES ${(member.loanLimit || 0).toFixed(2)}</td>
-        `;
-        memberTableBody.appendChild(row);
-    });
-}
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
