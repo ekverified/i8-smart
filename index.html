@@ -187,27 +187,11 @@
             </div>
         </div>
 
-        <!-- Page 5: Search Member -->
-        <div class="main-page" id="page5" style="display: none;">
-            <div class="financial-section">
-                <h2>Search Member</h2>
-                <form id="searchForm">
-                    <label for="memberNameSearch">Member Name:</label>
-                    <input type="text" id="memberNameSearch" placeholder="Enter member name (e.g., Joseph Kinyua)" aria-label="Search for member by name">
-                    <button type="submit" aria-label="Search member">Search</button>
-                </form>
-                <div class="loading-spinner" id="searchSpinner" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i> Loading...
-                </div>
-                <div id="searchResult"></div>
-            </div>
-        </div>
-
         <div class="pagination-controls">
             <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <span id="mainPageInfo">Page 1 of 5</span>
+            <span id="mainPageInfo">Page 1 of 4</span>
             <button id="nextMainPage" onclick="changeMainPage(1)" aria-label="Next page">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -221,7 +205,7 @@
         </div>
     </div>
 
-  <script>
+    <script>
     const CONFIG = {
         CONTRIBUTION_PENALTY: 0.30,
         CONTRIBUTION_DAILY_PENALTY: 0.01,
@@ -274,8 +258,7 @@
         spinners: {
             balanceSheet: document.getElementById('balanceSheetSpinner'),
             members: document.getElementById('membersSpinner'),
-            behavior: document.getElementById('behaviorSpinner'),
-            search: document.getElementById('searchSpinner')
+            behavior: document.getElementById('behaviorSpinner')
         }
     };
 
@@ -285,7 +268,7 @@
     let currentMainPage = 1;
     let currentMembers = [];
     let dataCache = null;
-    let forceRefresh = false; // Added for cache control
+    let forceRefresh = false;
 
     function sanitizeInput(input) {
         const div = document.createElement('div');
@@ -335,7 +318,7 @@
                 const response = await fetch(url, options);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                console.log(`Fetched data from ${url}:`, data); // Debug log
+                console.log(`Fetched data from ${url}:`, data);
                 return data;
             } catch (error) {
                 if (i < retries - 1) {
@@ -354,7 +337,7 @@
                 data: data,
                 timestamp: new Date().getTime()
             }));
-            console.log('Saved data to localStorage:', data); // Debug log
+            console.log('Saved data to localStorage:', data);
         } catch (error) {
             logError('Failed to save financial data to storage', error);
         }
@@ -371,7 +354,7 @@
                 localStorage.removeItem('financialData');
                 return null;
             }
-            console.log('Loaded data from localStorage:', data); // Debug log
+            console.log('Loaded data from localStorage:', data);
             return data;
         } catch (error) {
             logError('Failed to load financial data from storage', error);
@@ -1186,13 +1169,13 @@
     function changeMainPage(direction) {
         currentMainPage += direction;
         if (currentMainPage < 1) currentMainPage = 1;
-        if (currentMainPage > 5) currentMainPage = 5;
-        for (let i = 1; i <= 5; i++) {
+        if (currentMainPage > 4) currentMainPage = 4;
+        for (let i = 1; i <= 4; i++) {
             document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
         }
-        document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
+        document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 4`;
         document.getElementById('prevMainPage').disabled = currentMainPage === 1;
-        document.getElementById('nextMainPage').disabled = currentMainPage === 5;
+        document.getElementById('nextMainPage').disabled = currentMainPage === 4;
         if (currentMainPage === 2) updateFinancialData();
         if (currentMainPage === 3) updateFinancialData();
         if (currentMainPage === 4) updateBehaviorReport();
@@ -1203,10 +1186,36 @@
         const memberTableBody = document.getElementById('memberTableBody');
         memberTableBody.innerHTML = '';
         console.log('Members data:', members);
-        if (!members || members.length === 0) {
+
+        // Hardcoded company members
+        const hardcodedMembers = [
+            { member_name: 'Enoch Kamau Thumbi', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'John Waweru Njeri', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Geoffrey Mugi Gicini', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'John Gatheru Iragu', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'James Njoroge Kamau', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Joseph Wachira Waithaka', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Paul Masharia Muchiri', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Hempstone Mwangi Isaac', amount: 0, shares: 125, last_contribution_date: null },
+            { member_name: 'Isaac Thuku Maina', amount: 0, shares: 0, last_contribution_date: null },
+            { member_name: 'Nephat Njeru Muthee', amount: 0, shares: 0, last_contribution_date: null }
+        ];
+
+        // Merge API data with hardcoded members
+        const combinedMembers = hardcodedMembers.map(hardcoded => {
+            const apiMember = members.find(m => m.member_name === hardcoded.member_name);
+            return {
+                member_name: hardcoded.member_name,
+                amount: apiMember ? apiMember.amount || 0 : 0,
+                shares: hardcoded.shares,
+                last_contribution_date: apiMember ? apiMember.last_contribution_date : null
+            };
+        });
+
+        if (!combinedMembers || combinedMembers.length === 0) {
             memberTableBody.innerHTML = '<tr><td colspan="5">No members available.</td></tr>';
         } else {
-            members.forEach(member => {
+            combinedMembers.forEach(member => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${sanitizeInput(member.member_name || 'Unknown')}</td>
@@ -1223,15 +1232,17 @@
     function updateFinancialData() {
         showSpinner(elements.spinners.balanceSheet);
         showSpinner(elements.spinners.members);
+        localStorage.removeItem('financialData'); // Clear stale cache
+        forceRefresh = true; // Force fresh fetch
         fetchDataIfStale().then(() => {
             const data = dataCache || loadDataFromStorage();
-            if (!data) {
-                console.log('No data available in cache or storage');
+            if (!data || (!data.monthly_reports && !data.member_contributions) || (Object.keys(data.monthly_reports).length === 0 && data.member_contributions.length === 0)) {
+                console.warn('No data available in cache or storage');
                 if (currentMainPage === 2) {
-                    document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data. Please check your connection and try again later.</td></tr>';
+                    document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">No financial data available. Please check admin updates or server connection.</td></tr>`;
                 }
                 if (currentMainPage === 3) {
-                    document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="5">Error loading member data. Please check your connection and try again later.</td></tr>';
+                    document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">No member data available. Please check admin updates or server connection.</td></tr>`;
                 }
                 hideSpinner(elements.spinners.balanceSheet);
                 hideSpinner(elements.spinners.members);
@@ -1240,11 +1251,12 @@
             processFinancialData(data);
         }).catch(error => {
             logError('Error loading financial data', error);
+            const errorMessage = `Failed to load data: ${error.message}. Please try again or contact support.`;
             if (currentMainPage === 2) {
-                document.getElementById('balanceSheetBody').innerHTML = '<tr><td colspan="2">Error loading financial data: ${error.message}. Please try again later.</td></tr>';
+                document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">${errorMessage}</td></tr>`;
             }
             if (currentMainPage === 3) {
-                document.getElementById('memberTableBody').innerHTML = '<tr><td colspan="5">Error loading member data: ${error.message}. Please try again later.</td></tr>';
+                document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">${errorMessage}</td></tr>`;
             }
             hideSpinner(elements.spinners.balanceSheet);
             hideSpinner(elements.spinners.members);
@@ -1346,150 +1358,128 @@
             balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
                 <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
-                <tr><td>Members Contribution KCB</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Members Loan Repayment KCB</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Members Loan Repayment Lofty</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Interest on Loans KCB</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Interest on Deposits Lofty</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Other Income KCB</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Other Income Lofty</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Loans Disbursed KCB</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Loans Disbursed Lofty</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Bank Charges KCB</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Bank Charges Lofty</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Petty Cash Utilized KCB</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Petty Cash Utilized Lofty</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>AGM Facilitation KCB</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>AGM Facilitation Lofty</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Welfare Kitty Utilized KCB</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Welfare Kitty Utilized Lofty</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Contributions (KCB)</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Repayments (KCB)</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Repayments (Lofty)</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Loans (KCB)</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Deposits (Lofty)</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income (KCB)</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income (Lofty)</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Disbursements (KCB)</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Disbursements (Lofty)</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges (KCB)</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges (Lofty)</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized (KCB)</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized (Lofty)</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation (KCB)</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation (Lofty)</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized (KCB)</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized (Lofty)</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
                 <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
                 <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
                 <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
                 <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
-                <tr><td><strong>Total Balance</strong></td><td><strong>KES ${(monthlyData.total_balance || 0).toFixed(2)}</strong></td></tr>
+                <tr><td>Total Balance</td><td>KES ${(monthlyData.total_balance || 0).toFixed(2)}</td></tr>
             ` : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
-            hideSpinner(elements.spinners.balanceSheet);
-            hideSpinner(elements.spinners.members);
         }
+
+        hideSpinner(elements.spinners.balanceSheet);
+        hideSpinner(elements.spinners.members);
     }
 
-        function updateBehaviorReport() {
-            showSpinner(elements.spinners.behavior);
-            fetchDataIfStale().then(() => {
-                const data = dataCache || loadDataFromStorage();
-                if (!data) {
-                    document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading behavior report. Please check your connection and try again later.</td></tr>';
-                    hideSpinner(elements.spinners.behavior);
-                    return;
-                }
-                const period = document.getElementById('behaviorPeriod').value;
-                const periodValue = document.getElementById('behaviorMonth').value;
-                let behaviorData = {};
+    function updateBehaviorReport() {
+        showSpinner(elements.spinners.behavior);
+        fetchDataIfStale().then(() => {
+            const data = dataCache || loadDataFromStorage();
+            if (!data || !data.monthly_reports) {
+                console.log('No monthly_reports data available:', data);
+                document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">No report data available.</td></tr>';
+                hideSpinner(elements.spinners.behavior);
+                return;
+            }
 
-                if (period === 'monthly' && periodValue) {
-                    behaviorData = data.monthly_reports[periodValue] || {};
-                } else if (period === 'quarterly' && periodValue) {
-                    const [year, quarter] = periodValue.split('-Q');
-                    const quarterMonths = [];
-                    const startMonth = (parseInt(quarter) - 1) * 3 + 1;
-                    for (let i = 0; i < 3; i++) {
-                        const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
-                        if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
-                    }
-                    behaviorData = quarterMonths.reduce((acc, curr) => ({
+            const period = document.getElementById('behaviorPeriod').value;
+            const periodValue = document.getElementById('behaviorMonth').value;
+            let reportData = {};
+
+            if (period === 'monthly' && periodValue) {
+                reportData = data.monthly_reports[periodValue] || {};
+            } else if (period === 'quarterly' && periodValue) {
+                const [year, quarter] = periodValue.split('-Q');
+                const quarterMonths = [];
+                const startMonth = (parseInt(quarter) - 1) * 3 + 1;
+                for (let i = 0; i < 3; i++) {
+                    const month = `${year}-${(startMonth + i).toString().padStart(2, '0')}`;
+                    if (data.monthly_reports[month]) quarterMonths.push(data.monthly_reports[month]);
+                }
+                reportData = quarterMonths.reduce((acc, curr) => ({
+                    total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
+                    total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
+                    total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
+                    total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                    total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0)
+                }), {});
+            } else if (period === 'yearly' && periodValue) {
+                const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
+                reportData = yearMonths.reduce((acc, month) => {
+                    const curr = data.monthly_reports[month];
+                    return {
                         total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
                         total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
                         total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                        total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
-                        total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0)
-                    }), {});
-                } else if (period === 'yearly' && periodValue) {
-                    const yearMonths = Object.keys(data.monthly_reports).filter(m => m.startsWith(periodValue));
-                    behaviorData = yearMonths.reduce((acc, month) => {
-                        const curr = data.monthly_reports[month];
-                        return {
-                            total_inflows: (acc.total_inflows || 0) + (curr.total_inflows || 0),
-                            total_outflows: (acc.total_outflows || 0) + (curr.total_outflows || 0),
-                            total_balance: (acc.total_balance || 0) + (curr.total_balance || 0),
-                            total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0),
-                            total_loan_disbursements_lofty: (acc.total_loan_disbursements_lofty || 0) + (curr.total_loan_disbursements_lofty || 0)
-                        };
-                    }, {});
-                }
+                        total_member_contributions_kcb: (acc.total_member_contributions_kcb || 0) + (curr.total_member_contributions_kcb || 0),
+                        total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0)
+                    };
+                }, {});
+            }
 
-                const behaviorReportBody = document.getElementById('behaviorReportBody');
-                behaviorReportBody.innerHTML = behaviorData && Object.keys(behaviorData).length > 0 ? `
-                    <tr><td>Total Inflows</td><td>KES ${(behaviorData.total_inflows || 0).toFixed(2)}</td></tr>
-                    <tr><td>Total Outflows</td><td>KES ${(behaviorData.total_outflows || 0).toFixed(2)}</td></tr>
-                    <tr><td>Total Balance</td><td>KES ${(behaviorData.total_balance || 0).toFixed(2)}</td></tr>
-                    <tr><td>Loans Disbursed KCB</td><td>KES ${(behaviorData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
-                    <tr><td>Loans Disbursed Lofty</td><td>KES ${(behaviorData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
-                ` : '<tr><td colspan="2">No behavior data available for the selected period.</td></tr>';
-                hideSpinner(elements.spinners.behavior);
+            const behaviorReportBody = document.getElementById('behaviorReportBody');
+            behaviorReportBody.innerHTML = reportData && Object.keys(reportData).length > 0 ? `
+                <tr><td>Total Inflows</td><td>KES ${(reportData.total_inflows || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Outflows</td><td>KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Balance</td><td>KES ${(reportData.total_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Contributions (KCB)</td><td>KES ${(reportData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Disbursements (KCB)</td><td>KES ${(reportData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+            ` : '<tr><td colspan="2">No report data available for the selected period.</td></tr>';
+            hideSpinner(elements.spinners.behavior);
+        }).catch(error => {
+            logError('Error loading behavior report', error);
+            document.getElementById('behaviorReportBody').innerHTML = `<tr><td colspan="2">Failed to load report: ${error.message}. Please try again or contact support.</td></tr>`;
+            hideSpinner(elements.spinners.behavior);
+        });
+    }
+
+    window.onload = function() {
+        toggleFields();
+        populateYears();
+        updateButtonState();
+
+        elements.amount.addEventListener('input', updateButtonState);
+        elements.type.addEventListener('change', updateButtonState);
+        elements.year.addEventListener('change', updateButtonState);
+        elements.month.addEventListener('change', updateButtonState);
+        elements.dueDate.addEventListener('change', updateButtonState);
+        elements.checkDate.addEventListener('change', updateButtonState);
+        elements.loanType.addEventListener('change', updateButtonState);
+        elements.repaymentPeriod.addEventListener('change', updateButtonState);
+
+        document.getElementById('calcForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            calculate();
+        });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                console.log('Service Worker registered', reg);
             }).catch(error => {
-                logError('Error loading behavior report', error);
-                document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">Error loading behavior report. Please check your connection and try again later.</td></tr>';
-                hideSpinner(elements.spinners.behavior);
+                logError('Service Worker registration failed', error);
             });
         }
 
-        function searchMember(event) {
-            event.preventDefault();
-            const memberName = document.getElementById('memberNameSearch').value.trim();
-            showSpinner(elements.spinners.search);
-            document.getElementById('searchResult').innerHTML = '';
-            if (!memberName) {
-                document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Please enter a member name.</p>';
-                hideSpinner(elements.spinners.search);
-                return;
-            }
-            fetchDataIfStale().then(() => {
-                const data = dataCache || loadDataFromStorage();
-                if (!data || !data.member_contributions) {
-                    document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Error loading member data. Please check your connection and try again later.</p>';
-                    hideSpinner(elements.spinners.search);
-                    return;
-                }
-                const member = data.member_contributions.find(m => m.member_name.toLowerCase().includes(memberName.toLowerCase()));
-                if (member) {
-                    document.getElementById('searchResult').innerHTML = `
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr><th>Name</th><td>${sanitizeInput(member.member_name)}</td></tr>
-                            <tr><th>Contribution (KES)</th><td>KES ${(member.amount || 0).toFixed(2)}</td></tr>
-                            <tr><th>Shares</th><td>${member.shares || 0}</td></tr>
-                            <tr><th>Last Contribution</th><td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td></tr>
-                            <tr><th>Loan Limit (KES)</th><td>KES ${(member.amount ? member.amount * 0.9 : 0).toFixed(2)}</td></tr>
-                        </table>
-                    `;
-                } else {
-                    document.getElementById('searchResult').innerHTML = '<p>No member found with that name.</p>';
-                }
-                hideSpinner(elements.spinners.search);
-            }).catch(error => {
-                logError('Error searching member', error);
-                document.getElementById('searchResult').innerHTML = '<p style="color: #e74c3c;">Error searching member. Please check your connection and try again later.</p>';
-                hideSpinner(elements.spinners.search);
-            });
-        }
-
-        document.getElementById('calcForm').addEventListener('input', updateButtonState);
-        document.getElementById('searchForm').addEventListener('submit', searchMember);
-        window.addEventListener('resize', () => {
-            if (lastResult && window.innerHeight >= 600) {
-                elements.result.innerHTML = elements.modalResult.innerHTML;
-                elements.resultModal.style.display = 'none';
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            toggleFields();
-            populateYears();
-            updateButtonState();
-            if (currentMainPage === 2) populateReportPeriods();
-            if (currentMainPage === 4) populateBehaviorPeriods();
-        });
+        debugDataStructure();
+    };
     </script>
 </body>
 </html>
+```
