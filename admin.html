@@ -323,8 +323,9 @@
                 displayLogs();
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
-                populateMembers(MEMBERS);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message || 'Unknown error'}. Using default members list.</span>`;
+                populateMembers(MEMBERS); // Ensure members are populated even on API failure
+                displayLogs(); // Ensure logs are displayed
             }
         }
 
@@ -446,6 +447,7 @@
                     document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Member contribution updated successfully!'}</span>`;
                     logAction('Contribution Update', `Updated contribution of ${amount} KES for ${member} in ${month}`);
                     refreshForm();
+                    populateMembers(MEMBERS); // Ensure member dropdown is repopulated with all members
                 } else {
                     console.error('Error updating contribution:', result.error, result.details);
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
