@@ -170,6 +170,7 @@
 
         const CONFIG = {
             API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+            API_KEY: 'i8-smart-backend-2025', // Replace with the actual API key matching server.js
             FETCH_TIMEOUT: 10000
         };
 
@@ -333,14 +334,21 @@
                 });
                 clearTimeout(timeoutId);
                 if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText} - ${errorText}`);
                 }
                 const jsonData = await response.json();
                 console.log('Fetched data:', jsonData);
                 displayLogs();
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message || 'Unknown error'}. Using default members list.</span>`;
+                let errorMessage = 'Failed to load data. Please try again or contact support.';
+                if (error.message.includes('401')) {
+                    errorMessage = 'Unauthorized: Invalid API key. Please check CONFIG.API_KEY.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Data not found: Server may not have initialized data.json. Check GitHub token.';
+                }
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${errorMessage}</span>`;
                 displayLogs();
             }
         }
@@ -459,7 +467,10 @@
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
                 const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.API_KEY
+                    },
                     body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
                     signal: controller.signal
                 });
@@ -476,7 +487,11 @@
                 }
             } catch (error) {
                 console.error('Error updating financial data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
+                let errorMessage = `Error: Failed to update financial data (${error.message}). Please check your connection and try again.`;
+                if (error.message.includes('401')) {
+                    errorMessage = 'Unauthorized: Invalid API key. Please check CONFIG.API_KEY.';
+                }
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${errorMessage}</span>`;
                 submitButton.disabled = false;
             }
         }
@@ -508,7 +523,10 @@
                 const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
                 const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.API_KEY
+                    },
                     body: JSON.stringify({ month, data }),
                     signal: controller.signal
                 });
@@ -525,7 +543,11 @@
                 }
             } catch (error) {
                 console.error('Error updating contribution:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
+                let errorMessage = `Error: Failed to update contribution (${error.message}). Please check your connection and try again.`;
+                if (error.message.includes('401')) {
+                    errorMessage = 'Unauthorized: Invalid API key. Please check CONFIG.API_KEY.';
+                }
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${errorMessage}</span>`;
                 submitButton.disabled = false;
             }
         }
@@ -540,7 +562,10 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText} - ${errorText}`);
+                }
                 const data = await response.json();
                 console.log('Downloaded data:', data);
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -553,7 +578,13 @@
                 logAction('Backup', 'Downloaded data backup');
             } catch (error) {
                 console.error('Error downloading data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
+                let errorMessage = `Error: Failed to download backup (${error.message}). Please try again.`;
+                if (error.message.includes('401')) {
+                    errorMessage = 'Unauthorized: Invalid API key. Please check CONFIG.API_KEY.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Data not found: Server may not have initialized data.json. Check GitHub token.';
+                }
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${errorMessage}</span>`;
             } finally {
                 submitButton.disabled = false;
             }
