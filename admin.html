@@ -122,11 +122,9 @@
             </form>
             <h2>Update Member Contributions</h2>
             <form id="memberContributionForm">
-                <label for="memberSelect">Select Member:</label>
-                <select id="memberSelect" aria-label="Select member for contribution" required>
-                    <option value="">Select Member</option>
-                </select>
-                <span id="memberSelectError" class="error"></span>
+                <label for="memberName">Enter Member Name:</label>
+                <input type="text" id="memberName" placeholder="e.g., Enoch Kamau Thumbi" aria-label="Enter member name for contribution" required>
+                <span id="memberNameError" class="error"></span>
 
                 <label for="contributionMonth">Select Month:</label>
                 <select id="contributionMonth" aria-label="Select month for contribution" required>
@@ -187,71 +185,53 @@
             }
         }
 
-        function populateMembers(memberList = MEMBERS) {
-            const memberSelect = document.getElementById('memberSelect');
-            memberSelect.innerHTML = '<option value="">Select Member</option>';
-            memberList.forEach(member => {
-                const option = document.createElement('option');
-                option.value = member;
-                option.text = member;
-                memberSelect.appendChild(option);
-            });
-        }
-
-        function validateFinancialInputs() {
-            const errors = [];
-            const inputs = [
-                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
-                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
-                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
-                { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
-                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
-                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
-                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
-                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
-                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
-                { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
-                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
-                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
-                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
-                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
-                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
-            ];
-
-            inputs.forEach(input => {
-                const element = document.getElementById(input.id);
-                const errorElement = document.getElementById(input.errorId);
-                errorElement.style.display = 'none';
-                if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
-                    errorElement.textContent = input.message;
-                    errorElement.style.display = 'block';
-                    errors.push(input.message);
-                }
-            });
-
-            return errors.length === 0 ? null : errors.join(', ');
+        function findMatchingMember(inputName) {
+            if (!inputName || inputName.trim() === '') return null;
+            const inputLower = inputName.trim().toLowerCase();
+            return MEMBERS.find(member => {
+                const memberLower = member.toLowerCase();
+                // Split names into parts for partial matching
+                const inputParts = inputLower.split(' ').filter(part => part.length > 0);
+                const memberParts = memberLower.split(' ').filter(part => part.length > 0);
+                // Require at least one part to match exactly or be a substring
+                return inputParts.some(part => 
+                    memberParts.some(memberPart => 
+                        memberPart.includes(part) || part.includes(memberPart)
+                    )
+                ) && inputParts.length >= 1; // Ensure at least one part is provided
+            }) || null;
         }
 
         function validateContributionInputs() {
             const errors = [];
             const inputs = [
-                { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please select a member.' },
+                { id: 'memberName', errorId: 'memberNameError', message: 'Please enter a valid member name.' },
                 { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
                 { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
             ];
+
+            let matchedMember = null;
 
             inputs.forEach(input => {
                 const element = document.getElementById(input.id);
                 const errorElement = document.getElementById(input.errorId);
                 errorElement.style.display = 'none';
-                if (!element.value || (element.type === 'number' && parseFloat(element.value) <= 0)) {
+
+                if (input.id === 'memberName') {
+                    matchedMember = findMatchingMember(element.value);
+                    if (!matchedMember) {
+                        errorElement.textContent = input.message;
+                        errorElement.style.display = 'block';
+                        errors.push(input.message);
+                    }
+                } else if (!element.value || (element.type === 'number' && parseFloat(element.value) <= 0)) {
                     errorElement.textContent = input.message;
                     errorElement.style.display = 'block';
                     errors.push(input.message);
                 }
             });
 
-            return errors.length === 0 ? null : errors.join(', ');
+            return { errors: errors.length === 0 ? null : errors.join(', '), matchedMember };
         }
 
         function logAction(action, details) {
@@ -296,8 +276,8 @@
             document.getElementById('result').innerHTML = '';
             document.getElementById('submitFinancialButton').disabled = false;
             document.getElementById('submitContributionButton').disabled = false;
-            localStorage.removeItem('financialData'); // Clear stale financial data
-            localStorage.removeItem('adminLogs'); // Clear stale admin logs
+            localStorage.removeItem('financialData');
+            localStorage.removeItem('adminLogs');
             populateMonths('month');
             populateMonths('contributionMonth');
             fetchData();
@@ -316,16 +296,11 @@
                 }
                 const jsonData = await response.json();
                 console.log('Fetched data:', jsonData);
-                const members = jsonData.member_contributions?.length > 0
-                    ? [...new Set(jsonData.member_contributions.map(m => m.member_name))]
-                    : MEMBERS;
-                populateMembers(members);
                 displayLogs();
             } catch (error) {
                 console.error('Error fetching data:', error);
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message || 'Unknown error'}. Using default members list.</span>`;
-                populateMembers(MEMBERS); // Ensure members are populated even on API failure
-                displayLogs(); // Ensure logs are displayed
+                displayLogs();
             }
         }
 
@@ -383,6 +358,13 @@
                                  data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
             data.total_balance = data.kcb_balance + data.lofty_balance;
 
+            // Validate kcb_balance to prevent negative values
+            if (data.kcb_balance < 0) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: KCB balance cannot be negative (calculated as ${data.kcb_balance.toFixed(2)} KES). Please adjust inflows or outflows.</span>`;
+                submitButton.disabled = false;
+                return;
+            }
+
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -414,21 +396,21 @@
             e.preventDefault();
             const submitButton = document.getElementById('submitContributionButton');
             submitButton.disabled = true;
-            const validationError = validateContributionInputs();
-            if (validationError) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+            const { errors, matchedMember } = validateContributionInputs();
+            if (errors) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${errors}</span>`;
                 submitButton.disabled = false;
                 return;
             }
 
-            const member = document.getElementById('memberSelect').value;
+            const member = matchedMember; // Use the matched full name
             const month = document.getElementById('contributionMonth').value;
             const amount = parseFloat(document.getElementById('contributionAmount').value);
             const data = {
                 member_name: member,
                 amount: amount,
                 last_contribution_date: new Date().toISOString().split('T')[0],
-                shares: MEMBERS.indexOf(member) < 8 ? 125 : 0, // Assign 125 shares to first 8 members, 0 to others
+                shares: MEMBERS.indexOf(member) < 8 ? 125 : 0,
                 contributions: { [month]: amount }
             };
 
@@ -447,7 +429,6 @@
                     document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Member contribution updated successfully!'}</span>`;
                     logAction('Contribution Update', `Updated contribution of ${amount} KES for ${member} in ${month}`);
                     refreshForm();
-                    populateMembers(MEMBERS); // Ensure member dropdown is repopulated with all members
                 } else {
                     console.error('Error updating contribution:', result.error, result.details);
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
