@@ -47,6 +47,10 @@
                 <input type="number" id="total_member_contributions_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
                 <span id="membersContributionKcbError" class="error"></span>
 
+                <label for="total_member_contributions_lofty">Members Contribution Lofty (KES):</label>
+                <input type="number" id="total_member_contributions_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution Lofty in KES">
+                <span id="membersContributionLoftyError" class="error"></span>
+
                 <label for="total_loan_repayments_kcb">Members Loan Repayment KCB (KES):</label>
                 <input type="number" id="total_loan_repayments_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
                 <span id="membersLoanRepaymentKcbError" class="error"></span>
@@ -81,6 +85,10 @@
                 <span id="loansAdvancedError" class="error"></span>
 
                 <label for="bank_charges">Bank Charges (KES):</label>
+                <select id="bank_charges_account" aria-label="Select account for bank charges">
+                    <option value="kcb">KCB</option>
+                    <option value="lofty">Lofty</option>
+                </select>
                 <input type="number" id="bank_charges" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
                 <span id="bankChargesError" class="error"></span>
 
@@ -123,7 +131,7 @@
             <h2>Update Member Contributions</h2>
             <form id="memberContributionForm">
                 <label for="memberName">Enter Member Name:</label>
-                <input type="text" id="memberName" placeholder="e.g., Enoch Kamau Thumbi" aria-label="Enter member name for contribution" required>
+                <input type="text" id="memberName" placeholder="e.g., John Doe Mwangi" aria-label="Enter member name for contribution" required>
                 <span id="memberNameError" class="error"></span>
 
                 <label for="contributionMonth">Select Month:</label>
@@ -190,16 +198,49 @@
             const inputLower = inputName.trim().toLowerCase();
             return MEMBERS.find(member => {
                 const memberLower = member.toLowerCase();
-                // Split names into parts for partial matching
                 const inputParts = inputLower.split(' ').filter(part => part.length > 0);
                 const memberParts = memberLower.split(' ').filter(part => part.length > 0);
-                // Require at least one part to match exactly or be a substring
                 return inputParts.some(part => 
                     memberParts.some(memberPart => 
                         memberPart.includes(part) || part.includes(memberPart)
                     )
-                ) && inputParts.length >= 1; // Ensure at least one part is provided
+                ) && inputParts.length >= 1;
             }) || null;
+        }
+
+        function validateFinancialInputs() {
+            const errors = [];
+            const inputs = [
+                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
+                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
+                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
+                { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid KCB contribution amount.' },
+                { id: 'total_member_contributions_lofty', errorId: 'membersContributionLoftyError', message: 'Please enter a valid Lofty contribution amount.' },
+                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid KCB repayment amount.' },
+                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid Lofty repayment amount.' },
+                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid KCB interest amount.' },
+                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid Lofty interest amount.' },
+                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
+                { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
+                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
+                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
+                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
+                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
+                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
+            ];
+
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                const errorElement = document.getElementById(input.errorId);
+                errorElement.style.display = 'none';
+                if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
+                    errorElement.textContent = input.message;
+                    errorElement.style.display = 'block';
+                    errors.push(input.message);
+                }
+            });
+
+            return errors.length === 0 ? null : errors.join(', ');
         }
 
         function validateContributionInputs() {
@@ -320,6 +361,7 @@
                 opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
                 opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
                 total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value || 0),
+                total_member_contributions_lofty: parseFloat(document.getElementById('total_member_contributions_lofty').value || 0),
                 total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value || 0),
                 total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
                 interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
@@ -328,8 +370,8 @@
                 other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
                 total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
                 total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
-                bank_charges_kcb: parseFloat(document.getElementById('bank_charges').value || 0),
-                bank_charges_lofty: parseFloat(document.getElementById('bank_charges').value || 0),
+                bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
+                bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
                 petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
                 petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
                 agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
@@ -345,22 +387,69 @@
                 total_balance: 0
             };
 
-            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
-                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb + data.bank_charges_lofty +
-                                  data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
-                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                               data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges_kcb -
-                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
-            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                                 data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges_lofty -
-                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
+            data.total_inflows = data.total_member_contributions_kcb + data.total_member_contributions_lofty + 
+                                 data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
+                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + 
+                                 data.other_income_kcb + data.other_income_lofty;
+            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + 
+                                  data.bank_charges_kcb + data.bank_charges_lofty +
+                                  data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + 
+                                  data.agm_facilitation_kcb + data.agm_facilitation_lofty +
+                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + 
+                                  data.other_expenses_kcb + data.other_expenses_lofty;
+            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + 
+                               data.total_loan_repayments_kcb + data.interest_on_loans_kcb + 
+                               data.other_income_kcb - data.total_loan_disbursements_kcb - 
+                               data.bank_charges_kcb - data.petty_cash_utilized_kcb - 
+                               data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - 
+                               data.other_expenses_kcb;
+            data.lofty_balance = data.opening_lofty_balance + data.total_member_contributions_lofty + 
+                                 data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
+                                 data.other_income_lofty - data.total_loan_disbursements_lofty - 
+                                 data.bank_charges_lofty - data.petty_cash_utilized_lofty - 
+                                 data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - 
+                                 data.other_expenses_lofty;
             data.total_balance = data.kcb_balance + data.lofty_balance;
 
-            // Validate kcb_balance to prevent negative values
+            // Log calculated balances for debugging
+            console.log('Submitting financial data:', {
+                month,
+                kcb_balance: data.kcb_balance.toFixed(2),
+                lofty_balance: data.lofty_balance.toFixed(2),
+                total_balance: data.total_balance.toFixed(2),
+                inputs: {
+                    opening_kcb_balance: data.opening_kcb_balance,
+                    total_member_contributions_kcb: data.total_member_contributions_kcb,
+                    total_member_contributions_lofty: data.total_member_contributions_lofty,
+                    total_loan_repayments_kcb: data.total_loan_repayments_kcb,
+                    total_loan_repayments_lofty: data.total_loan_repayments_lofty,
+                    interest_on_loans_kcb: data.interest_on_loans_kcb,
+                    interest_on_deposits_lofty: data.interest_on_deposits_lofty,
+                    other_income_kcb: data.other_income_kcb,
+                    other_income_lofty: data.other_income_lofty,
+                    total_loan_disbursements_kcb: data.total_loan_disbursements_kcb,
+                    total_loan_disbursements_lofty: data.total_loan_disbursements_lofty,
+                    bank_charges_kcb: data.bank_charges_kcb,
+                    bank_charges_lofty: data.bank_charges_lofty,
+                    petty_cash_utilized_kcb: data.petty_cash_utilized_kcb,
+                    petty_cash_utilized_lofty: data.petty_cash_utilized_lofty,
+                    agm_facilitation_kcb: data.agm_facilitation_kcb,
+                    agm_facilitation_lofty: data.agm_facilitation_lofty,
+                    welfare_kitty_utilized_kcb: data.welfare_kitty_utilized_kcb,
+                    welfare_kitty_utilized_lofty: data.welfare_kitty_utilized_lofty,
+                    other_expenses_kcb: data.other_expenses_kcb,
+                    other_expenses_lofty: data.other_expenses_lofty
+                }
+            });
+
+            // Validate balances to prevent negative values
             if (data.kcb_balance < 0) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: KCB balance cannot be negative (calculated as ${data.kcb_balance.toFixed(2)} KES). Please adjust inflows or outflows.</span>`;
+                submitButton.disabled = false;
+                return;
+            }
+            if (data.lofty_balance < 0) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Lofty balance cannot be negative (calculated as ${data.lofty_balance.toFixed(2)} KES). Please adjust inflows or outflows.</span>`;
                 submitButton.disabled = false;
                 return;
             }
@@ -403,7 +492,7 @@
                 return;
             }
 
-            const member = matchedMember; // Use the matched full name
+            const member = matchedMember;
             const month = document.getElementById('contributionMonth').value;
             const amount = parseFloat(document.getElementById('contributionAmount').value);
             const data = {
