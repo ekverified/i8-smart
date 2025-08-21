@@ -214,10 +214,10 @@ const CONFIG = {
     LOAN_DAILY_PENALTY: 0.005,
     PENALTY_START_DAY: 1,
     API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
-    API_KEY: 'i8-smart-backend-2025', // Added API key
+    API_KEY: 'i8-smart-backend-2025',
     MAX_RETRIES: 3,
     RETRY_DELAY: 2000,
-    CACHE_VALIDITY: 24 * 60 * 60 * 1000 // 24 hours
+    CACHE_VALIDITY: 1 * 60 * 1000 // Reduced to 1 minute for fresher data
 };
 
 const elements = {
@@ -311,7 +311,6 @@ function showSuccessMessage(message) {
 async function fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
     for (let i = 0; i < retries; i++) {
         try {
-            // Ensure headers include x-api-key
             const fetchOptions = {
                 ...options,
                 headers: {
@@ -370,14 +369,15 @@ function loadDataFromStorage() {
     }
 }
 
-async function fetchDataIfStale() {
+async function fetchDataIfStale(force = false) {
     const cachedData = loadDataFromStorage();
-    if (cachedData && !forceRefresh) {
+    if (cachedData && !force && !forceRefresh) {
         dataCache = cachedData;
         console.log('Using cached data:', dataCache);
         return;
     }
     try {
+        console.log('Fetching fresh data from /api/data');
         const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
         if (!data || Object.keys(data).length === 0) {
             throw new Error('Empty or invalid data received from API');
@@ -395,7 +395,7 @@ async function fetchDataIfStale() {
 }
 
 function debugDataStructure() {
-    fetchDataIfStale().then(() => {
+    fetchDataIfStale(true).then(() => {
         console.log('Data structure:', JSON.stringify(dataCache, null, 2));
         if (dataCache && dataCache.monthly_reports) {
             console.log('Monthly reports keys:', Object.keys(dataCache.monthly_reports));
@@ -586,10 +586,10 @@ async function submitContribution(amount, month) {
             body: JSON.stringify({
                 month: month,
                 data: {
-                    member_name: "Anonymous", // Placeholder, as index.html doesn't collect member name
+                    member_name: "Anonymous",
                     amount: amount,
                     last_contribution_date: new Date().toISOString().split('T')[0],
-                    shares: 0, // Placeholder, as shares not calculated in index.html
+                    shares: 0,
                     contributions: { [month]: amount }
                 }
             })
@@ -655,10 +655,11 @@ function populateMonths() {
 function updateFinancialData() {
     showSpinner(elements.spinners.balanceSheet);
     showSpinner(elements.spinners.members);
-    localStorage.removeItem('financialData'); // Clear stale cache
+    localStorage.removeItem('financialData'); // Clear cache to force fresh fetch
     forceRefresh = true; // Force fresh fetch
-    fetchDataIfStale().then(() => {
+    fetchDataIfStale(true).then(() => {
         const data = dataCache || loadDataFromStorage();
+        console.log('Financial data fetched for Page 2:', data);
         if (!data || !data.monthly_reports || Object.keys(data.monthly_reports).length === 0) {
             console.warn('No data available in cache or storage');
             if (currentMainPage === 2) {
@@ -684,7 +685,6 @@ function updateFinancialData() {
         const currentMonth = currentDate.getMonth() + 1;
         const currentQuarter = Math.ceil(currentMonth / 3);
 
-        // Select the most recent period
         let periodValue = '';
         const availableMonths = Object.keys(data.monthly_reports).filter(m => {
             const [year, month] = m.split('-').map(Number);
@@ -692,7 +692,7 @@ function updateFinancialData() {
         }).sort();
 
         if (period === 'monthly' && availableMonths.length > 0) {
-            periodValue = availableMonths[availableMonths.length - 1]; // Most recent month
+            periodValue = availableMonths[availableMonths.length - 1];
             monthlyData = data.monthly_reports[periodValue] || {};
         } else if (period === 'quarterly' && availableMonths.length > 0) {
             const latestMonth = availableMonths[availableMonths.length - 1];
@@ -736,7 +736,7 @@ function updateFinancialData() {
                 total_balance: (acc.total_balance || 0) + (curr.total_balance || 0)
             }), {});
         } else if (period === 'yearly' && availableMonths.length > 0) {
-            periodValue = availableMonths[availableMonths.length - 1].split('-')[0]; // Most recent year
+            periodValue = availableMonths[availableMonths.length - 1].split('-')[0];
             const yearMonths = availableMonths.filter(m => m.startsWith(periodValue));
             monthlyData = yearMonths.reduce((acc, month) => {
                 const curr = data.monthly_reports[month];
@@ -819,7 +819,7 @@ function updateFinancialData() {
 
 function updateBehaviorReport() {
     showSpinner(elements.spinners.behavior);
-    fetchDataIfStale().then(() => {
+    fetchDataIfStale(true).then(() => {
         const data = dataCache || loadDataFromStorage();
         if (!data || !data.monthly_reports) {
             console.log('No monthly_reports data available:', data);
@@ -835,7 +835,6 @@ function updateBehaviorReport() {
         const currentMonth = currentDate.getMonth() + 1;
         const currentQuarter = Math.ceil(currentMonth / 3);
 
-        // Select the most recent period
         let periodValue = '';
         const availableMonths = Object.keys(data.monthly_reports).filter(m => {
             const [year, month] = m.split('-').map(Number);
@@ -843,7 +842,7 @@ function updateBehaviorReport() {
         }).sort();
 
         if (period === 'monthly' && availableMonths.length > 0) {
-            periodValue = availableMonths[availableMonths.length - 1]; // Most recent month
+            periodValue = availableMonths[availableMonths.length - 1];
             reportData = data.monthly_reports[periodValue] || {};
         } else if (period === 'quarterly' && availableMonths.length > 0) {
             const latestMonth = availableMonths[availableMonths.length - 1];
@@ -867,7 +866,7 @@ function updateBehaviorReport() {
                 total_loan_disbursements_kcb: (acc.total_loan_disbursements_kcb || 0) + (curr.total_loan_disbursements_kcb || 0)
             }), {});
         } else if (period === 'yearly' && availableMonths.length > 0) {
-            periodValue = availableMonths[availableMonths.length - 1].split('-')[0]; // Most recent year
+            periodValue = availableMonths[availableMonths.length - 1].split('-')[0];
             const yearMonths = availableMonths.filter(m => m.startsWith(periodValue));
             reportData = yearMonths.reduce((acc, month) => {
                 const curr = data.monthly_reports[month];
@@ -1327,7 +1326,6 @@ function displayMembers(members) {
     memberTableBody.innerHTML = '';
     console.log('Members data:', members);
 
-    // Hardcoded company members
     const hardcodedMembers = [
         { member_name: 'Enoch Kamau Thumbi', amount: 0, shares: 125, last_contribution_date: null },
         { member_name: 'John Waweru Njeri', amount: 0, shares: 125, last_contribution_date: null },
@@ -1341,7 +1339,6 @@ function displayMembers(members) {
         { member_name: 'Nephat Njeru Muthee', amount: 0, shares: 0, last_contribution_date: null }
     ];
 
-    // Merge API data with hardcoded members
     const combinedMembers = hardcodedMembers.map(hardcoded => {
         const apiMember = members.find(m => m.member_name === hardcoded.member_name);
         return {
@@ -1369,20 +1366,13 @@ function displayMembers(members) {
     }
 }
 
-// Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize form fields
     toggleFields();
     populateYears();
     updateButtonState();
-
-    // Initialize page
-    changeMainPage(0); // Show initial page
-
-    // Debug data structure on load
+    changeMainPage(0);
     debugDataStructure();
 
-    // Add event listeners for real-time validation
     elements.amount.addEventListener('input', updateButtonState);
     elements.type.addEventListener('change', toggleFields);
     elements.year.addEventListener('change', populateMonths);
@@ -1392,14 +1382,12 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.loanType.addEventListener('change', toggleRepaymentFields);
     elements.repaymentPeriod.addEventListener('change', updateButtonState);
 
-    // Prevent form submission on Enter key
     document.getElementById('calcForm').addEventListener('submit', (e) => {
         e.preventDefault();
         if (!elements.calcButton.disabled) calculate();
     });
 });
 
-// Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -1411,7 +1399,6 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-    
 </script>
 </body>
 </html>
