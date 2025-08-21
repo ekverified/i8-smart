@@ -175,6 +175,86 @@ body {
     background: linear-gradient(135deg, #e74c3c, #ff6b6b);
 }
 
+.backup-button {
+    position: absolute;
+    top: 1.5rem;
+    right: clamp(5rem, 12vw, 5.5rem);
+    background: linear-gradient(135deg, #1a73e8, #4285f4);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: clamp(0.9rem, 2.2vw, 1rem);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.backup-button:hover {
+    background: linear-gradient(135deg, #4285f4, #1a73e8);
+    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
+    transform: scale(1.05);
+}
+
+.backup-button:active {
+    background: linear-gradient(135deg, #1565c0, #1a73e8);
+    transform: scale(0.95);
+}
+
+.backup-button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.backup-button i {
+    font-size: 1rem;
+}
+
+.edit-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.edit-controls button {
+    background: linear-gradient(135deg, #1a73e8, #4285f4);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    font-size: clamp(0.9rem, 2.2vw, 1rem);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.edit-controls button:hover {
+    background: linear-gradient(135deg, #4285f4, #1a73e8);
+    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
+    transform: scale(1.05);
+}
+
+.edit-controls button:active {
+    background: linear-gradient(135deg, #1565c0, #1a73e8);
+    transform: scale(0.95);
+}
+
+.edit-controls button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
 label {
     display: block;
     margin: 0.5rem 0 0.3rem;
@@ -240,6 +320,13 @@ input[type="date"] {
 .button-container button:active {
     background: linear-gradient(135deg, #1565c0, #1a73e8);
     transform: scale(0.95);
+}
+
+.button-container button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 #calcButton {
@@ -594,6 +681,19 @@ input[type="date"] {
         width: 2rem;
         height: 2rem;
         font-size: 0.9rem;
+    }
+    .backup-button {
+        right: 3.5rem;
+        padding: 0.6rem 1rem;
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
+    }
+    .edit-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .edit-controls button {
+        padding: 0.6rem 1rem;
+        font-size: clamp(0.8rem, 2vw, 0.9rem);
     }
     select, input, #calcButton, #searchForm button, .button-container button, .logout-button {
         font-size: clamp(0.8rem, 2vw, 0.9rem);
