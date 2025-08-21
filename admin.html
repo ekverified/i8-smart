@@ -160,468 +160,494 @@
         </div>
     </div>
 
-    <script>
-        const MEMBERS = [
-            "Enoch Kamau Thumbi",
-            "John Waweru Njeri",
-            "Geoffrey Mugi Gicini",
-            "John Gatheru Iragu",
-            "James Njoroge Kamau",
-            "Joseph Wachira Waithaka",
-            "Paul Masharia Muchiri",
-            "Hempstone Mwangi Isaac",
-            "Isaac Thuku Maina",
-            "Nephat Njeru Muthee"
-        ];
+   <script>
+const MEMBERS = [
+    "Enoch Kamau Thumbi",
+    "John Waweru Njeri",
+    "Geoffrey Mugi Gicini",
+    "John Gatheru Iragu",
+    "James Njoroge Kamau",
+    "Joseph Wachira Waithaka",
+    "Paul Masharia Muchiri",
+    "Hempstone Mwangi Isaac",
+    "Isaac Thuku Maina",
+    "Nephat Njeru Muthee"
+];
 
-        const CONFIG = {
-            API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
-            API_KEY: 'i8-smart-backend-2025',
-            FETCH_TIMEOUT: 10000
-        };
+const CONFIG = {
+    API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+    API_KEY: 'i8-smart-backend-2025',
+    FETCH_TIMEOUT: 10000
+};
 
-        function populateMonths(selectId) {
-            const monthSelect = document.getElementById(selectId);
-            monthSelect.innerHTML = '<option value="">Select Month</option>';
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentMonth = currentDate.getMonth();
-            const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function populateMonths(selectId) {
+    const monthSelect = document.getElementById(selectId);
+    monthSelect.innerHTML = '<option value="">Select Month</option>';
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-            for (let year = 2024; year <= currentYear; year++) {
-                const maxMonth = year === currentYear ? currentMonth : 11;
-                for (let month = 0; month <= maxMonth; month++) {
-                    const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-                    const option = document.createElement('option');
-                    option.value = monthValue;
-                    option.text = `${monthAbbr[month]} ${year}`;
-                    monthSelect.appendChild(option);
-                }
+    for (let year = 2024; year <= currentYear; year++) {
+        const maxMonth = year === currentYear ? currentMonth : 11;
+        for (let month = 0; month <= maxMonth; month++) {
+            const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+            const option = document.createElement('option');
+            option.value = monthValue;
+            option.text = `${monthAbbr[month]} ${year}`;
+            monthSelect.appendChild(option);
+        }
+    }
+}
+
+function fuzzyMatch(input, members) {
+    const cleanInput = input.trim().toLowerCase();
+    if (!cleanInput) return null;
+
+    // Split input into parts and filter out empty strings
+    const inputParts = cleanInput.split(/\s+/).filter(part => part.length > 0);
+
+    // Require at least two parts for matching
+    if (inputParts.length < 2) {
+        return null;
+    }
+
+    for (const member of members) {
+        const memberParts = member.toLowerCase().split(/\s+/);
+        let matchCount = 0;
+
+        // Check if each input part matches any member part
+        for (const inputPart of inputParts) {
+            if (memberParts.some(memberPart => memberPart.includes(inputPart))) {
+                matchCount++;
             }
         }
 
-        function fuzzyMatch(input, members) {
-            const cleanInput = input.trim().toLowerCase();
-            if (!cleanInput) return null;
-            return members.find(member => member.toLowerCase().includes(cleanInput)) || null;
+        // Return the full member name if at least two parts match
+        if (matchCount >= 2) {
+            return member;
         }
+    }
 
-        function validateFinancialInputs() {
-            const errors = [];
-            const inputs = [
-                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
-                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
-                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
-                { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
-                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
-                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
-                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
-                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
-                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
-                { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
-                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
-                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
-                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
-                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
-                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
-            ];
+    return null;
+}
 
-            inputs.forEach(input => {
-                const element = document.getElementById(input.id);
-                const errorElement = document.getElementById(input.errorId);
-                errorElement.style.display = 'none';
-                if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
-                    errorElement.textContent = input.message;
-                    errorElement.style.display = 'block';
-                    errors.push(input.message);
-                }
-            });
+function validateFinancialInputs() {
+    const errors = [];
+    const inputs = [
+        { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
+        { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
+        { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
+        { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
+        { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
+        { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
+        { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
+        { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
+        { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
+        { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
+        { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
+        { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
+        { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
+        { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
+        { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
+    ];
 
-            return errors.length === 0 ? null : errors.join(', ');
+    inputs.forEach(input => {
+        const element = document.getElementById(input.id);
+        const errorElement = document.getElementById(input.errorId);
+        errorElement.style.display = 'none';
+        if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
+            errorElement.textContent = input.message;
+            errorElement.style.display = 'block';
+            errors.push(input.message);
         }
+    });
 
-        function validateContributionInputs() {
-            const errors = [];
-            const inputs = [
-                { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please enter a valid member name.' },
-                { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
-                { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
-            ];
+    return errors.length === 0 ? null : errors.join(', ');
+}
 
-            inputs.forEach(input => {
-                const element = document.getElementById(input.id);
-                const errorElement = document.getElementById(input.errorId);
-                errorElement.style.display = 'none';
-                if (!element.value || 
-                    (input.id === 'memberSelect' && !fuzzyMatch(element.value, MEMBERS)) || 
-                    (input.id === 'contributionAmount' && parseFloat(element.value) <= 0)) {
-                    errorElement.textContent = input.message;
-                    errorElement.style.display = 'block';
-                    errors.push(input.message);
-                }
-            });
+function validateContributionInputs() {
+    const errors = [];
+    const inputs = [
+        { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please enter a valid member name (at least two name parts required).' },
+        { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
+        { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
+    ];
 
-            return errors.length === 0 ? null : errors.join(', ');
+    inputs.forEach(input => {
+        const element = document.getElementById(input.id);
+        const errorElement = document.getElementById(input.errorId);
+        errorElement.style.display = 'none';
+        if (!element.value || 
+            (input.id === 'memberSelect' && !fuzzyMatch(element.value, MEMBERS)) || 
+            (input.id === 'contributionAmount' && parseFloat(element.value) <= 0)) {
+            errorElement.textContent = input.message;
+            errorElement.style.display = 'block';
+            errors.push(input.message);
         }
+    });
 
-        function logAction(action, details) {
-            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-            logs.push({ timestamp: new Date().toISOString(), action, details });
-            localStorage.setItem('adminLogs', JSON.stringify(logs));
-            displayLogs();
-        }
+    return errors.length === 0 ? null : errors.join(', ');
+}
 
-        function displayLogs() {
-            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-            const logSection = document.getElementById('adminLogs');
-            logSection.innerHTML = logs.length > 0 ? `
-                <table class="log-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${logs.map(log => `
-                            <tr>
-                                <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
-                                <td>${log.action}</td>
-                                <td>${log.details}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            ` : '<p>No logs available.</p>';
-        }
+function logAction(action, details) {
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    logs.push({ timestamp: new Date().toISOString(), action, details });
+    localStorage.setItem('adminLogs', JSON.stringify(logs));
+    displayLogs();
+}
 
-        function refreshForm() {
-            document.getElementById('adminForm').reset();
-            document.getElementById('memberContributionForm').reset();
-            document.getElementById('editMember').value = '';
-            document.getElementById('editMonthBalance').value = '';
-            document.getElementById('editMonthContribution').value = '';
-            document.querySelectorAll('.error').forEach(error => {
-                error.textContent = '';
-                error.style.display = 'none';
-            });
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('submitFinancialButton').disabled = false;
-            document.getElementById('submitContributionButton').disabled = false;
-            localStorage.removeItem('financialData');
-            localStorage.removeItem('adminLogs');
-            populateMonths('month');
-            populateMonths('contributionMonth');
-            populateMonths('editMonthBalance');
-            populateMonths('editMonthContribution');
-            fetchData();
-        }
+function displayLogs() {
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    const logSection = document.getElementById('adminLogs');
+    logSection.innerHTML = logs.length > 0 ? `
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${logs.map(log => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
+                        <td>${log.action}</td>
+                        <td>${log.details}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    ` : '<p>No logs available.</p>';
+}
 
-        async function fetchData() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const jsonData = await response.json();
-                console.log('Fetched data:', jsonData);
-                displayLogs();
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
-            }
-        }
+function refreshForm() {
+    document.getElementById('adminForm').reset();
+    document.getElementById('memberContributionForm').reset();
+    document.getElementById('editMember').value = '';
+    document.getElementById('editMonthBalance').value = '';
+    document.getElementById('editMonthContribution').value = '';
+    document.querySelectorAll('.error').forEach(error => {
+        error.textContent = '';
+        error.style.display = 'none';
+    });
+    document.getElementById('result').innerHTML = '';
+    document.getElementById('submitFinancialButton').disabled = false;
+    document.getElementById('submitContributionButton').disabled = false;
+    localStorage.removeItem('financialData');
+    localStorage.removeItem('adminLogs');
+    populateMonths('month');
+    populateMonths('contributionMonth');
+    populateMonths('editMonthBalance');
+    populateMonths('editMonthContribution');
+    fetchData();
+}
 
-        async function loadBalanceSheetData() {
-            const editMonth = document.getElementById('editMonthBalance').value;
-            if (!editMonth) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to edit.</span>`;
-                return;
-            }
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${editMonth}`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                if (!data || Object.keys(data).length === 0) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
-                    return;
-                }
-
-                document.getElementById('month').value = editMonth;
-                document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || 0;
-                document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || 0;
-                document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || 0;
-                document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || 0;
-                document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || 0;
-                document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || 0;
-                document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || 0;
-                document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_income').value = (data.other_income_kcb || 0) + (data.other_income_lofty || 0);
-                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('total_loan_disbursements').value = (data.total_loan_disbursements_kcb || 0) + (data.total_loan_disbursements_lofty || 0);
-                document.getElementById('bank_charges').value = data.bank_charges || 0;
-                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('petty_cash_utilized').value = (data.petty_cash_utilized_kcb || 0) + (data.petty_cash_utilized_lofty || 0);
-                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('agm_facilitation').value = (data.agm_facilitation_kcb || 0) + (data.agm_facilitation_lofty || 0);
-                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('welfare_kitty_utilized').value = (data.welfare_kitty_utilized_kcb || 0) + (data.welfare_kitty_utilized_lofty || 0);
-                document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_expenses').value = (data.other_expenses_kcb || 0) + (data.other_expenses_lofty || 0);
-
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
-                logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
-            } catch (error) {
-                console.error('Error loading balance sheet data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data for ${editMonth}: ${error.message}.</span>`;
-            }
-        }
-
-        async function loadContributionData() {
-            const editMember = document.getElementById('editMember').value.trim();
-            const editMonth = document.getElementById('editMonthContribution').value;
-            if (!editMember || !editMonth) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name and select a month to edit.</span>`;
-                return;
-            }
-
-            const matchedMember = fuzzyMatch(editMember, MEMBERS);
-            if (!matchedMember) {
-                document.getElementById('editMemberError').textContent = 'Member name not found.';
-                document.getElementById('editMemberError').style.display = 'block';
-                return;
-            }
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(matchedMember)}`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const result = await response.json();
-                const memberData = result.members.find(m => m.member_name === matchedMember);
-                if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
-                    return;
-                }
-
-                document.getElementById('memberSelect').value = matchedMember;
-                document.getElementById('contributionMonth').value = editMonth;
-                document.getElementById('contributionAmount').value = memberData.contributions[editMonth];
-                document.getElementById('editMemberError').style.display = 'none';
-
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${editMonth} loaded. Edit and submit to update.</span>`;
-                logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${editMonth}`);
-            } catch (error) {
-                console.error('Error loading contribution data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load contribution data: ${error.message}.</span>`;
-            }
-        }
-
-        async function submitFinancialForm(e) {
-            e.preventDefault();
-            const submitButton = document.getElementById('submitFinancialButton');
-            submitButton.disabled = true;
-            const validationError = validateFinancialInputs();
-            if (validationError) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
-                submitButton.disabled = false;
-                return;
-            }
-
-            const month = document.getElementById('month').value;
-            const data = {
-                opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
-                opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
-                total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value || 0),
-                total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value || 0),
-                total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
-                interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
-                interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
-                other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
-                other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
-                total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
-                total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
-                bank_charges: parseFloat(document.getElementById('bank_charges').value || 0),
-                petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
-                petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
-                agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
-                agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
-                welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
-                welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
-                other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
-                other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
-                total_inflows: 0,
-                total_outflows: 0,
-                kcb_balance: 0,
-                lofty_balance: 0,
-                total_balance: 0
-            };
-
-            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
-                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges +
-                                  data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
-                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                               data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges -
-                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
-            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                                 data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges -
-                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
-            data.total_balance = data.kcb_balance + data.lofty_balance;
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY
-                    },
-                    body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const result = await response.json();
-                if (response.ok) {
-                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
-                    logAction('Financial Update', `Updated financial data for ${month}`);
-                    refreshForm();
-                } else {
-                    console.error('Error updating financial data:', result.error, result.details);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
-                    submitButton.disabled = false;
-                }
-            } catch (error) {
-                console.error('Error updating financial data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
-                submitButton.disabled = false;
-            }
-        }
-
-        async function submitContributionForm(e) {
-            e.preventDefault();
-            const submitButton = document.getElementById('submitContributionButton');
-            submitButton.disabled = true;
-            const validationError = validateContributionInputs();
-            if (validationError) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
-                submitButton.disabled = false;
-                return;
-            }
-
-            const memberInput = document.getElementById('memberSelect').value.trim();
-            const matchedMember = fuzzyMatch(memberInput, MEMBERS);
-            if (!matchedMember) {
-                document.getElementById('memberSelectError').textContent = 'Member name not found.';
-                document.getElementById('memberSelectError').style.display = 'block';
-                submitButton.disabled = false;
-                return;
-            }
-
-            const month = document.getElementById('contributionMonth').value;
-            const amount = parseFloat(document.getElementById('contributionAmount').value);
-            const data = {
-                member_name: matchedMember,
-                amount: amount,
-                last_contribution_date: new Date().toISOString().split('T')[0],
-                shares: MEMBERS.indexOf(matchedMember) < 8 ? 125 : 0,
-                contributions: { [month]: amount }
-            };
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY
-                    },
-                    body: JSON.stringify({ month, data }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const result = await response.json();
-                if (response.ok) {
-                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Member contribution updated successfully!'}</span>`;
-                    logAction('Contribution Update', `Updated contribution of ${amount} KES for ${matchedMember} in ${month}`);
-                    refreshForm();
-                } else {
-                    console.error('Error updating contribution:', result.error, result.details);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
-                    submitButton.disabled = false;
-                }
-            } catch (error) {
-                console.error('Error updating contribution:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
-                submitButton.disabled = false;
-            }
-        }
-
-        async function downloadData() {
-            const submitButton = document.querySelector('.backup-button');
-            submitButton.disabled = true;
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                const data = await response.json();
-                console.log('Downloaded data:', data);
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'data-backup.json';
-                a.click();
-                URL.revokeObjectURL(url);
-                logAction('Backup', 'Downloaded data backup');
-            } catch (error) {
-                console.error('Error downloading data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
-            } finally {
-                submitButton.disabled = false;
-            }
-        }
-
-        window.addEventListener('load', () => {
-            document.getElementById('adminContainer').style.display = 'block';
-            document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
-            document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
-            populateMonths('month');
-            populateMonths('contributionMonth');
-            populateMonths('editMonthBalance');
-            populateMonths('editMonthContribution');
-            fetchData();
+async function fetchData() {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+            headers: { 'x-api-key': CONFIG.API_KEY },
+            signal: controller.signal
         });
-    </script>
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+        }
+        const jsonData = await response.json();
+        console.log('Fetched data:', jsonData);
+        displayLogs();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
+    }
+}
+
+async function loadBalanceSheetData() {
+    const editMonth = document.getElementById('editMonthBalance').value;
+    if (!editMonth) {
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to edit.</span>`;
+        return;
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${editMonth}`, {
+            headers: { 'x-api-key': CONFIG.API_KEY },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (!data || Object.keys(data).length === 0) {
+            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
+            return;
+        }
+
+        document.getElementById('month').value = editMonth;
+        document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || 0;
+        document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || 0;
+        document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || 0;
+        document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || 0;
+        document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || 0;
+        document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || 0;
+        document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || 0;
+        document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('other_income').value = (data.other_income_kcb || 0) + (data.other_income_lofty || 0);
+        document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('total_loan_disbursements').value = (data.total_loan_disbursements_kcb || 0) + (data.total_loan_disbursements_lofty || 0);
+        document.getElementById('bank_charges').value = data.bank_charges || 0;
+        document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('petty_cash_utilized').value = (data.petty_cash_utilized_kcb || 0) + (data.petty_cash_utilized_lofty || 0);
+        document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('agm_facilitation').value = (data.agm_facilitation_kcb || 0) + (data.agm_facilitation_lofty || 0);
+        document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('welfare_kitty_utilized').value = (data.welfare_kitty_utilized_kcb || 0) + (data.welfare_kitty_utilized_lofty || 0);
+        document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
+        document.getElementById('other_expenses').value = (data.other_expenses_kcb || 0) + (data.other_expenses_lofty || 0);
+
+        document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
+        logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
+    } catch (error) {
+        console.error('Error loading balance sheet data:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data for ${editMonth}: ${error.message}.</span>`;
+    }
+}
+
+async function loadContributionData() {
+    const editMember = document.getElementById('editMember').value.trim();
+    const editMonth = document.getElementById('editMonthContribution').value;
+    if (!editMember || !editMonth) {
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name and select a month to edit.</span>`;
+        return;
+    }
+
+    const matchedMember = fuzzyMatch(editMember, MEMBERS);
+    if (!matchedMember) {
+        document.getElementById('editMemberError').textContent = 'Member name not found (at least two name parts required).';
+        document.getElementById('editMemberError').style.display = 'block';
+        return;
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(matchedMember)}`, {
+            headers: { 'x-api-key': CONFIG.API_KEY },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+        }
+        const result = await response.json();
+        const memberData = result.members.find(m => m.member_name === matchedMember);
+        if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
+            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
+            return;
+        }
+
+        document.getElementById('memberSelect').value = matchedMember;
+        document.getElementById('contributionMonth').value = editMonth;
+        document.getElementById('contributionAmount').value = memberData.contributions[editMonth];
+        document.getElementById('editMemberError').style.display = 'none';
+
+        document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${editMonth} loaded. Edit and submit to update.</span>`;
+        logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${editMonth}`);
+    } catch (error) {
+        console.error('Error loading contribution data:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load contribution data: ${error.message}.</span>`;
+    }
+}
+
+async function submitFinancialForm(e) {
+    e.preventDefault();
+    const submitButton = document.getElementById('submitFinancialButton');
+    submitButton.disabled = true;
+    const validationError = validateFinancialInputs();
+    if (validationError) {
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+        submitButton.disabled = false;
+        return;
+    }
+
+    const month = document.getElementById('month').value;
+    const data = {
+        opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
+        opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
+        total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value || 0),
+        total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value || 0),
+        total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
+        interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
+        interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
+        other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
+        other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
+        total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
+        total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
+        bank_charges: parseFloat(document.getElementById('bank_charges').value || 0),
+        petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
+        petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
+        agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
+        agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
+        welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
+        welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
+        other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
+        other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
+        total_inflows: 0,
+        total_outflows: 0,
+        kcb_balance: 0,
+        lofty_balance: 0,
+        total_balance: 0
+    };
+
+    data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
+                         data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
+    data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges +
+                          data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
+                          data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
+    data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
+                       data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges -
+                       data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
+    data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
+                         data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges -
+                         data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
+    data.total_balance = data.kcb_balance + data.lofty_balance;
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': CONFIG.API_KEY
+            },
+            body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
+            logAction('Financial Update', `Updated financial data for ${month}`);
+            refreshForm();
+        } else {
+            console.error('Error updating financial data:', result.error, result.details);
+            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
+            submitButton.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error updating financial data:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
+        submitButton.disabled = false;
+    }
+}
+
+async function submitContributionForm(e) {
+    e.preventDefault();
+    const submitButton = document.getElementById('submitContributionButton');
+    submitButton.disabled = true;
+    const validationError = validateContributionInputs();
+    if (validationError) {
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+        submitButton.disabled = false;
+        return;
+    }
+
+    const memberInput = document.getElementById('memberSelect').value.trim();
+    const matchedMember = fuzzyMatch(memberInput, MEMBERS);
+    if (!matchedMember) {
+        document.getElementById('memberSelectError').textContent = 'Member name not found (at least two name parts required).';
+        document.getElementById('memberSelectError').style.display = 'block';
+        submitButton.disabled = false;
+        return;
+    }
+
+    const month = document.getElementById('contributionMonth').value;
+    const amount = parseFloat(document.getElementById('contributionAmount').value);
+    const data = {
+        member_name: matchedMember,
+        amount: amount,
+        last_contribution_date: new Date().toISOString().split('T')[0],
+        shares: MEMBERS.indexOf(matchedMember) < 8 ? 125 : 0,
+        contributions: { [month]: amount }
+    };
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-api-key': CONFIG.API_KEY
+            },
+            body: JSON.stringify({ month, data }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${month} updated successfully!</span>`;
+            logAction('Contribution Update', `Updated contribution of ${amount} KES for ${matchedMember} in ${month}`);
+            refreshForm();
+        } else {
+            console.error('Error updating contribution:', result.error, result.details);
+            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
+            submitButton.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error updating contribution:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
+        submitButton.disabled = false;
+    }
+}
+
+async function downloadData() {
+    const submitButton = document.querySelector('.backup-button');
+    submitButton.disabled = true;
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+        const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+            headers: { 'x-api-key': CONFIG.API_KEY },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+        const data = await response.json();
+        console.log('Downloaded data:', data);
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'data-backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        logAction('Backup', 'Downloaded data backup');
+    } catch (error) {
+        console.error('Error downloading data:', error);
+        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
+    } finally {
+        submitButton.disabled = false;
+    }
+}
+
+window.addEventListener('load', () => {
+    document.getElementById('adminContainer').style.display = 'block';
+    document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
+    document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
+    populateMonths('month');
+    populateMonths('contributionMonth');
+    populateMonths('editMonthBalance');
+    populateMonths('editMonthContribution');
+    fetchData();
+});
+</script>
 </body>
 </html>
