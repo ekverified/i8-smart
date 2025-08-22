@@ -36,6 +36,7 @@
                 <div class="edit-controls">
                     <button class="action-button" onclick="loadBalanceSheetData()" aria-label="Load existing balance sheet data for editing">
                         <i class="fas fa-folder-open"></i> Load Balance Sheet
+                        <span class="spinner-icon hidden"></span>
                     </button>
                     <select id="editMonthBalance" class="input-field" aria-label="Select month to edit balance sheet">
                         <option value="">Select Month to Edit</option>
@@ -494,7 +495,6 @@
 
         function logout() {
             logAction('Logout', 'User logged out of admin panel');
-            // Placeholder for actual logout logic (e.g., clear session, redirect)
             document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged out successfully.</span>`;
             setTimeout(() => {
                 window.location.reload();
@@ -544,6 +544,18 @@
                 }
                 const jsonData = await response.json();
                 console.log('Fetched data:', jsonData);
+                // Populate editMonthBalance with available months from data
+                const monthSelect = document.getElementById('editMonthBalance');
+                monthSelect.innerHTML = '<option value="">Select Month to Edit</option>';
+                const months = Object.keys(jsonData.monthly_reports || {}).sort().reverse();
+                months.forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    const [year, monthNum] = month.split('-');
+                    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(monthNum) - 1];
+                    option.text = `${monthAbbr} ${year}`;
+                    monthSelect.appendChild(option);
+                });
                 displayLogs();
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -567,7 +579,7 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${editMonth}`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     signal: controller.signal
                 });
@@ -576,34 +588,35 @@
                     throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                 }
                 const data = await response.json();
-                if (!data || Object.keys(data).length === 0) {
+                const report = data.monthly_reports?.[editMonth];
+                if (!report) {
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
                     setButtonLoading(button, false);
                     return;
                 }
 
                 document.getElementById('month').value = editMonth;
-                document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || 0;
-                document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || 0;
-                document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || 0;
-                document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || 0;
-                document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || 0;
-                document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || 0;
-                document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || 0;
-                document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_income').value = (data.other_income_kcb || 0) + (data.other_income_lofty || 0);
-                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('total_loan_disbursements').value = (data.total_loan_disbursements_kcb || 0) + (data.total_loan_disbursements_lofty || 0);
-                document.getElementById('bank_charges_account').value = data.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('bank_charges').value = (data.bank_charges_kcb || 0) + (data.bank_charges_lofty || 0);
-                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('petty_cash_utilized').value = (data.petty_cash_utilized_kcb || 0) + (data.petty_cash_utilized_lofty || 0);
-                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('agm_facilitation').value = (data.agm_facilitation_kcb || 0) + (data.agm_facilitation_lofty || 0);
-                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('welfare_kitty_utilized').value = (data.welfare_kitty_utilized_kcb || 0) + (data.welfare_kitty_utilized_lofty || 0);
-                document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_expenses').value = (data.other_expenses_kcb || 0) + (data.other_expenses_lofty || 0);
+                document.getElementById('opening_kcb_balance').value = report.opening_kcb_balance || 0;
+                document.getElementById('opening_lofty_balance').value = report.opening_lofty_balance || 0;
+                document.getElementById('total_member_contributions_kcb').value = report.total_member_contributions_kcb || 0;
+                document.getElementById('total_loan_repayments_kcb').value = report.total_loan_repayments_kcb || 0;
+                document.getElementById('total_loan_repayments_lofty').value = report.total_loan_repayments_lofty || 0;
+                document.getElementById('interest_on_loans_kcb').value = report.interest_on_loans_kcb || 0;
+                document.getElementById('interest_on_deposits_lofty').value = report.interest_on_deposits_lofty || 0;
+                document.getElementById('other_income_account').value = report.other_income_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_income').value = (report.other_income_kcb || 0) + (report.other_income_lofty || 0);
+                document.getElementById('total_loan_disbursements_account').value = report.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('total_loan_disbursements').value = (report.total_loan_disbursements_kcb || 0) + (report.total_loan_disbursements_lofty || 0);
+                document.getElementById('bank_charges_account').value = report.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('bank_charges').value = (report.bank_charges_kcb || 0) + (report.bank_charges_lofty || 0);
+                document.getElementById('petty_cash_utilized_account').value = report.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('petty_cash_utilized').value = (report.petty_cash_utilized_kcb || 0) + (report.petty_cash_utilized_lofty || 0);
+                document.getElementById('agm_facilitation_account').value = report.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('agm_facilitation').value = (report.agm_facilitation_kcb || 0) + (report.agm_facilitation_lofty || 0);
+                document.getElementById('welfare_kitty_utilized_account').value = report.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('welfare_kitty_utilized').value = (report.welfare_kitty_utilized_kcb || 0) + (report.welfare_kitty_utilized_lofty || 0);
+                document.getElementById('other_expenses_account').value = report.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_expenses').value = (report.other_expenses_kcb || 0) + (report.other_expenses_lofty || 0);
 
                 document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
                 logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
@@ -639,7 +652,7 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(matchedMember)}`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     signal: controller.signal
                 });
@@ -647,8 +660,8 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
                 }
-                const result = await response.json();
-                const memberData = result.members.find(m => m.member_name === matchedMember);
+                const data = await response.json();
+                const memberData = data.member_contributions.find(m => m.member_name === matchedMember);
                 if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
                     setButtonLoading(button, false);
@@ -709,7 +722,8 @@
                 total_outflows: 0,
                 kcb_balance: 0,
                 lofty_balance: 0,
-                total_balance: 0
+                total_balance: 0,
+                updated_at: new Date().toISOString()
             };
 
             data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
@@ -836,7 +850,9 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                }
                 const data = await response.json();
                 console.log('Downloaded data:', data);
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -844,7 +860,9 @@
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `data-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 logAction('Backup', 'Downloaded data backup');
                 document.getElementById('result').innerHTML = `<span style="color: #34c759;">Backup downloaded successfully.</span>`;
@@ -857,16 +875,16 @@
             }
         }
 
-        window.addEventListener('load', () => {
+        window.addEventListener('DOMContentLoaded', () => {
             try {
                 // Ensure the container is visible
-                const adminContainer = document.getElementById('app-container');
-                if (adminContainer) {
-                    adminContainer.style.display = 'flex';
-                } else {
-                    console.error('Admin container not found.');
+                const adminContainer = document.querySelector('.app-container');
+                if (!adminContainer) {
+                    console.error('Application container not found.');
                     document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Application container not found. Please refresh the page.</span>`;
+                    return;
                 }
+                adminContainer.style.display = 'flex';
 
                 // Populate all month selectors
                 ['month', 'contributionMonth', 'editMonthBalance', 'editMonthContribution'].forEach(id => {
