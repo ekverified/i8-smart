@@ -7,648 +7,884 @@
     <meta name="author" content="Insightful Eight Co. Ltd.">
     <title>i-8 SMART BOT Admin</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" id="adminContainer">
-        <div class="title-container">
-            <div>
-                <div class="main-title">i-8 SMART</div>
-                <div class="sub-title">admin</div>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">i-8 SMART</div>
+                <div class="logo-sub">Admin</div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="sidebar-button" onclick="refreshForm()" aria-label="Refresh form and clear inputs">
+                    <i class="fas fa-sync-alt"></i> Refresh Form
+                </button>
+                <button class="sidebar-button" onclick="downloadData()" aria-label="Download data backup">
+                    <i class="fas fa-download"></i> Download Backup
+                </button>
+                <button class="sidebar-button logout-button" onclick="logout()" aria-label="Log out of admin panel">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <div class="card">
+                <h2>Update Financial Data</h2>
+                <div class="edit-controls">
+                    <button class="action-button" onclick="loadBalanceSheetData()" aria-label="Load existing balance sheet data for editing">
+                        <i class="fas fa-folder-open"></i> Load Balance Sheet
+                    </button>
+                    <select id="editMonthBalance" class="input-field" aria-label="Select month to edit balance sheet">
+                        <option value="">Select Month to Edit</option>
+                    </select>
+                </div>
+                <form id="adminForm" class="form-grid">
+                    <div class="form-group">
+                        <label for="month" class="tooltip" title="Select the month for which financial data is being entered or updated.">Select Month:</label>
+                        <select id="month" class="input-field" aria-label="Select month for financial data" required>
+                            <option value="">Select Month</option>
+                        </select>
+                        <span id="monthError" class="error"></span>
+                    </div>
+
+                    <details class="collapsible-section">
+                        <summary>KCB Accounts</summary>
+                        <div class="form-group">
+                            <label for="opening_kcb_balance" class="tooltip" title="The starting balance in the KCB account for the selected month (KES).">Opening KCB Balance (KES):</label>
+                            <input type="number" id="opening_kcb_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening KCB balance in KES">
+                            <span id="openingKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_member_contributions_kcb" class="tooltip" title="Total contributions made by members to the KCB account for the month (KES).">Members Contribution KCB (KES):</label>
+                            <input type="number" id="total_member_contributions_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
+                            <span id="membersContributionKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_loan_repayments_kcb" class="tooltip" title="Total loan repayments received in the KCB account for the month (KES).">Members Loan Repayment KCB (KES):</label>
+                            <input type="number" id="total_loan_repayments_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
+                            <span id="membersLoanRepaymentKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="interest_on_loans_kcb" class="tooltip" title="Interest earned on loans issued from the KCB account for the month (KES).">Interest on Loans KCB (KES):</label>
+                            <input type="number" id="interest_on_loans_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
+                            <span id="interestOnLoansKcbError" class="error"></span>
+                        </div>
+                    </details>
+
+                    <details class="collapsible-section">
+                        <summary>Lofty Accounts</summary>
+                        <div class="form-group">
+                            <label for="opening_lofty_balance" class="tooltip" title="The starting balance in the Lofty account for the selected month (KES).">Opening Lofty Balance (KES):</label>
+                            <input type="number" id="opening_lofty_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening Lofty balance in KES">
+                            <span id="openingLoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_loan_repayments_lofty" class="tooltip" title="Total loan repayments received in the Lofty account for the month (KES).">Members Loan Repayment Lofty (KES):</label>
+                            <input type="number" id="total_loan_repayments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
+                            <span id="membersLoanRepaymentLoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="interest_on_deposits_lofty" class="tooltip" title="Interest earned on deposits held in the Lofty account for the month (KES).">Interest on Deposits Lofty (KES):</label>
+                            <input type="number" id="interest_on_deposits_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
+                            <span id="interestOnDepositsLoftyError" class="error"></span>
+                        </div>
+                    </details>
+
+                    <details class="collapsible-section">
+                        <summary>Other Inflows</summary>
+                        <div class="form-group">
+                            <label for="other_income" class="tooltip" title="Miscellaneous income not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Income (KES):</label>
+                            <div class="input-group">
+                                <select id="other_income_account" class="input-field" aria-label="Select account for other income">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="other_income" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income in KES">
+                            </div>
+                            <span id="otherIncomeError" class="error"></span>
+                        </div>
+                    </details>
+
+                    <details class="collapsible-section">
+                        <summary>Outflows</summary>
+                        <div class="form-group">
+                            <label for="total_loan_disbursements" class="tooltip" title="Total loans disbursed to members from either KCB or Lofty account for the month (KES).">Loans Advanced to Members (KES):</label>
+                            <div class="input-group">
+                                <select id="total_loan_disbursements_account" class="input-field" aria-label="Select account for loans advanced">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="total_loan_disbursements" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Loans advanced to members in KES">
+                            </div>
+                            <span id="loansAdvancedError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="bank_charges" class="tooltip" title="Charges incurred from banking services, assigned to either KCB or Lofty account (KES).">Bank Charges (KES):</label>
+                            <div class="input-group">
+                                <select id="bank_charges_account" class="input-field" aria-label="Select account for bank charges">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="bank_charges" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
+                            </div>
+                            <span id="bankChargesError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="petty_cash_utilized" class="tooltip" title="Petty cash used for minor expenses, assigned to either KCB or Lofty account (KES).">Petty Cash Utilized (KES):</label>
+                            <div class="input-group">
+                                <select id="petty_cash_utilized_account" class="input-field" aria-label="Select account for petty cash utilized">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="petty_cash_utilized" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Petty cash utilized in KES">
+                            </div>
+                            <span id="pettyCashUtilizedError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="agm_facilitation" class="tooltip" title="Expenses related to facilitating the Annual General Meeting, assigned to either KCB or Lofty account (KES).">AGM Facilitation (KES):</label>
+                            <div class="input-group">
+                                <select id="agm_facilitation_account" class="input-field" aria-label="Select account for AGM facilitation">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="agm_facilitation" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM facilitation in KES">
+                            </div>
+                            <span id="agmFacilitationError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="welfare_kitty_utilized" class="tooltip" title="Funds used for member welfare activities, assigned to either KCB or Lofty account (KES).">Welfare Kitty Utilized (KES):</label>
+                            <div class="input-group">
+                                <select id="welfare_kitty_utilized_account" class="input-field" aria-label="Select account for welfare kitty utilized">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="welfare_kitty_utilized" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Welfare kitty utilized in KES">
+                            </div>
+                            <span id="welfareKittyUtilizedError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="other_expenses" class="tooltip" title="Miscellaneous expenses not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Expenses (KES):</label>
+                            <div class="input-group">
+                                <select id="other_expenses_account" class="input-field" aria-label="Select account for other expenses">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="number" id="other_expenses" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
+                            </div>
+                            <span id="otherExpensesError" class="error"></span>
+                        </div>
+                    </details>
+
+                    <div class="button-container">
+                        <button type="submit" id="submitFinancialButton" class="action-button primary" aria-label="Submit financial data">
+                            <i class="fas fa-save"></i> Submit Financial Data
+                            <span class="spinner-icon hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Update Member Contributions</h2>
+                <div class="edit-controls">
+                    <button class="action-button" onclick="loadContributionData()" aria-label="Load existing member contribution for editing">
+                        <i class="fas fa-folder-open"></i> Load Contribution
+                        <span class="spinner-icon hidden"></span>
+                    </button>
+                    <input type="text" id="editMember" class="input-field" placeholder="Enter member name" aria-label="Enter member name to edit contribution">
+                    <span id="editMemberError" class="error"></span>
+                    <select id="editMonthContribution" class="input-field" aria-label="Select month to edit contribution">
+                        <option value="">Select Month to Edit</option>
+                    </select>
+                </div>
+                <form id="memberContributionForm" class="form-grid">
+                    <div class="form-group">
+                        <label for="memberSelect" class="tooltip" title="Enter the full name of the member making the contribution.">Enter Member Name:</label>
+                        <input type="text" id="memberSelect" class="input-field" placeholder="Enter member name" aria-label="Enter member name for contribution" required>
+                        <span id="memberSelectError" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="contributionMonth" class="tooltip" title="Select the month for which the contribution is being recorded.">Select Month:</label>
+                        <select id="contributionMonth" class="input-field" aria-label="Select month for contribution" required>
+                            <option value="">Select Month</option>
+                        </select>
+                        <span id="contributionMonthError" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="contributionAmount" class="tooltip" title="The amount contributed by the member for the selected month (KES).">Contribution Amount (KES):</label>
+                        <input type="number" id="contributionAmount" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Member contribution amount in KES" required>
+                        <span id="contributionAmountError" class="error"></span>
+                    </div>
+                    <div class="button-container">
+                        <button type="submit" id="submitContributionButton" class="action-button primary" aria-label="Submit member contribution">
+                            <i class="fas fa-save"></i> Submit Contribution
+                            <span class="spinner-icon hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Admin Logs</h2>
+                <div id="adminLogs" class="log-section"></div>
+            </div>
+
+            <div id="result" class="result"></div>
+        </main>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmationModal" class="modal">
+            <div class="modal-content">
+                <h3>Confirm Financial Data Submission</h3>
+                <p>Please review the entered data before submitting:</p>
+                <div id="modalSummary" class="modal-summary"></div>
+                <div class="modal-buttons">
+                    <button id="confirmSubmit" class="action-button primary" aria-label="Confirm submission">
+                        <i class="fas fa-check"></i> Confirm
+                        <span class="spinner-icon hidden"></span>
+                    </button>
+                    <button id="cancelSubmit" class="action-button secondary" aria-label="Cancel submission">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
             </div>
         </div>
-        <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear inputs">
-            <i class="fas fa-sync-alt"></i>
-        </button>
-        <button class="backup-button" onclick="downloadData()" aria-label="Download data backup">
-            <i class="fas fa-download"></i> Download Backup
-        </button>
-        <div class="financial-section">
-            <h2>Update Financial Data</h2>
-            <div class="edit-controls">
-                <button onclick="loadBalanceSheetData()" aria-label="Load existing balance sheet data for editing">Load Existing Balance Sheet</button>
-                <select id="editMonthBalance" aria-label="Select month to edit balance sheet">
-                    <option value="">Select Month to Edit</option>
-                </select>
-            </div>
-            <form id="adminForm">
-                <label for="month">Select Month:</label>
-                <select id="month" aria-label="Select month for financial data" required>
-                    <option value="">Select Month</option>
-                </select>
-                <span id="monthError" class="error"></span>
 
-                <h2>Inflows</h2>
-                <label for="opening_kcb_balance">Opening KCB Balance (KES):</label>
-                <input type="number" id="opening_kcb_balance" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening KCB balance in KES">
-                <span id="openingKcbError" class="error"></span>
-
-                <label for="opening_lofty_balance">Opening Lofty Balance (KES):</label>
-                <input type="number" id="opening_lofty_balance" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening Lofty balance in KES">
-                <span id="openingLoftyError" class="error"></span>
-
-                <label for="total_member_contributions_kcb">Members Contribution KCB (KES):</label>
-                <input type="number" id="total_member_contributions_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
-                <span id="membersContributionKcbError" class="error"></span>
-
-                <label for="total_loan_repayments_kcb">Members Loan Repayment KCB (KES):</label>
-                <input type="number" id="total_loan_repayments_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
-                <span id="membersLoanRepaymentKcbError" class="error"></span>
-
-                <label for="total_loan_repayments_lofty">Members Loan Repayment Lofty (KES):</label>
-                <input type="number" id="total_loan_repayments_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
-                <span id="membersLoanRepaymentLoftyError" class="error"></span>
-
-                <label for="interest_on_loans_kcb">Interest on Loans KCB (KES):</label>
-                <input type="number" id="interest_on_loans_kcb" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
-                <span id="interestOnLoansKcbError" class="error"></span>
-
-                <label for="interest_on_deposits_lofty">Interest on Deposits Lofty (KES):</label>
-                <input type="number" id="interest_on_deposits_lofty" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
-                <span id="interestOnDepositsLoftyError" class="error"></span>
-
-                <label for="other_income">Other Income (KES):</label>
-                <select id="other_income_account" aria-label="Select account for other income">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="other_income" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income in KES">
-                <span id="otherIncomeError" class="error"></span>
-
-                <h2>Outflows</h2>
-                <label for="total_loan_disbursements">Loans Advanced to Members (KES):</label>
-                <select id="total_loan_disbursements_account" aria-label="Select account for loans advanced">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="total_loan_disbursements" min="0" step="0.01" placeholder="Enter amount" aria-label="Loans advanced to members in KES">
-                <span id="loansAdvancedError" class="error"></span>
-
-                <label for="bank_charges">Bank Charges (KES):</label>
-                <select id="bank_charges_account" aria-label="Select account for bank charges">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="bank_charges" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
-                <span id="bankChargesError" class="error"></span>
-
-                <label for="petty_cash_utilized">Petty Cash Utilized (KES):</label>
-                <select id="petty_cash_utilized_account" aria-label="Select account for petty cash utilized">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="petty_cash_utilized" min="0" step="0.01" placeholder="Enter amount" aria-label="Petty cash utilized in KES">
-                <span id="pettyCashUtilizedError" class="error"></span>
-
-                <label for="agm_facilitation">AGM Facilitation (KES):</label>
-                <select id="agm_facilitation_account" aria-label="Select account for AGM facilitation">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="agm_facilitation" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM facilitation in KES">
-                <span id="agmFacilitationError" class="error"></span>
-
-                <label for="welfare_kitty_utilized">Welfare Kitty Utilized (KES):</label>
-                <select id="welfare_kitty_utilized_account" aria-label="Select account for welfare kitty utilized">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="welfare_kitty_utilized" min="0" step="0.01" placeholder="Enter amount" aria-label="Welfare kitty utilized in KES">
-                <span id="welfareKittyUtilizedError" class="error"></span>
-
-                <label for="other_expenses">Other Expenses (KES):</label>
-                <select id="other_expenses_account" aria-label="Select account for other expenses">
-                    <option value="kcb">KCB</option>
-                    <option value="lofty">Lofty</option>
-                </select>
-                <input type="number" id="other_expenses" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
-                <span id="otherExpensesError" class="error"></span>
-
-                <div class="button-container">
-                    <button type="submit" id="submitFinancialButton" aria-label="Submit financial data">Submit Financial Data</button>
-                </div>
-            </form>
-            <h2>Update Member Contributions</h2>
-            <div class="edit-controls">
-                <button onclick="loadContributionData()" aria-label="Load existing member contribution for editing">Load Existing Contribution</button>
-                <input type="text" id="editMember" placeholder="Enter member name" aria-label="Enter member name to edit contribution">
-                <span id="editMemberError" class="error"></span>
-                <select id="editMonthContribution" aria-label="Select month to edit contribution">
-                    <option value="">Select Month to Edit</option>
-                </select>
-            </div>
-            <form id="memberContributionForm">
-                <label for="memberSelect">Enter Member Name:</label>
-                <input type="text" id="memberSelect" placeholder="Enter member name" aria-label="Enter member name for contribution" required>
-                <span id="memberSelectError" class="error"></span>
-
-                <label for="contributionMonth">Select Month:</label>
-                <select id="contributionMonth" aria-label="Select month for contribution" required>
-                    <option value="">Select Month</option>
-                </select>
-                <span id="contributionMonthError" class="error"></span>
-
-                <label for="contributionAmount">Contribution Amount (KES):</label>
-                <input type="number" id="contributionAmount" min="0" step="0.01" placeholder="Enter amount" aria-label="Member contribution amount in KES" required>
-                <span id="contributionAmountError" class="error"></span>
-
-                <div class="button-container">
-                    <button type="submit" id="submitContributionButton" aria-label="Submit member contribution">Submit Contribution</button>
-                </div>
-            </form>
-            <div id="result" class="result"></div>
-            <h2>Admin Logs</h2>
-            <div id="adminLogs" class="log-section"></div>
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="spinner">
+            <div class="spinner-icon"></div>
+            <p>Processing...</p>
         </div>
     </div>
 
-<script>
-const MEMBERS = [
-    "Enoch Kamau Thumbi",
-    "John Waweru Njeri",
-    "Geoffrey Mugi Gicini",
-    "John Gatheru Iragu",
-    "James Njoroge Kamau",
-    "Joseph Wachira Waithaka",
-    "Paul Masharia Muchiri",
-    "Hempstone Mwangi Isaac",
-    "Isaac Thuku Maina",
-    "Nephat Njeru Muthee"
-];
+    <script>
+        const MEMBERS = [
+            "Enoch Kamau Thumbi",
+            "John Waweru Njeri",
+            "Geoffrey Mugi Gicini",
+            "John Gatheru Iragu",
+            "James Njoroge Kamau",
+            "Joseph Wachira Waithaka",
+            "Paul Masharia Muchiri",
+            "Hempstone Mwangi Isaac",
+            "Isaac Thuku Maina",
+            "Nephat Njeru Muthee"
+        ];
 
-const CONFIG = {
-    API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
-    API_KEY: 'i8-smart-backend-2025',
-    FETCH_TIMEOUT: 10000
-};
+        const CONFIG = {
+            API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+            API_KEY: 'i8-smart-backend-2025',
+            FETCH_TIMEOUT: 10000
+        };
 
-function populateMonths(selectId) {
-    const monthSelect = document.getElementById(selectId);
-    monthSelect.innerHTML = '<option value="">Select Month</option>';
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth();
-    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    for (let year = 2024; year <= currentYear; year++) {
-        const maxMonth = year === currentYear ? currentMonth : 11;
-        for (let month = 0; month <= maxMonth; month++) {
-            const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-            const option = document.createElement('option');
-            option.value = monthValue;
-            option.text = `${monthAbbr[month]} ${year}`;
-            monthSelect.appendChild(option);
-        }
-    }
-}
-
-function fuzzyMatch(input, members) {
-    const cleanInput = input.trim().toLowerCase();
-    if (!cleanInput) return null;
-
-    const inputParts = cleanInput.split(/\s+/).filter(part => part.length > 0);
-    if (inputParts.length < 2) {
-        return null;
-    }
-
-    for (const member of members) {
-        const memberParts = member.toLowerCase().split(/\s+/);
-        let matchCount = 0;
-
-        for (const inputPart of inputParts) {
-            if (memberParts.some(memberPart => memberPart.includes(inputPart))) {
-                matchCount++;
+        function setButtonLoading(button, isLoading) {
+            const spinner = button.querySelector('.spinner-icon');
+            if (isLoading) {
+                button.disabled = true;
+                spinner.classList.remove('hidden');
+                button.style.opacity = '0.7';
+            } else {
+                button.disabled = false;
+                spinner.classList.add('hidden');
+                button.style.opacity = '1';
             }
         }
 
-        if (matchCount >= 2) {
-            return member;
+        function populateMonths(selectId) {
+            try {
+                const monthSelect = document.getElementById(selectId);
+                if (!monthSelect) {
+                    console.error(`Element with ID ${selectId} not found.`);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Month selector (${selectId}) not found. Please refresh the page.</span>`;
+                    return;
+                }
+                monthSelect.innerHTML = '<option value="">Select Month</option>';
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth();
+                const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+                for (let year = 2024; year <= currentYear; year++) {
+                    const maxMonth = year === currentYear ? currentMonth : 11;
+                    for (let month = 0; month <= maxMonth; month++) {
+                        const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+                        const option = document.createElement('option');
+                        option.value = monthValue;
+                        option.text = `${monthAbbr[month]} ${year}`;
+                        monthSelect.appendChild(option);
+                    }
+                }
+                console.log(`Populated months for ${selectId}`);
+            } catch (error) {
+                console.error(`Error populating months for ${selectId}:`, error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to populate months for ${selectId}. Please refresh the page.</span>`;
+            }
         }
-    }
 
-    return null;
-}
+        function fuzzyMatch(input, members) {
+            const cleanInput = input.trim().toLowerCase();
+            if (!cleanInput) return null;
 
-function validateFinancialInputs() {
-    const errors = [];
-    const inputs = [
-        { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
-        { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
-        { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
-        { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
-        { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
-        { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
-        { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
-        { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
-        { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
-        { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
-        { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
-        { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
-        { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
-        { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
-        { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
-    ];
+            const inputParts = cleanInput.split(/\s+/).filter(part => part.length > 0);
+            if (inputParts.length < 2) {
+                return null;
+            }
 
-    inputs.forEach(input => {
-        const element = document.getElementById(input.id);
-        const errorElement = document.getElementById(input.errorId);
-        errorElement.style.display = 'none';
-        if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
-            errorElement.textContent = input.message;
-            errorElement.style.display = 'block';
-            errors.push(input.message);
+            for (const member of members) {
+                const memberParts = member.toLowerCase().split(/\s+/);
+                let matchCount = 0;
+
+                for (const inputPart of inputParts) {
+                    if (memberParts.some(memberPart => memberPart.includes(inputPart))) {
+                        matchCount++;
+                    }
+                }
+
+                if (matchCount >= 2) {
+                    return member;
+                }
+            }
+
+            return null;
         }
-    });
 
-    return errors.length === 0 ? null : errors.join(', ');
-}
+        function validateFinancialInputs() {
+            const errors = [];
+            const inputs = [
+                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
+                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
+                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
+                { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
+                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
+                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
+                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
+                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
+                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
+                { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
+                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
+                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
+                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
+                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
+                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
+            ];
 
-function validateContributionInputs() {
-    const errors = [];
-    const inputs = [
-        { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please enter a valid member name (at least two name parts required).' },
-        { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
-        { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
-    ];
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                const errorElement = document.getElementById(input.errorId);
+                errorElement.style.display = 'none';
+                if (!element.value || (element.type === 'number' && parseFloat(element.value) < 0)) {
+                    errorElement.textContent = input.message;
+                    errorElement.style.display = 'block';
+                    errors.push(input.message);
+                }
+            });
 
-    inputs.forEach(input => {
-        const element = document.getElementById(input.id);
-        const errorElement = document.getElementById(input.errorId);
-        errorElement.style.display = 'none';
-        if (!element.value || 
-            (input.id === 'memberSelect' && !fuzzyMatch(element.value, MEMBERS)) || 
-            (input.id === 'contributionAmount' && parseFloat(element.value) <= 0)) {
-            errorElement.textContent = input.message;
-            errorElement.style.display = 'block';
-            errors.push(input.message);
+            return errors.length === 0 ? null : errors.join(', ');
         }
-    });
 
-    return errors.length === 0 ? null : errors.join(', ');
-}
+        function validateContributionInputs() {
+            const errors = [];
+            const inputs = [
+                { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please enter a valid member name (at least two name parts required).' },
+                { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
+                { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
+            ];
 
-function logAction(action, details) {
-    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    logs.push({ timestamp: new Date().toISOString(), action, details });
-    localStorage.setItem('adminLogs', JSON.stringify(logs));
-    displayLogs();
-}
+            inputs.forEach(input => {
+                const element = document.getElementById(input.id);
+                const errorElement = document.getElementById(input.errorId);
+                errorElement.style.display = 'none';
+                if (!element.value || 
+                    (input.id === 'memberSelect' && !fuzzyMatch(element.value, MEMBERS)) || 
+                    (input.id === 'contributionAmount' && parseFloat(element.value) <= 0)) {
+                    errorElement.textContent = input.message;
+                    errorElement.style.display = 'block';
+                    errors.push(input.message);
+                }
+            });
 
-function displayLogs() {
-    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    const logSection = document.getElementById('adminLogs');
-    logSection.innerHTML = logs.length > 0 ? `
-        <table class="log-table">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Action</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${logs.map(log => `
-                    <tr>
-                        <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
-                        <td>${log.action}</td>
-                        <td>${log.details}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    ` : '<p>No logs available.</p>';
-}
+            return errors.length === 0 ? null : errors.join(', ');
+        }
 
-function refreshForm() {
-    document.getElementById('adminForm').reset();
-    document.getElementById('memberContributionForm').reset();
-    document.getElementById('editMember').value = '';
-    document.getElementById('editMonthBalance').value = '';
-    document.getElementById('editMonthContribution').value = '';
-    document.querySelectorAll('.error').forEach(error => {
-        error.textContent = '';
-        error.style.display = 'none';
-    });
-    document.getElementById('result').innerHTML = '';
-    document.getElementById('submitFinancialButton').disabled = false;
-    document.getElementById('submitContributionButton').disabled = false;
-    localStorage.removeItem('financialData');
-    localStorage.removeItem('adminLogs');
-    populateMonths('month');
-    populateMonths('contributionMonth');
-    populateMonths('editMonthBalance');
-    populateMonths('editMonthContribution');
-    fetchData();
-}
+        function logAction(action, details) {
+            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+            logs.push({ timestamp: new Date().toISOString(), action, details });
+            localStorage.setItem('adminLogs', JSON.stringify(logs));
+            displayLogs();
+        }
 
-async function fetchData() {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-            headers: { 'x-api-key': CONFIG.API_KEY },
-            signal: controller.signal
+        function displayLogs() {
+            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+            const logSection = document.getElementById('adminLogs');
+            logSection.innerHTML = logs.length > 0 ? `
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.map(log => `
+                            <tr>
+                                <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
+                                <td>${log.action}</td>
+                                <td>${log.details}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : '<p>No logs available.</p>';
+        }
+
+        function showLoadingSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'flex';
+        }
+
+        function hideLoadingSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        function showConfirmationModal(data, month, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            const modalSummary = document.getElementById('modalSummary');
+            modalSummary.innerHTML = `
+                <p><strong>Month:</strong> ${month}</p>
+                <h4>KCB Accounts</h4>
+                <p>Opening KCB Balance: KES ${data.opening_kcb_balance.toFixed(2)}</p>
+                <p>Members Contribution KCB: KES ${data.total_member_contributions_kcb.toFixed(2)}</p>
+                <p>Loan Repayments KCB: KES ${data.total_loan_repayments_kcb.toFixed(2)}</p>
+                <p>Interest on Loans KCB: KES ${data.interest_on_loans_kcb.toFixed(2)}</p>
+                <h4>Lofty Accounts</h4>
+                <p>Opening Lofty Balance: KES ${data.opening_lofty_balance.toFixed(2)}</p>
+                <p>Loan Repayments Lofty: KES ${data.total_loan_repayments_lofty.toFixed(2)}</p>
+                <p>Interest on Deposits Lofty: KES ${data.interest_on_deposits_lofty.toFixed(2)}</p>
+                <h4>Other Inflows</h4>
+                <p>Other Income (${data.other_income_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_income_kcb + data.other_income_lofty).toFixed(2)}</p>
+                <h4>Outflows</h4>
+                <p>Loan Disbursements (${data.total_loan_disbursements_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty).toFixed(2)}</p>
+                <p>Bank Charges (${data.bank_charges_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.bank_charges_kcb + data.bank_charges_lofty).toFixed(2)}</p>
+                <p>Petty Cash Utilized (${data.petty_cash_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty).toFixed(2)}</p>
+                <p>AGM Facilitation (${data.agm_facilitation_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.agm_facilitation_kcb + data.agm_facilitation_lofty).toFixed(2)}</p>
+                <p>Welfare Kitty Utilized (${data.welfare_kitty_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty).toFixed(2)}</p>
+                <p>Other Expenses (${data.other_expenses_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_expenses_kcb + data.other_expenses_lofty).toFixed(2)}</p>
+                <h4>Summary</h4>
+                <p>Total Inflows: KES ${data.total_inflows.toFixed(2)}</p>
+                <p>Total Outflows: KES ${data.total_outflows.toFixed(2)}</p>
+                <p>KCB Balance: KES ${data.kcb_balance.toFixed(2)}</p>
+                <p>Lofty Balance: KES ${data.lofty_balance.toFixed(2)}</p>
+                <p>Total Balance: KES ${data.total_balance.toFixed(2)}</p>
+            `;
+            modal.style.display = 'block';
+
+            document.getElementById('confirmSubmit').onclick = () => {
+                setButtonLoading(document.getElementById('confirmSubmit'), true);
+                modal.style.display = 'none';
+                onConfirm();
+            };
+            document.getElementById('cancelSubmit').onclick = () => {
+                modal.style.display = 'none';
+                setButtonLoading(document.getElementById('submitFinancialButton'), false);
+            };
+        }
+
+        function logout() {
+            logAction('Logout', 'User logged out of admin panel');
+            // Placeholder for actual logout logic (e.g., clear session, redirect)
+            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged out successfully.</span>`;
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        function refreshForm() {
+            try {
+                document.getElementById('adminForm').reset();
+                document.getElementById('memberContributionForm').reset();
+                document.getElementById('editMember').value = '';
+                document.getElementById('editMonthBalance').value = '';
+                document.getElementById('editMonthContribution').value = '';
+                document.querySelectorAll('.error').forEach(error => {
+                    error.textContent = '';
+                    error.style.display = 'none';
+                });
+                document.getElementById('result').innerHTML = '';
+                setButtonLoading(document.getElementById('submitFinancialButton'), false);
+                setButtonLoading(document.getElementById('submitContributionButton'), false);
+                localStorage.removeItem('financialData');
+                localStorage.removeItem('adminLogs');
+                populateMonths('month');
+                populateMonths('contributionMonth');
+                populateMonths('editMonthBalance');
+                populateMonths('editMonthContribution');
+                fetchData();
+                logAction('Refresh Form', 'Form reset and months repopulated');
+            } catch (error) {
+                console.error('Error refreshing form:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to refresh form (${error.message}). Please try again.</span>`;
+            }
+        }
+
+        async function fetchData() {
+            showLoadingSpinner();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                }
+                const jsonData = await response.json();
+                console.log('Fetched data:', jsonData);
+                displayLogs();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
+            } finally {
+                hideLoadingSpinner();
+            }
+        }
+
+        async function loadBalanceSheetData() {
+            const editMonth = document.getElementById('editMonthBalance').value;
+            const button = document.querySelector('button[onclick="loadBalanceSheetData()"]');
+            setButtonLoading(button, true);
+            if (!editMonth) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+
+            showLoadingSpinner();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${editMonth}`, {
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                if (!data || Object.keys(data).length === 0) {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
+                    setButtonLoading(button, false);
+                    return;
+                }
+
+                document.getElementById('month').value = editMonth;
+                document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || 0;
+                document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || 0;
+                document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || 0;
+                document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || 0;
+                document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || 0;
+                document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || 0;
+                document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || 0;
+                document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_income').value = (data.other_income_kcb || 0) + (data.other_income_lofty || 0);
+                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('total_loan_disbursements').value = (data.total_loan_disbursements_kcb || 0) + (data.total_loan_disbursements_lofty || 0);
+                document.getElementById('bank_charges_account').value = data.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('bank_charges').value = (data.bank_charges_kcb || 0) + (data.bank_charges_lofty || 0);
+                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('petty_cash_utilized').value = (data.petty_cash_utilized_kcb || 0) + (data.petty_cash_utilized_lofty || 0);
+                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('agm_facilitation').value = (data.agm_facilitation_kcb || 0) + (data.agm_facilitation_lofty || 0);
+                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('welfare_kitty_utilized').value = (data.welfare_kitty_utilized_kcb || 0) + (data.welfare_kitty_utilized_lofty || 0);
+                document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_expenses').value = (data.other_expenses_kcb || 0) + (data.other_expenses_lofty || 0);
+
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
+                logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
+            } catch (error) {
+                console.error('Error loading balance sheet data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data for ${editMonth}: ${error.message}.</span>`;
+            } finally {
+                setButtonLoading(button, false);
+                hideLoadingSpinner();
+            }
+        }
+
+        async function loadContributionData() {
+            const editMember = document.getElementById('editMember').value.trim();
+            const editMonth = document.getElementById('editMonthContribution').value;
+            const button = document.querySelector('button[onclick="loadContributionData()"]');
+            setButtonLoading(button, true);
+            if (!editMember || !editMonth) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name and select a month to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+
+            const matchedMember = fuzzyMatch(editMember, MEMBERS);
+            if (!matchedMember) {
+                document.getElementById('editMemberError').textContent = 'Member name not found (at least two name parts required).';
+                document.getElementById('editMemberError').style.display = 'block';
+                setButtonLoading(button, false);
+                return;
+            }
+
+            showLoadingSpinner();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(matchedMember)}`, {
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                }
+                const result = await response.json();
+                const memberData = result.members.find(m => m.member_name === matchedMember);
+                if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
+                    setButtonLoading(button, false);
+                    return;
+                }
+
+                document.getElementById('memberSelect').value = matchedMember;
+                document.getElementById('contributionMonth').value = editMonth;
+                document.getElementById('contributionAmount').value = memberData.contributions[editMonth];
+                document.getElementById('editMemberError').style.display = 'none';
+
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${editMonth} loaded. Edit and submit to update.</span>`;
+                logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${editMonth}`);
+            } catch (error) {
+                console.error('Error loading contribution data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load contribution data: ${error.message}.</span>`;
+            } finally {
+                setButtonLoading(button, false);
+                hideLoadingSpinner();
+            }
+        }
+
+        async function submitFinancialForm(e) {
+            e.preventDefault();
+            const submitButton = document.getElementById('submitFinancialButton');
+            setButtonLoading(submitButton, true);
+            const validationError = validateFinancialInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                setButtonLoading(submitButton, false);
+                return;
+            }
+
+            const month = document.getElementById('month').value;
+            const data = {
+                opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
+                opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
+                total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value || 0),
+                total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value || 0),
+                total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
+                interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
+                interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
+                other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
+                other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
+                total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
+                total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
+                bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
+                bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
+                petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
+                petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
+                agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
+                agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
+                welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
+                welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
+                other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
+                other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
+                total_inflows: 0,
+                total_outflows: 0,
+                kcb_balance: 0,
+                lofty_balance: 0,
+                total_balance: 0
+            };
+
+            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
+                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
+            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb + data.bank_charges_lofty +
+                                  data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
+                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
+            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
+                               data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges_kcb -
+                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
+            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
+                                 data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges_lofty -
+                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
+            data.total_balance = data.kcb_balance + data.lofty_balance;
+
+            showConfirmationModal(data, month, async () => {
+                showLoadingSpinner();
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-api-key': CONFIG.API_KEY
+                        },
+                        body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    const result = await response.json();
+                    if (response.ok) {
+                        document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
+                        logAction('Financial Update', `Updated financial data for ${month}`);
+                        refreshForm();
+                    } else {
+                        console.error('Error updating financial data:', result.error, result.details);
+                        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
+                        setButtonLoading(submitButton, false);
+                    }
+                } catch (error) {
+                    console.error('Error updating financial data:', error);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
+                    setButtonLoading(submitButton, false);
+                } finally {
+                    setButtonLoading(document.getElementById('confirmSubmit'), false);
+                    hideLoadingSpinner();
+                }
+            });
+        }
+
+        async function submitContributionForm(e) {
+            e.preventDefault();
+            const submitButton = document.getElementById('submitContributionButton');
+            setButtonLoading(submitButton, true);
+            const validationError = validateContributionInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
+                setButtonLoading(submitButton, false);
+                return;
+            }
+
+            const memberInput = document.getElementById('memberSelect').value.trim();
+            const matchedMember = fuzzyMatch(memberInput, MEMBERS);
+            if (!matchedMember) {
+                document.getElementById('memberSelectError').textContent = 'Member name not found (at least two name parts required).';
+                document.getElementById('memberSelectError').style.display = 'block';
+                setButtonLoading(submitButton, false);
+                return;
+            }
+
+            showLoadingSpinner();
+            const month = document.getElementById('contributionMonth').value;
+            const amount = parseFloat(document.getElementById('contributionAmount').value);
+            const data = {
+                member_name: matchedMember,
+                amount: amount,
+                last_contribution_date: new Date().toISOString().split('T')[0],
+                shares: MEMBERS.indexOf(matchedMember) < 8 ? 125 : 0,
+                contributions: { [month]: amount }
+            };
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: JSON.stringify({ month, data }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${month} updated successfully!</span>`;
+                    logAction('Contribution Update', `Updated contribution of ${amount} KES for ${matchedMember} in ${month}`);
+                    refreshForm();
+                } else {
+                    console.error('Error updating contribution:', result.error, result.details);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
+                    setButtonLoading(submitButton, false);
+                }
+            } catch (error) {
+                console.error('Error updating contribution:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
+                setButtonLoading(submitButton, false);
+            } finally {
+                hideLoadingSpinner();
+            }
+        }
+
+        async function downloadData() {
+            const submitButton = document.querySelector('.sidebar-button[onclick="downloadData()"]');
+            setButtonLoading(submitButton, true);
+            showLoadingSpinner();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+                const data = await response.json();
+                console.log('Downloaded data:', data);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `data-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                logAction('Backup', 'Downloaded data backup');
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Backup downloaded successfully.</span>`;
+            } catch (error) {
+                console.error('Error downloading data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
+            } finally {
+                setButtonLoading(submitButton, false);
+                hideLoadingSpinner();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            try {
+                // Ensure the container is visible
+                const adminContainer = document.getElementById('app-container');
+                if (adminContainer) {
+                    adminContainer.style.display = 'flex';
+                } else {
+                    console.error('Admin container not found.');
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Application container not found. Please refresh the page.</span>`;
+                }
+
+                // Populate all month selectors
+                ['month', 'contributionMonth', 'editMonthBalance', 'editMonthContribution'].forEach(id => {
+                    populateMonths(id);
+                });
+
+                // Add event listeners
+                document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
+                document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
+
+                // Initial data fetch
+                fetchData();
+                logAction('Page Load', 'Admin panel loaded');
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to initialize page (${error.message}). Please refresh the page.</span>`;
+            }
         });
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-        }
-        const jsonData = await response.json();
-        console.log('Fetched data:', jsonData);
-        displayLogs();
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
-    }
-}
-
-async function loadBalanceSheetData() {
-    const editMonth = document.getElementById('editMonthBalance').value;
-    if (!editMonth) {
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to edit.</span>`;
-        return;
-    }
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${editMonth}`, {
-            headers: { 'x-api-key': CONFIG.API_KEY },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        if (!data || Object.keys(data).length === 0) {
-            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
-            return;
-        }
-
-        document.getElementById('month').value = editMonth;
-        document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || 0;
-        document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || 0;
-        document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || 0;
-        document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || 0;
-        document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || 0;
-        document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || 0;
-        document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || 0;
-        document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('other_income').value = (data.other_income_kcb || 0) + (data.other_income_lofty || 0);
-        document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('total_loan_disbursements').value = (data.total_loan_disbursements_kcb || 0) + (data.total_loan_disbursements_lofty || 0);
-        document.getElementById('bank_charges_account').value = data.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('bank_charges').value = (data.bank_charges_kcb || 0) + (data.bank_charges_lofty || 0);
-        document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('petty_cash_utilized').value = (data.petty_cash_utilized_kcb || 0) + (data.petty_cash_utilized_lofty || 0);
-        document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('agm_facilitation').value = (data.agm_facilitation_kcb || 0) + (data.agm_facilitation_lofty || 0);
-        document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('welfare_kitty_utilized').value = (data.welfare_kitty_utilized_kcb || 0) + (data.welfare_kitty_utilized_lofty || 0);
-        document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
-        document.getElementById('other_expenses').value = (data.other_expenses_kcb || 0) + (data.other_expenses_lofty || 0);
-
-        document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
-        logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
-    } catch (error) {
-        console.error('Error loading balance sheet data:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data for ${editMonth}: ${error.message}.</span>`;
-    }
-}
-
-async function loadContributionData() {
-    const editMember = document.getElementById('editMember').value.trim();
-    const editMonth = document.getElementById('editMonthContribution').value;
-    if (!editMember || !editMonth) {
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name and select a month to edit.</span>`;
-        return;
-    }
-
-    const matchedMember = fuzzyMatch(editMember, MEMBERS);
-    if (!matchedMember) {
-        document.getElementById('editMemberError').textContent = 'Member name not found (at least two name parts required).';
-        document.getElementById('editMemberError').style.display = 'block';
-        return;
-    }
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/search-member?name=${encodeURIComponent(matchedMember)}`, {
-            headers: { 'x-api-key': CONFIG.API_KEY },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-        }
-        const result = await response.json();
-        const memberData = result.members.find(m => m.member_name === matchedMember);
-        if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
-            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
-            return;
-        }
-
-        document.getElementById('memberSelect').value = matchedMember;
-        document.getElementById('contributionMonth').value = editMonth;
-        document.getElementById('contributionAmount').value = memberData.contributions[editMonth];
-        document.getElementById('editMemberError').style.display = 'none';
-
-        document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${editMonth} loaded. Edit and submit to update.</span>`;
-        logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${editMonth}`);
-    } catch (error) {
-        console.error('Error loading contribution data:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load contribution data: ${error.message}.</span>`;
-    }
-}
-
-async function submitFinancialForm(e) {
-    e.preventDefault();
-    const submitButton = document.getElementById('submitFinancialButton');
-    submitButton.disabled = true;
-    const validationError = validateFinancialInputs();
-    if (validationError) {
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
-        submitButton.disabled = false;
-        return;
-    }
-
-    const month = document.getElementById('month').value;
-    const data = {
-        opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value || 0),
-        opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value || 0),
-        total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value || 0),
-        total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value || 0),
-        total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value || 0),
-        interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value || 0),
-        interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value || 0),
-        other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
-        other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value || 0) : 0,
-        total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
-        total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value || 0) : 0,
-        bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
-        bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value || 0) : 0,
-        petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
-        petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value || 0) : 0,
-        agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
-        agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value || 0) : 0,
-        welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
-        welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value || 0) : 0,
-        other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
-        other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value || 0) : 0,
-        total_inflows: 0,
-        total_outflows: 0,
-        kcb_balance: 0,
-        lofty_balance: 0,
-        total_balance: 0
-    };
-
-    data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
-                         data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-    data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb + data.bank_charges_lofty +
-                          data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
-                          data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-    data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                       data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges_kcb -
-                       data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
-    data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                         data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges_lofty -
-                         data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
-    data.total_balance = data.kcb_balance + data.lofty_balance;
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-api-key': CONFIG.API_KEY
-            },
-            body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        const result = await response.json();
-        if (response.ok) {
-            document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
-            logAction('Financial Update', `Updated financial data for ${month}`);
-            refreshForm();
-        } else {
-            console.error('Error updating financial data:', result.error, result.details);
-            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
-            submitButton.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error updating financial data:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
-        submitButton.disabled = false;
-    }
-}
-
-async function submitContributionForm(e) {
-    e.preventDefault();
-    const submitButton = document.getElementById('submitContributionButton');
-    submitButton.disabled = true;
-    const validationError = validateContributionInputs();
-    if (validationError) {
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
-        submitButton.disabled = false;
-        return;
-    }
-
-    const memberInput = document.getElementById('memberSelect').value.trim();
-    const matchedMember = fuzzyMatch(memberInput, MEMBERS);
-    if (!matchedMember) {
-        document.getElementById('memberSelectError').textContent = 'Member name not found (at least two name parts required).';
-        document.getElementById('memberSelectError').style.display = 'block';
-        submitButton.disabled = false;
-        return;
-    }
-
-    const month = document.getElementById('contributionMonth').value;
-    const amount = parseFloat(document.getElementById('contributionAmount').value);
-    const data = {
-        member_name: matchedMember,
-        amount: amount,
-        last_contribution_date: new Date().toISOString().split('T')[0],
-        shares: MEMBERS.indexOf(matchedMember) < 8 ? 125 : 0,
-        contributions: { [month]: amount }
-    };
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-api-key': CONFIG.API_KEY
-            },
-            body: JSON.stringify({ month, data }),
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        const result = await response.json();
-        if (response.ok) {
-            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${month} updated successfully!</span>`;
-            logAction('Contribution Update', `Updated contribution of ${amount} KES for ${matchedMember} in ${month}`);
-            refreshForm();
-        } else {
-            console.error('Error updating contribution:', result.error, result.details);
-            document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
-            submitButton.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error updating contribution:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
-        submitButton.disabled = false;
-    }
-}
-
-async function downloadData() {
-    const submitButton = document.querySelector('.backup-button');
-    submitButton.disabled = true;
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-        const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-            headers: { 'x-api-key': CONFIG.API_KEY },
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (!response.ok) throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-        const data = await response.json();
-        console.log('Downloaded data:', data);
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'data-backup.json';
-        a.click();
-        URL.revokeObjectURL(url);
-        logAction('Backup', 'Downloaded data backup');
-    } catch (error) {
-        console.error('Error downloading data:', error);
-        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
-    } finally {
-        submitButton.disabled = false;
-    }
-}
-
-window.addEventListener('load', () => {
-    document.getElementById('adminContainer').style.display = 'block';
-    document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
-    document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
-    populateMonths('month');
-    populateMonths('contributionMonth');
-    populateMonths('editMonthBalance');
-    populateMonths('editMonthContribution');
-    fetchData();
-});
-</script>
+    </script>
 </body>
 </html>
