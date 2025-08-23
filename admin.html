@@ -544,18 +544,6 @@
                 }
                 const jsonData = await response.json();
                 console.log('Fetched data:', jsonData);
-                // Populate editMonthBalance with available months from data
-                const monthSelect = document.getElementById('editMonthBalance');
-                monthSelect.innerHTML = '<option value="">Select Month to Edit</option>';
-                const months = Object.keys(jsonData.monthly_reports || {}).sort().reverse();
-                months.forEach(month => {
-                    const option = document.createElement('option');
-                    option.value = month;
-                    const [year, monthNum] = month.split('-');
-                    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(monthNum) - 1];
-                    option.text = `${monthAbbr} ${year}`;
-                    monthSelect.appendChild(option);
-                });
                 displayLogs();
             } catch (error) {
                 console.error('Error fetching data:', error);
