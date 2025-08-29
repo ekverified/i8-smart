@@ -255,40 +255,40 @@ const CONFIG = {
 };
 
 const elements = {
-    type: document.getElementById('type'),
-    amount: document.getElementById('amount'),
-    contributionFields: document.getElementById('contributionFields'),
-    year: document.getElementById('year'),
-    month: document.getElementById('month'),
-    dateFields: document.getElementById('dateFields'),
-    dueDate: document.getElementById('dueDate'),
-    checkDate: document.getElementById('checkDate'),
-    loanFields: document.getElementById('loanFields'),
-    loanType: document.getElementById('loanType'),
-    repaymentFields: document.getElementById('repaymentFields'),
-    repaymentPeriod: document.getElementById('repaymentPeriod'),
-    calcButton: document.getElementById('calcButton'),
-    buttonContainer: document.getElementById('buttonContainer'),
-    result: document.getElementById('result'),
-    successMessage: document.getElementById('successMessage'),
-    progressBar: document.getElementById('progressBar'),
-    progressFill: document.getElementById('progressFill'),
-    resultModal: document.getElementById('resultModal'),
-    modalResult: document.getElementById('modalResult'),
+    type: safeGetElementById('type'),
+    amount: safeGetElementById('amount'),
+    contributionFields: safeGetElementById('contributionFields'),
+    year: safeGetElementById('year'),
+    month: safeGetElementById('month'),
+    dateFields: safeGetElementById('dateFields'),
+    dueDate: safeGetElementById('dueDate'),
+    checkDate: safeGetElementById('checkDate'),
+    loanFields: safeGetElementById('loanFields'),
+    loanType: safeGetElementById('loanType'),
+    repaymentFields: safeGetElementById('repaymentFields'),
+    repaymentPeriod: safeGetElementById('repaymentPeriod'),
+    calcButton: safeGetElementById('calcButton'),
+    buttonContainer: safeGetElementById('buttonContainer'),
+    result: safeGetElementById('result'),
+    successMessage: safeGetElementById('successMessage'),
+    progressBar: safeGetElementById('progressBar'),
+    progressFill: safeGetElementById('progressFill'),
+    resultModal: safeGetElementById('resultModal'),
+    modalResult: safeGetElementById('modalResult'),
     errors: {
-        type: document.getElementById('typeError'),
-        amount: document.getElementById('amountError'),
-        year: document.getElementById('yearError'),
-        month: document.getElementById('monthError'),
-        dueDate: document.getElementById('dueDateError'),
-        checkDate: document.getElementById('checkDateError'),
-        loanType: document.getElementById('loanTypeError'),
-        repaymentPeriod: document.getElementById('repaymentPeriodError')
+        type: safeGetElementById('typeError'),
+        amount: safeGetElementById('amountError'),
+        year: safeGetElementById('yearError'),
+        month: safeGetElementById('monthError'),
+        dueDate: safeGetElementById('dueDateError'),
+        checkDate: safeGetElementById('checkDateError'),
+        loanType: safeGetElementById('loanTypeError'),
+        repaymentPeriod: safeGetElementById('repaymentPeriodError')
     },
     spinners: {
-        balanceSheet: document.getElementById('balanceSheetSpinner'),
-        members: document.getElementById('membersSpinner'),
-        behavior: document.getElementById('behaviorSpinner')
+        balanceSheet: safeGetElementById('balanceSheetSpinner'),
+        members: safeGetElementById('membersSpinner'),
+        behavior: safeGetElementById('behaviorSpinner')
     }
 };
 
@@ -564,12 +564,13 @@ function validateDateFields(dueDate, checkDate, month, year) {
 
 function validateInputs() {
     const errors = [];
-    const type = elements.type.value;
-    const amount = parseFloat(elements.amount.value) || 0;
-    const year = elements.year.value;
-    const month = elements.month.value;
-    const loanType = elements.loanType.value;
-    const repaymentPeriod = elements.repaymentPeriod.value;
+    const type = sanitizeInput(elements.type.value);
+    const amountInput = sanitizeNumericInput(elements.amount.value);
+    const amount = parseFloat(amountInput);
+    const year = sanitizeInput(elements.year.value);
+    const month = sanitizeInput(elements.month.value);
+    const loanType = sanitizeInput(elements.loanType.value);
+    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
 
     clearErrors();
 
@@ -578,7 +579,7 @@ function validateInputs() {
         errors.push('Invalid type');
     }
 
-    if (amount <= 0 || isNaN(amount)) {
+    if (!isValidNumber(amount) || amount <= 0) {
         showError(elements.errors.amount, 'Amount must be a positive number in KES.');
         errors.push('Invalid amount');
     } else if (type === 'existing_loan' || type === 'apply_loan') {
@@ -941,8 +942,8 @@ function updateBehaviorReport() {
 }
 
 function toggleRepaymentFields() {
-    const type = elements.type.value;
-    const loanType = elements.loanType.value;
+    const type = sanitizeInput(elements.type.value);
+    const loanType = sanitizeInput(elements.loanType.value);
     elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
     elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
     elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
@@ -966,7 +967,7 @@ function toggleRepaymentFields() {
 }
 
 function toggleFields() {
-    const type = elements.type.value;
+    const type = sanitizeInput(elements.type.value);
     elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
     elements.contributionFields.classList.toggle('show', type === 'contribution');
     elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
@@ -985,7 +986,7 @@ function toggleFields() {
 }
 
 function updateDueDate() {
-    const type = elements.type.value;
+    const type = sanitizeInput(elements.type.value);
     if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
         const selectedMonth = elements.month.value.split('-');
         const year = parseInt(selectedMonth[0]);
@@ -998,14 +999,14 @@ function updateDueDate() {
 }
 
 function updateButtonState() {
-    const type = elements.type.value;
+    const type = sanitizeInput(elements.type.value);
     const amount = elements.amount.value;
-    const year = elements.year.value;
-    const month = elements.month.value;
+    const year = sanitizeInput(elements.year.value);
+    const month = sanitizeInput(elements.month.value);
     const dueDate = elements.dueDate.value;
     const checkDate = elements.checkDate.value;
-    const loanType = elements.loanType.value;
-    const repaymentPeriod = elements.repaymentPeriod.value;
+    const loanType = sanitizeInput(elements.loanType.value);
+    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
 
     const isAmountValid = amount && parseFloat(amount) > 0;
     let isValid = false;
@@ -1221,29 +1222,20 @@ async function shareResults() {
 async function calculate() {
     const validationError = validateInputs();
     if (validationError) {
-        if (elements.result) {
-            elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
-        }
+        elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
         return;
     }
 
     isCalculating = true;
-    if (elements.calcButton) {
-        elements.calcButton.classList.add('loading');
-        elements.calcButton.disabled = true;
-    }
+    elements.calcButton.classList.add('loading');
+    elements.calcButton.disabled = true;
     showProgress();
 
     try {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const type = sanitizeInput(elements.type.value);
-        const amountInput = sanitizeNumericInput(elements.amount.value);
-        const amount = parseFloat(amountInput);
-
-        if (!isValidNumber(amount) || amount <= 0) {
-            throw new Error('Invalid amount provided');
-        }
+        const type = elements.type.value;
+        const amount = parseFloat(elements.amount.value);
         let tableHTML = `
             <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
             <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
@@ -1701,7 +1693,7 @@ function performSimulation(currentData, months, growthRate, newMembers) {
         totalContributions: contributions,
         contributionGrowth,
         totalMembers: members,
-        newMembersAdded: newMembers,
+        newMembersAdded: members - 10,  // Fix: Calculate added members
         growthPotential,
         recommendations
     };
