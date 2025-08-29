@@ -2,997 +2,1668 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="i-8 SMART BOT Admin: Update financial data and member contributions for the SACCO.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="i-8 SMART BOT: Calculate deposit penalties, loan interest, and track financial data in KES.">
     <meta name="author" content="Insightful Eight Co. Ltd.">
-    <title>i-8 SMART BOT Admin</title>
+    <meta name="keywords" content="sacco calculator, Kenya finance, deposit penalty, loan interest, financial tracking">
+    <title>i-8 SMART BOT</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">i-8 SMART</div>
-                <div class="logo-sub">Admin</div>
-            </div>
-            <nav class="sidebar-nav">
-                <button class="sidebar-button" onclick="refreshForm()" aria-label="Refresh form and clear inputs">
-                    <i class="fas fa-sync-alt"></i> Refresh Form
-                </button>
-                <button class="sidebar-button" onclick="downloadData()" aria-label="Download data backup">
-                    <i class="fas fa-download"></i> Download Backup
-                </button>
-                <button class="sidebar-button logout-button" onclick="logout()" aria-label="Log out of admin panel">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </nav>
-        </aside>
-        <main class="main-content">
-            <div class="card">
-                <h2>Update Financial Data</h2>
-                <div class="edit-controls">
-                    <button class="action-button" onclick="loadBalanceSheetData()" aria-label="Load existing balance sheet data for editing">
-                        <i class="fas fa-folder-open"></i> Load Balance Sheet
-                        <span class="spinner-icon hidden"></span>
-                    </button>
-                    <select id="editMonthBalance" class="input-field" aria-label="Select month to edit balance sheet">
-                        <option value="">Select Month to Edit</option>
-                    </select>
+    <div class="container">
+        <!-- Page 1: Calculator Section -->
+        <div class="main-page" id="page1">
+            <div class="title-container">
+                <div>
+                    <div class="main-title">i-8 SMART</div>
+                    <div class="sub-title">bot</div>
                 </div>
-                <form id="adminForm" class="form-grid">
-                    <div class="form-group">
-                        <label for="month" class="tooltip" title="Select the month for which financial data is being entered or updated.">Select Month:</label>
-                        <select id="month" class="input-field" aria-label="Select month for financial data" required>
-                            <option value="">Select Month</option>
-                        </select>
-                        <span id="monthError" class="error"></span>
-                    </div>
-
-                    <details class="collapsible-section">
-                        <summary>KCB Accounts</summary>
-                        <div class="form-group">
-                            <label for="opening_kcb_balance" class="tooltip" title="The starting balance in the KCB account for the selected month (KES).">Opening KCB Balance (KES):</label>
-                            <input type="number" id="opening_kcb_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening KCB balance in KES">
-                            <span id="openingKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_member_contributions_kcb" class="tooltip" title="Total contributions made by members to the KCB account for the month (KES).">Members Contribution KCB (KES):</label>
-                            <input type="number" id="total_member_contributions_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
-                            <span id="membersContributionKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_loan_repayments_kcb" class="tooltip" title="Total loan repayments received in the KCB account for the month (KES).">Members Loan Repayment KCB (KES):</label>
-                            <input type="number" id="total_loan_repayments_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
-                            <span id="membersLoanRepaymentKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="interest_on_loans_kcb" class="tooltip" title="Interest earned on loans issued from the KCB account for the month (KES).">Interest on Loans KCB (KES):</label>
-                            <input type="number" id="interest_on_loans_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
-                            <span id="interestOnLoansKcbError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Lofty Accounts</summary>
-                        <div class="form-group">
-                            <label for="opening_lofty_balance" class="tooltip" title="The starting balance in the Lofty account for the selected month (KES).">Opening Lofty Balance (KES):</label>
-                            <input type="number" id="opening_lofty_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening Lofty balance in KES">
-                            <span id="openingLoftyError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_loan_repayments_lofty" class="tooltip" title="Total loan repayments received in the Lofty account for the month (KES).">Members Loan Repayment Lofty (KES):</label>
-                            <input type="number" id="total_loan_repayments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
-                            <span id="membersLoanRepaymentLoftyError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="interest_on_deposits_lofty" class="tooltip" title="Interest earned on deposits held in the Lofty account for the month (KES).">Interest on Deposits Lofty (KES):</label>
-                            <input type="number" id="interest_on_deposits_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
-                            <span id="interestOnDepositsLoftyError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Other Inflows</summary>
-                        <div class="form-group">
-                            <label for="other_income" class="tooltip" title="Miscellaneous income not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Income (KES):</label>
-                            <div class="input-group">
-                                <select id="other_income_account" class="input-field" aria-label="Select account for other income">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="other_income" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income in KES">
-                            </div>
-                            <span id="otherIncomeError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Outflows</summary>
-                        <div class="form-group">
-                            <label for="total_loan_disbursements" class="tooltip" title="Total loans disbursed to members from either KCB or Lofty account for the month (KES).">Loans Advanced to Members (KES):</label>
-                            <div class="input-group">
-                                <select id="total_loan_disbursements_account" class="input-field" aria-label="Select account for loans advanced">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="total_loan_disbursements" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Loans advanced to members in KES">
-                            </div>
-                            <span id="loansAdvancedError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="bank_charges" class="tooltip" title="Charges incurred from banking services, assigned to either KCB or Lofty account (KES).">Bank Charges (KES):</label>
-                            <div class="input-group">
-                                <select id="bank_charges_account" class="input-field" aria-label="Select account for bank charges">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="bank_charges" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
-                            </div>
-                            <span id="bankChargesError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="petty_cash_utilized" class="tooltip" title="Petty cash used for minor expenses, assigned to either KCB or Lofty account (KES).">Petty Cash Utilized (KES):</label>
-                            <div class="input-group">
-                                <select id="petty_cash_utilized_account" class="input-field" aria-label="Select account for petty cash utilized">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="petty_cash_utilized" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Petty cash utilized in KES">
-                            </div>
-                            <span id="pettyCashUtilizedError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="agm_facilitation" class="tooltip" title="Expenses related to facilitating the Annual General Meeting, assigned to either KCB or Lofty account (KES).">AGM Facilitation (KES):</label>
-                            <div class="input-group">
-                                <select id="agm_facilitation_account" class="input-field" aria-label="Select account for AGM facilitation">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="agm_facilitation" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM facilitation in KES">
-                            </div>
-                            <span id="agmFacilitationError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="welfare_kitty_utilized" class="tooltip" title="Funds used for member welfare activities, assigned to either KCB or Lofty account (KES).">Welfare Kitty Utilized (KES):</label>
-                            <div class="input-group">
-                                <select id="welfare_kitty_utilized_account" class="input-field" aria-label="Select account for welfare kitty utilized">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="welfare_kitty_utilized" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Welfare kitty utilized in KES">
-                            </div>
-                            <span id="welfareKittyUtilizedError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="other_expenses" class="tooltip" title="Miscellaneous expenses not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Expenses (KES):</label>
-                            <div class="input-group">
-                                <select id="other_expenses_account" class="input-field" aria-label="Select account for other expenses">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="other_expenses" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
-                            </div>
-                            <span id="otherExpensesError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <div class="button-container">
-                        <button type="submit" id="submitFinancialButton" class="action-button primary" aria-label="Submit financial data">
-                            <i class="fas fa-save"></i> Submit Financial Data
-                            <span class="spinner-icon hidden"></span>
-                        </button>
-                    </div>
-                </form>
             </div>
+            <button class="refresh-button" onclick="refreshForm()" aria-label="Refresh form and clear results">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <div class="apply-now-section">
+                <button onclick="window.open('https://forms.gle/AZejGB89vmrbg9zh8', '_blank')" aria-label="Apply for loan via Google Form">
+                    Apply Loan
+                    <span class="star-top-left"></span>
+                    <span class="star-top-right"></span>
+                    <span class="star-bottom-left"></span>
+                    <span class="star-bottom-right"></span>
+                </button>
+            </div>
+            <form id="calcForm">
+                <label for="type">Type:</label>
+                <select id="type" aria-label="Select transaction type: Deposit, Existing Loan, or New Loans" onchange="toggleFields()">
+                    <option value="contribution">Deposit</option>
+                    <option value="existing_loan">Existing Loan</option>
+                    <option value="apply_loan">New Loans</option>
+                </select>
+                <span id="typeError" class="error"></span>
 
-            <div class="card">
-                <h2>Update Member Contributions</h2>
-                <div class="edit-controls">
-                    <button class="action-button" onclick="loadContributionData()" aria-label="Load existing member contribution for editing">
-                        <i class="fas fa-folder-open"></i> Load Contribution
-                        <span class="spinner-icon hidden"></span>
-                    </button>
-                    <input type="text" id="editMember" class="input-field" placeholder="Enter member name" aria-label="Enter member name to edit contribution">
-                    <span id="editMemberError" class="error"></span>
-                    <select id="editMonthContribution" class="input-field" aria-label="Select month to edit contribution">
-                        <option value="">Select Month to Edit</option>
-                    </select>
+                <label for="amount">Amount (KES):</label>
+                <input type="number" id="amount" min="1" step="100" placeholder="Enter amount in KES" aria-label="Enter amount in Kenyan Shillings (KES)" required>
+                <span id="amountError" class="error"></span>
+
+                <div id="contributionFields">
+                    <label for="year">Contribution Year:</label>
+                    <select id="year" aria-label="Select contribution year" onchange="populateMonths()"></select>
+                    <span id="yearError" class="error"></span>
+
+                    <label for="month">Contribution Month:</label>
+                    <select id="month" aria-label="Select contribution month" onchange="updateDueDate()"></select>
+                    <span id="monthError" class="error"></span>
                 </div>
-                <form id="memberContributionForm" class="form-grid">
-                    <div class="form-group">
-                        <label for="memberSelect" class="tooltip" title="Enter the full name of the member making the contribution.">Enter Member Name:</label>
-                        <input type="text" id="memberSelect" class="input-field" placeholder="Enter member name" aria-label="Enter member name for contribution" required>
-                        <span id="memberSelectError" class="error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="contributionMonth" class="tooltip" title="Select the month for which the contribution is being recorded.">Select Month:</label>
-                        <select id="contributionMonth" class="input-field" aria-label="Select month for contribution" required>
-                            <option value="">Select Month</option>
+
+                <div id="dateFields">
+                    <label for="dueDate">Due Date:</label>
+                    <input type="date" id="dueDate" aria-label="Select due date" required onchange="updateButtonState()">
+                    <span id="dueDateError" class="error"></span>
+
+                    <label for="checkDate">Check Date:</label>
+                    <input type="date" id="checkDate" aria-label="Select check date" required onchange="updateButtonState()">
+                    <span id="checkDateError" class="error"></span>
+                </div>
+
+                <div id="loanFields">
+                    <label for="loanType">Loan Type:</label>
+                    <select id="loanType" aria-label="Select loan type: Short Term, Medium Term, or Long Term" onchange="toggleRepaymentFields()">
+                        <option value="short">Short Term (30 Days)</option>
+                        <option value="medium">Medium Term (90 Days)</option>
+                        <option value="long">Long Term (365 Days)</option>
+                    </select>
+                    <span id="loanTypeError" class="error"></span>
+
+                    <div id="repaymentFields">
+                        <label for="repaymentPeriod">Repayment Period (Months):</label>
+                        <select id="repaymentPeriod" aria-label="Select repayment period">
+                            <option value="">Select months</option>
                         </select>
-                        <span id="contributionMonthError" class="error"></span>
+                        <span id="repaymentPeriodError" class="error"></span>
                     </div>
-                    <div class="form-group">
-                        <label for="contributionAmount" class="tooltip" title="The amount contributed by the member for the selected month (KES).">Contribution Amount (KES):</label>
-                        <input type="number" id="contributionAmount" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Member contribution amount in KES" required>
-                        <span id="contributionAmountError" class="error"></span>
-                    </div>
-                    <div class="button-container">
-                        <button type="submit" id="submitContributionButton" class="action-button primary" aria-label="Submit member contribution">
-                            <i class="fas fa-save"></i> Submit Contribution
-                            <span class="spinner-icon hidden"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
 
-            <div class="card">
-                <h2>Admin Logs</h2>
-                <div id="adminLogs" class="log-section"></div>
+                <div class="button-container" id="buttonContainer">
+                    <button type="button" onclick="calculate()" id="calcButton" aria-label="Calculate penalties or interest">Calc</button>
+                </div>
+            </form>
+            <div class="progress-bar" id="progressBar">
+                <div id="progressFill"></div>
             </div>
-
             <div id="result" class="result"></div>
-        </main>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+        </div>
 
-        <!-- Confirmation Modal -->
-        <div id="confirmationModal" class="modal">
-            <div class="modal-content">
-                <h3>Confirm Financial Data Submission</h3>
-                <p>Please review the entered data before submitting:</p>
-                <div id="modalSummary" class="modal-summary"></div>
-                <div class="modal-buttons">
-                    <button id="confirmSubmit" class="action-button primary" aria-label="Confirm submission">
-                        <i class="fas fa-check"></i> Confirm
-                        <span class="spinner-icon hidden"></span>
-                    </button>
-                    <button id="cancelSubmit" class="action-button secondary" aria-label="Cancel submission">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
+        <!-- Page 2: Financial Overview -->
+        <div class="main-page" id="page2" style="display: none;">
+            <div class="financial-section">
+                <h2>Financial Overview</h2>
+                <form id="periodSelectForm">
+                    <label for="reportPeriod">Select Period:</label>
+                    <select id="reportPeriod" aria-label="Select report period" onchange="updateFinancialData()">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </form>
+                <div id="balanceSheet">
+                    <h3>Balance Sheet</h3>
+                    <div class="loading-spinner" id="balanceSheetSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                    <table class="balance-sheet-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Amount (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="balanceSheetBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Loading Spinner -->
-        <div id="loadingSpinner" class="spinner">
-            <div class="spinner-icon"></div>
-            <p>Processing...</p>
+        <!-- Page 3: Member Contributions -->
+        <div class="main-page" id="page3" style="display: none;">
+            <div class="financial-section">
+                <h2>Member Contributions</h2>
+                <div class="loading-spinner" id="membersSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+                <div id="memberContributions">
+                    <table class="member-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contribution (KES)</th>
+                                <th>Shares</th>
+                                <th>Last Contribution</th>
+                                <th>Contribution Months</th>
+                                <th>Loan Limit (KES)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memberTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: Company Behavior Report -->
+        <div class="main-page" id="page4" style="display: none;">
+            <div class="financial-section">
+                <h2>Company Behavior Report</h2>
+                <form id="behaviorReportForm">
+                    <label for="behaviorPeriod">Select Period:</label>
+                    <select id="behaviorPeriod" aria-label="Select report period" onchange="updateBehaviorReport()">
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </form>
+                <div class="loading-spinner" id="behaviorSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+                <div id="behaviorReport">
+                    <h3>Financial Summary</h3>
+                    <table class="balance-sheet-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="behaviorReportBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 5: Company Analysis & Future Simulation -->
+        <div class="main-page" id="page5" style="display: none;">
+            <div class="financial-section">
+                <h2>Company Analysis & Future Simulation</h2>
+                <div class="analysis-section">
+                    <h3>Performance Analysis</h3>
+                    <div id="performanceAnalysis">
+                        <div class="loading-spinner" id="analysisSpinner" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                        </div>
+                        <div id="analysisResults"></div>
+                    </div>
+                </div>
+
+                <div class="simulation-section">
+                    <h3>Future Simulation</h3>
+                    <form id="simulationForm">
+                        <label for="projectionMonths">Projection Period (Months):</label>
+                        <input type="number" id="projectionMonths" min="1" max="48" value="12" aria-label="Number of months to project">
+
+                        <label for="newMembers">New Members Expected:</label>
+                        <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
+
+                        <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
+                    </form>
+                    <div id="simulationResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination-controls">
+            <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="mainPageInfo">Page 1 of 5</span>
+            <button id="nextMainPage" onclick="changeMainPage(1)" aria-label="Next page">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div id="resultModal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeResultModal()" aria-label="Close results">&times;</button>
+                <div id="modalResult"></div>
+            </div>
         </div>
     </div>
+<script>
+const CONFIG = {
+    CONTRIBUTION_PENALTY: 0.30,
+    CONTRIBUTION_DAILY_PENALTY: 0.01,
+    LOAN_SHORT_INTEREST: 0.05,
+    LOAN_MEDIUM_INTEREST: 0.10,
+    LOAN_LONG_INTEREST: 0.15,
+    LOAN_SHORT_MINIMUM: 2000,
+    LOAN_MEDIUM_MINIMUM: 5000,
+    LOAN_LONG_MINIMUM: 30000,
+    ROLLOVER_INTEREST: 0.05,
+    LOAN_DAILY_PENALTY: 0.005,
+    PENALTY_START_DAY: 1,
+    API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
+    API_KEY: 'i8-smart-backend-2025',
+    MAX_RETRIES: 3,
+    RETRY_DELAY: 2000,
+    CACHE_VALIDITY: 1 * 60 * 1000 // Reduced to 1 minute for fresher data
+};
 
-    <script>
-        const MEMBERS = [
-            "Enoch Kamau Thumbi",
-            "John Waweru Njeri",
-            "Geoffrey Mugi Gicini",
-            "John Gatheru Iragu",
-            "James Njoroge Kamau",
-            "Joseph Wachira Waithaka",
-            "Paul Masharia Muchiri",
-            "Hempstone Mwangi Isaac",
-            "Isaac Thuku Maina",
-            "Nephat Njeru Muthee"
-        ];
+const elements = {
+    type: safeGetElementById('type'),
+    amount: safeGetElementById('amount'),
+    contributionFields: safeGetElementById('contributionFields'),
+    year: safeGetElementById('year'),
+    month: safeGetElementById('month'),
+    dateFields: safeGetElementById('dateFields'),
+    dueDate: safeGetElementById('dueDate'),
+    checkDate: safeGetElementById('checkDate'),
+    loanFields: safeGetElementById('loanFields'),
+    loanType: safeGetElementById('loanType'),
+    repaymentFields: safeGetElementById('repaymentFields'),
+    repaymentPeriod: safeGetElementById('repaymentPeriod'),
+    calcButton: safeGetElementById('calcButton'),
+    buttonContainer: safeGetElementById('buttonContainer'),
+    result: safeGetElementById('result'),
+    successMessage: safeGetElementById('successMessage'),
+    progressBar: safeGetElementById('progressBar'),
+    progressFill: safeGetElementById('progressFill'),
+    resultModal: safeGetElementById('resultModal'),
+    modalResult: safeGetElementById('modalResult'),
+    errors: {
+        type: safeGetElementById('typeError'),
+        amount: safeGetElementById('amountError'),
+        year: safeGetElementById('yearError'),
+        month: safeGetElementById('monthError'),
+        dueDate: safeGetElementById('dueDateError'),
+        checkDate: safeGetElementById('checkDateError'),
+        loanType: safeGetElementById('loanTypeError'),
+        repaymentPeriod: safeGetElementById('repaymentPeriodError')
+    },
+    spinners: {
+        balanceSheet: safeGetElementById('balanceSheetSpinner'),
+        members: safeGetElementById('membersSpinner'),
+        behavior: safeGetElementById('behaviorSpinner')
+    }
+};
 
-        const CONFIG = {
-            API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
-            API_KEY: 'i8-smart-backend-2025',
-            FETCH_TIMEOUT: 10000
-        };
+let isCalculating = false;
+let lastResult = null;
+let lastResultText = '';
+let currentMainPage = 1;
+let currentMembers = [];
+let dataCache = null;
+let forceRefresh = false;
 
-        // Input sanitization and validation utilities
-        function sanitizeInput(input) {
-            if (typeof input !== 'string') return '';
-            // Remove potentially harmful characters and trim whitespace
-            return input.replace(/[<>\"'&]/g, '').trim();
-        }
+function sanitizeInput(input) {
+    if (typeof input !== 'string') return '';
+    // Remove potentially harmful characters and trim whitespace
+    return input.replace(/[<>\"'&]/g, '').trim();
+}
 
-        function sanitizeNumericInput(input) {
-            if (typeof input !== 'string') return '';
-            // Allow only numbers, decimal points, and negative signs
-            return input.replace(/[^0-9.-]/g, '');
-        }
+function sanitizeNumericInput(input) {
+    if (typeof input !== 'string') return '';
+    // Allow only numbers, decimal points, and negative signs
+    return input.replace(/[^0-9.-]/g, '');
+}
 
-        function isValidNumber(value) {
-            const num = parseFloat(value);
-            return !isNaN(num) && isFinite(num);
-        }
+function isValidNumber(value) {
+    const num = parseFloat(value);
+    return !isNaN(num) && isFinite(num);
+}
 
-        function safeGetElementById(id) {
-            try {
-                const element = document.getElementById(id);
-                if (!element) {
-                    console.error(`Element with ID '${id}' not found`);
-                    return null;
-                }
-                return element;
-            } catch (error) {
-                console.error(`Error getting element with ID '${id}':`, error);
-                return null;
-            }
-        }
-
-        function setButtonLoading(button, isLoading) {
-            const spinner = button.querySelector('.spinner-icon');
-            if (isLoading) {
-                button.disabled = true;
-                spinner.classList.remove('hidden');
-                button.style.opacity = '0.7';
-            } else {
-                button.disabled = false;
-                spinner.classList.add('hidden');
-                button.style.opacity = '1';
-            }
-        }
-
-        function populateMonths(selectId) {
-            try {
-                const monthSelect = document.getElementById(selectId);
-                if (!monthSelect) {
-                    console.error(`Element with ID ${selectId} not found.`);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Month selector (${selectId}) not found. Please refresh the page.</span>`;
-                    return;
-                }
-                monthSelect.innerHTML = '<option value="">Select Month</option>';
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = currentDate.getMonth();
-                const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-                for (let year = 2024; year <= currentYear; year++) {
-                    const maxMonth = year === currentYear ? currentMonth : 11;
-                    for (let month = 0; month <= maxMonth; month++) {
-                        const monthValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
-                        const option = document.createElement('option');
-                        option.value = monthValue;
-                        option.text = `${monthAbbr[month]} ${year}`;
-                        monthSelect.appendChild(option);
-                    }
-                }
-                console.log(`Populated months for ${selectId}`);
-            } catch (error) {
-                console.error(`Error populating months for ${selectId}:`, error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to populate months for ${selectId}. Please refresh the page.</span>`;
-            }
-        }
-
-        function fuzzyMatch(input, members) {
-            const cleanInput = input.trim().toLowerCase();
-            if (!cleanInput) return null;
-
-            const inputParts = cleanInput.split(/\s+/).filter(part => part.length > 0);
-            if (inputParts.length < 2) {
-                return null;
-            }
-
-            for (const member of members) {
-                const memberParts = member.toLowerCase().split(/\s+/);
-                let matchCount = 0;
-
-                for (const inputPart of inputParts) {
-                    if (memberParts.some(memberPart => memberPart.includes(inputPart))) {
-                        matchCount++;
-                    }
-                }
-
-                if (matchCount >= 2) {
-                    return member;
-                }
-            }
-
+function safeGetElementById(id) {
+    try {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Element with ID '${id}' not found`);
             return null;
         }
+        return element;
+    } catch (error) {
+        console.error(`Error getting element with ID '${id}':`, error);
+        return null;
+    }
+}
 
-        function validateFinancialInputs() {
-            const errors = [];
-            const inputs = [
-                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
-                { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
-                { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
-                { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
-                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
-                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
-                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
-                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
-                { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
-                { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
-                { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
-                { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
-                { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
-                { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
-                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
-            ];
+function logError(message, error) {
+    console.error(`[i-8 SMART BOT] ${message}`, error);
+}
 
-            inputs.forEach(input => {
-                const element = document.getElementById(input.id);
-                const errorElement = document.getElementById(input.errorId);
+function showProgress() {
+    elements.progressBar.classList.add('active');
+    elements.progressFill.style.width = '0%';
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 10;
+        elements.progressFill.style.width = `${progress}%`;
+        if (progress >= 100) clearInterval(interval);
+    }, 100);
+}
 
-                if (!element || !errorElement) {
-                    console.error(`DOM element not found: ${input.id} or ${input.errorId}`);
-                    return;
+function hideProgress() {
+    elements.progressBar.classList.remove('active');
+    elements.progressFill.style.width = '0%';
+}
+
+function showSpinner(element) {
+    element.style.display = 'block';
+}
+
+function hideSpinner(element) {
+    element.style.display = 'none';
+}
+
+function showSuccessMessage(message) {
+    elements.successMessage.textContent = message;
+    elements.successMessage.style.display = 'block';
+    setTimeout(() => {
+        elements.successMessage.style.display = 'none';
+    }, 5000);
+}
+
+async function fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const fetchOptions = {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'x-api-key': CONFIG.API_KEY,
+                    'Content-Type': 'application/json'
                 }
-
-                errorElement.style.display = 'none';
-
-                if (input.id === 'month') {
-                    // Special handling for month select
-                    if (!element.value) {
-                        errorElement.textContent = input.message;
-                        errorElement.style.display = 'block';
-                        errors.push(input.message);
-                    }
-                } else {
-                    // Handle number inputs with proper NaN validation
-                    const value = parseFloat(element.value);
-                    if (!element.value.trim() || isNaN(value) || value < 0) {
-                        errorElement.textContent = input.message;
-                        errorElement.style.display = 'block';
-                        errors.push(input.message);
-                    }
-                }
-            });
-
-            return errors.length === 0 ? null : errors.join(', ');
-        }
-
-        function validateContributionInputs() {
-            const errors = [];
-            const inputs = [
-                { id: 'memberSelect', errorId: 'memberSelectError', message: 'Please enter a valid member name (at least two name parts required).' },
-                { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
-                { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
-            ];
-
-            inputs.forEach(input => {
-                const element = document.getElementById(input.id);
-                const errorElement = document.getElementById(input.errorId);
-
-                if (!element || !errorElement) {
-                    console.error(`DOM element not found: ${input.id} or ${input.errorId}`);
-                    return;
-                }
-
-                errorElement.style.display = 'none';
-
-                if (input.id === 'memberSelect') {
-                    if (!element.value.trim() || !fuzzyMatch(element.value, MEMBERS)) {
-                        errorElement.textContent = input.message;
-                        errorElement.style.display = 'block';
-                        errors.push(input.message);
-                    }
-                } else if (input.id === 'contributionMonth') {
-                    if (!element.value) {
-                        errorElement.textContent = input.message;
-                        errorElement.style.display = 'block';
-                        errors.push(input.message);
-                    }
-                } else if (input.id === 'contributionAmount') {
-                    const value = parseFloat(element.value);
-                    if (!element.value.trim() || isNaN(value) || value <= 0) {
-                        errorElement.textContent = input.message;
-                        errorElement.style.display = 'block';
-                        errors.push(input.message);
-                    }
-                }
-            });
-
-            return errors.length === 0 ? null : errors.join(', ');
-        }
-
-        function logAction(action, details) {
-            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-            logs.push({ timestamp: new Date().toISOString(), action, details });
-            localStorage.setItem('adminLogs', JSON.stringify(logs));
-            displayLogs();
-        }
-
-        function displayLogs() {
-            const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-            const logSection = document.getElementById('adminLogs');
-            logSection.innerHTML = logs.length > 0 ? `
-                <table class="log-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${logs.map(log => `
-                            <tr>
-                                <td>${new Date(log.timestamp).toLocaleString('en-GB')}</td>
-                                <td>${log.action}</td>
-                                <td>${log.details}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            ` : '<p>No logs available.</p>';
-        }
-
-        function showLoadingSpinner() {
-            document.getElementById('loadingSpinner').style.display = 'flex';
-        }
-
-        function hideLoadingSpinner() {
-            document.getElementById('loadingSpinner').style.display = 'none';
-        }
-
-        function showConfirmationModal(data, month, onConfirm) {
-            const modal = document.getElementById('confirmationModal');
-            const modalSummary = document.getElementById('modalSummary');
-            modalSummary.innerHTML = `
-                <p><strong>Month:</strong> ${month}</p>
-                <h4>KCB Accounts</h4>
-                <p>Opening KCB Balance: KES ${data.opening_kcb_balance.toFixed(2)}</p>
-                <p>Members Contribution KCB: KES ${data.total_member_contributions_kcb.toFixed(2)}</p>
-                <p>Loan Repayments KCB: KES ${data.total_loan_repayments_kcb.toFixed(2)}</p>
-                <p>Interest on Loans KCB: KES ${data.interest_on_loans_kcb.toFixed(2)}</p>
-                <h4>Lofty Accounts</h4>
-                <p>Opening Lofty Balance: KES ${data.opening_lofty_balance.toFixed(2)}</p>
-                <p>Loan Repayments Lofty: KES ${data.total_loan_repayments_lofty.toFixed(2)}</p>
-                <p>Interest on Deposits Lofty: KES ${data.interest_on_deposits_lofty.toFixed(2)}</p>
-                <h4>Other Inflows</h4>
-                <p>Other Income (${data.other_income_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_income_kcb + data.other_income_lofty).toFixed(2)}</p>
-                <h4>Outflows</h4>
-                <p>Loan Disbursements (${data.total_loan_disbursements_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty).toFixed(2)}</p>
-                <p>Bank Charges (${data.bank_charges_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.bank_charges_kcb + data.bank_charges_lofty).toFixed(2)}</p>
-                <p>Petty Cash Utilized (${data.petty_cash_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty).toFixed(2)}</p>
-                <p>AGM Facilitation (${data.agm_facilitation_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.agm_facilitation_kcb + data.agm_facilitation_lofty).toFixed(2)}</p>
-                <p>Welfare Kitty Utilized (${data.welfare_kitty_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty).toFixed(2)}</p>
-                <p>Other Expenses (${data.other_expenses_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_expenses_kcb + data.other_expenses_lofty).toFixed(2)}</p>
-                <h4>Summary</h4>
-                <p>Total Inflows: KES ${data.total_inflows.toFixed(2)}</p>
-                <p>Total Outflows: KES ${data.total_outflows.toFixed(2)}</p>
-                <p>KCB Balance: KES ${data.kcb_balance.toFixed(2)}</p>
-                <p>Lofty Balance: KES ${data.lofty_balance.toFixed(2)}</p>
-                <p>Total Balance: KES ${data.total_balance.toFixed(2)}</p>
-            `;
-            modal.style.display = 'block';
-
-            document.getElementById('confirmSubmit').onclick = () => {
-                setButtonLoading(document.getElementById('confirmSubmit'), true);
-                modal.style.display = 'none';
-                onConfirm();
             };
-            document.getElementById('cancelSubmit').onclick = () => {
-                modal.style.display = 'none';
-                setButtonLoading(document.getElementById('submitFinancialButton'), false);
-            };
+            const response = await fetch(url, fetchOptions);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`HTTP error! Status: ${response.status}, Details: ${errorData.details || 'Unknown error'}`);
+            }
+            const data = await response.json();
+            console.log(`Fetched data from ${url}:`, data);
+            return data;
+        } catch (error) {
+            if (i < retries - 1) {
+                console.log(`Retrying fetch (${i + 1}/${retries}) for ${url}`);
+                await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
+                continue;
+            }
+            throw error;
         }
+    }
+}
 
-        function logout() {
-            logAction('Logout', 'User logged out of admin panel');
-            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged out successfully.</span>`;
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+function saveDataToStorage(data) {
+    try {
+        localStorage.setItem('financialData', JSON.stringify({
+            data: data,
+            timestamp: new Date().getTime()
+        }));
+        console.log('Saved data to localStorage:', data);
+    } catch (error) {
+        logError('Failed to save financial data to storage', error);
+    }
+}
+
+function loadDataFromStorage() {
+    try {
+        const stored = localStorage.getItem('financialData');
+        if (!stored) return null;
+        const { data, timestamp } = JSON.parse(stored);
+        const now = new Date().getTime();
+        if (now - timestamp > CONFIG.CACHE_VALIDITY) {
+            console.log('Cached data is stale, discarding');
+            localStorage.removeItem('financialData');
+            return null;
         }
+        console.log('Loaded data from localStorage:', data);
+        return data;
+    } catch (error) {
+        logError('Failed to load financial data from storage', error);
+        return null;
+    }
+}
 
-        function refreshForm() {
-            try {
-                document.getElementById('adminForm').reset();
-                document.getElementById('memberContributionForm').reset();
-                document.getElementById('editMember').value = '';
-                document.getElementById('editMonthBalance').value = '';
-                document.getElementById('editMonthContribution').value = '';
-                document.querySelectorAll('.error').forEach(error => {
-                    error.textContent = '';
-                    error.style.display = 'none';
-                });
-                document.getElementById('result').innerHTML = '';
-                setButtonLoading(document.getElementById('submitFinancialButton'), false);
-                setButtonLoading(document.getElementById('submitContributionButton'), false);
-                localStorage.removeItem('financialData');
-                localStorage.removeItem('adminLogs');
-                populateMonths('month');
-                populateMonths('contributionMonth');
-                populateMonths('editMonthBalance');
-                populateMonths('editMonthContribution');
-                fetchData();
-                logAction('Refresh Form', 'Form reset and months repopulated');
-            } catch (error) {
-                console.error('Error refreshing form:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to refresh form (${error.message}). Please try again.</span>`;
-            }
+async function fetchDataIfStale(force = false) {
+    const cachedData = loadDataFromStorage();
+    if (cachedData && !force && !forceRefresh) {
+        dataCache = cachedData;
+        console.log('Using cached data:', dataCache);
+        return;
+    }
+    try {
+        console.log('Fetching fresh data from /api/data');
+        const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
+        if (!data || Object.keys(data).length === 0) {
+            throw new Error('Empty or invalid data received from API');
         }
+        dataCache = data;
+        saveDataToStorage(data);
+        forceRefresh = false;
+        console.log('Fetched fresh data:', dataCache);
+    } catch (error) {
+        logError('Failed to fetch fresh data', error);
+        dataCache = null;
+        localStorage.removeItem('financialData');
+        throw error;
+    }
+}
 
-        async function fetchData() {
-            showLoadingSpinner();
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const jsonData = await response.json();
-                console.log('Fetched data:', jsonData);
-                displayLogs();
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data: ${error.message}. Using default members.</span>`;
-            } finally {
-                hideLoadingSpinner();
-            }
+function debugDataStructure() {
+    fetchDataIfStale(true).then(() => {
+        console.log('Data structure:', JSON.stringify(dataCache, null, 2));
+        if (dataCache && dataCache.monthly_reports) {
+            console.log('Monthly reports keys:', Object.keys(dataCache.monthly_reports));
         }
-
-        async function loadBalanceSheetData() {
-            const editMonth = document.getElementById('editMonthBalance').value;
-            const button = document.querySelector('button[onclick="loadBalanceSheetData()"]');
-            setButtonLoading(button, true);
-            if (!editMonth) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to edit.</span>`;
-                setButtonLoading(button, false);
-                return;
-            }
-
-            showLoadingSpinner();
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                const report = data.monthly_reports?.[editMonth];
-                if (!report) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data found for ${editMonth}.</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-
-                document.getElementById('month').value = editMonth;
-                document.getElementById('opening_kcb_balance').value = report.opening_kcb_balance || 0;
-                document.getElementById('opening_lofty_balance').value = report.opening_lofty_balance || 0;
-                document.getElementById('total_member_contributions_kcb').value = report.total_member_contributions_kcb || 0;
-                document.getElementById('total_loan_repayments_kcb').value = report.total_loan_repayments_kcb || 0;
-                document.getElementById('total_loan_repayments_lofty').value = report.total_loan_repayments_lofty || 0;
-                document.getElementById('interest_on_loans_kcb').value = report.interest_on_loans_kcb || 0;
-                document.getElementById('interest_on_deposits_lofty').value = report.interest_on_deposits_lofty || 0;
-                document.getElementById('other_income_account').value = report.other_income_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_income').value = (report.other_income_kcb || 0) + (report.other_income_lofty || 0);
-                document.getElementById('total_loan_disbursements_account').value = report.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('total_loan_disbursements').value = (report.total_loan_disbursements_kcb || 0) + (report.total_loan_disbursements_lofty || 0);
-                document.getElementById('bank_charges_account').value = report.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('bank_charges').value = (report.bank_charges_kcb || 0) + (report.bank_charges_lofty || 0);
-                document.getElementById('petty_cash_utilized_account').value = report.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('petty_cash_utilized').value = (report.petty_cash_utilized_kcb || 0) + (report.petty_cash_utilized_lofty || 0);
-                document.getElementById('agm_facilitation_account').value = report.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('agm_facilitation').value = (report.agm_facilitation_kcb || 0) + (report.agm_facilitation_lofty || 0);
-                document.getElementById('welfare_kitty_utilized_account').value = report.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('welfare_kitty_utilized').value = (report.welfare_kitty_utilized_kcb || 0) + (report.welfare_kitty_utilized_lofty || 0);
-                document.getElementById('other_expenses_account').value = report.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
-                document.getElementById('other_expenses').value = (report.other_expenses_kcb || 0) + (report.other_expenses_lofty || 0);
-
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data for ${editMonth} loaded. Edit and submit to update.</span>`;
-                logAction('Load Balance Sheet', `Loaded balance sheet data for ${editMonth}`);
-            } catch (error) {
-                console.error('Error loading balance sheet data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load data for ${editMonth}: ${error.message}.</span>`;
-            } finally {
-                setButtonLoading(button, false);
-                hideLoadingSpinner();
-            }
+        if (dataCache && dataCache.member_contributions) {
+            console.log('Member contributions:', dataCache.member_contributions);
         }
+    }).catch(error => {
+        logError('Failed to debug data structure', error);
+    });
+}
 
-        async function loadContributionData() {
-            const editMember = document.getElementById('editMember').value.trim();
-            const editMonth = document.getElementById('editMonthContribution').value;
-            const button = document.querySelector('button[onclick="loadContributionData()"]');
-            setButtonLoading(button, true);
-            if (!editMember || !editMonth) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name and select a month to edit.</span>`;
-                setButtonLoading(button, false);
-                return;
-            }
-
-            const matchedMember = fuzzyMatch(editMember, MEMBERS);
-            if (!matchedMember) {
-                document.getElementById('editMemberError').textContent = 'Member name not found (at least two name parts required).';
-                document.getElementById('editMemberError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            showLoadingSpinner();
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                const memberData = data.member_contributions.find(m => m.member_name === matchedMember);
-                if (!memberData || !memberData.contributions || !memberData.contributions[editMonth]) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${editMonth}.</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-
-                document.getElementById('memberSelect').value = matchedMember;
-                document.getElementById('contributionMonth').value = editMonth;
-                document.getElementById('contributionAmount').value = memberData.contributions[editMonth];
-                document.getElementById('editMemberError').style.display = 'none';
-
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${editMonth} loaded. Edit and submit to update.</span>`;
-                logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${editMonth}`);
-            } catch (error) {
-                console.error('Error loading contribution data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Failed to load contribution data: ${error.message}.</span>`;
-            } finally {
-                setButtonLoading(button, false);
-                hideLoadingSpinner();
-            }
-        }
-
-        async function submitFinancialForm(e) {
-            e.preventDefault();
-            const submitButton = safeGetElementById('submitFinancialButton');
-            const resultElement = safeGetElementById('result');
-
-            if (!submitButton || !resultElement) {
-                console.error('Required DOM elements not found for financial form submission');
-                return;
-            }
-
-            setButtonLoading(submitButton, true);
-            const validationError = validateFinancialInputs();
-            if (validationError) {
-                resultElement.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
-                setButtonLoading(submitButton, false);
-                return;
-            }
-
-            const monthElement = safeGetElementById('month');
-            if (!monthElement) {
-                resultElement.innerHTML = `<span style="color: #e74c3c;">Error: Month field not found. Please refresh the page.</span>`;
-                setButtonLoading(submitButton, false);
-                return;
-            }
-
-            const month = sanitizeInput(monthElement.value);
-
-            // Helper function to safely get and parse numeric input
-            const getNumericValue = (id) => {
-                const element = safeGetElementById(id);
-                if (!element) return 0;
-                const sanitized = sanitizeNumericInput(element.value);
-                const parsed = parseFloat(sanitized);
-                return isValidNumber(parsed) ? parsed : 0;
-            };
-
-            // Helper function to get account selection and amount
-            const getAccountValue = (accountId, amountId) => {
-                const accountElement = safeGetElementById(accountId);
-                const amountElement = safeGetElementById(amountId);
-                if (!accountElement || !amountElement) return { kcb: 0, lofty: 0 };
-
-                const account = sanitizeInput(accountElement.value);
-                const amount = getNumericValue(amountId);
-
-                return {
-                    kcb: account === 'kcb' ? amount : 0,
-                    lofty: account === 'lofty' ? amount : 0
-                };
-            };
-
-            const data = {
-                opening_kcb_balance: getNumericValue('opening_kcb_balance'),
-                opening_lofty_balance: getNumericValue('opening_lofty_balance'),
-                total_member_contributions_kcb: getNumericValue('total_member_contributions_kcb'),
-                total_loan_repayments_kcb: getNumericValue('total_loan_repayments_kcb'),
-                total_loan_repayments_lofty: getNumericValue('total_loan_repayments_lofty'),
-                interest_on_loans_kcb: getNumericValue('interest_on_loans_kcb'),
-                interest_on_deposits_lofty: getNumericValue('interest_on_deposits_lofty'),
-                ...getAccountValue('other_income_account', 'other_income'),
-                ...getAccountValue('total_loan_disbursements_account', 'total_loan_disbursements'),
-                ...getAccountValue('bank_charges_account', 'bank_charges'),
-                ...getAccountValue('petty_cash_utilized_account', 'petty_cash_utilized'),
-                ...getAccountValue('agm_facilitation_account', 'agm_facilitation'),
-                ...getAccountValue('welfare_kitty_utilized_account', 'welfare_kitty_utilized'),
-                ...getAccountValue('other_expenses_account', 'other_expenses'),
-                total_inflows: 0,
-                total_outflows: 0,
-                kcb_balance: 0,
-                lofty_balance: 0,
-                total_balance: 0,
-                updated_at: new Date().toISOString()
-            };
-
-            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.total_loan_repayments_lofty +
-                                 data.interest_on_loans_kcb + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb + data.bank_charges_lofty +
-                                  data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty + data.agm_facilitation_kcb + data.agm_facilitation_lofty +
-                                  data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                               data.interest_on_loans_kcb + data.other_income_kcb - data.total_loan_disbursements_kcb - data.bank_charges_kcb -
-                               data.petty_cash_utilized_kcb - data.agm_facilitation_kcb - data.welfare_kitty_utilized_kcb - data.other_expenses_kcb;
-            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                                 data.other_income_lofty - data.total_loan_disbursements_lofty - data.bank_charges_lofty -
-                                 data.petty_cash_utilized_lofty - data.agm_facilitation_lofty - data.welfare_kitty_utilized_lofty - data.other_expenses_lofty;
-            data.total_balance = data.kcb_balance + data.lofty_balance;
-
-            showConfirmationModal(data, month, async () => {
-                showLoadingSpinner();
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'x-api-key': CONFIG.API_KEY
-                        },
-                        body: JSON.stringify({ action: 'updateBalanceSheet', month, data }),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    const result = await response.json();
-                    if (response.ok) {
-                        document.getElementById('result').innerHTML = `<span style="color: #34c759;">${result.message || 'Financial data updated successfully!'}</span>`;
-                        logAction('Financial Update', `Updated financial data for ${month}`);
-                        refreshForm();
-                    } else {
-                        console.error('Error updating financial data:', result.error, result.details);
-                        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update financial data'}${result.details ? ` (${result.details})` : ''}</span>`;
-                        setButtonLoading(submitButton, false);
-                    }
-                } catch (error) {
-                    console.error('Error updating financial data:', error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update financial data (${error.message}). Please check your connection and try again.</span>`;
-                    setButtonLoading(submitButton, false);
-                } finally {
-                    setButtonLoading(document.getElementById('confirmSubmit'), false);
-                    hideLoadingSpinner();
-                }
-            });
-        }
-
-        async function submitContributionForm(e) {
-            e.preventDefault();
-            const submitButton = document.getElementById('submitContributionButton');
-            setButtonLoading(submitButton, true);
-            const validationError = validateContributionInputs();
-            if (validationError) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">${validationError}</span>`;
-                setButtonLoading(submitButton, false);
-                return;
-            }
-
-            const memberInput = document.getElementById('memberSelect').value.trim();
-            const matchedMember = fuzzyMatch(memberInput, MEMBERS);
-            if (!matchedMember) {
-                document.getElementById('memberSelectError').textContent = 'Member name not found (at least two name parts required).';
-                document.getElementById('memberSelectError').style.display = 'block';
-                setButtonLoading(submitButton, false);
-                return;
-            }
-
-            showLoadingSpinner();
-            const month = document.getElementById('contributionMonth').value;
-            const amount = parseFloat(document.getElementById('contributionAmount').value);
-            const data = {
-                member_name: matchedMember,
-                amount: amount,
-                last_contribution_date: new Date().toISOString().split('T')[0],
-                shares: MEMBERS.indexOf(matchedMember) < 8 ? 125 : 0,
-                contributions: { [month]: amount }
-            };
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/add-contribution`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY
-                    },
-                    body: JSON.stringify({ month, data }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const result = await response.json();
-                if (response.ok) {
-                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution for ${matchedMember} in ${month} updated successfully!</span>`;
-                    logAction('Contribution Update', `Updated contribution of ${amount} KES for ${matchedMember} in ${month}`);
-                    refreshForm();
-                } else {
-                    console.error('Error updating contribution:', result.error, result.details);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: ${result.error || 'Failed to update contribution'}${result.details ? ` (${result.details})` : ''}</span>`;
-                    setButtonLoading(submitButton, false);
-                }
-            } catch (error) {
-                console.error('Error updating contribution:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to update contribution (${error.message}). Please check your connection and try again.</span>`;
-                setButtonLoading(submitButton, false);
-            } finally {
-                hideLoadingSpinner();
-            }
-        }
-
-        async function downloadData() {
-            const submitButton = document.querySelector('.sidebar-button[onclick="downloadData()"]');
-            setButtonLoading(submitButton, true);
-            showLoadingSpinner();
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), CONFIG.FETCH_TIMEOUT);
-                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                console.log('Downloaded data:', data);
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `data-backup-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                logAction('Backup', 'Downloaded data backup');
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Backup downloaded successfully.</span>`;
-            } catch (error) {
-                console.error('Error downloading data:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download backup (${error.message}). Please try again.</span>`;
-            } finally {
-                setButtonLoading(submitButton, false);
-                hideLoadingSpinner();
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                // Ensure the container is visible
-                const adminContainer = document.querySelector('.app-container');
-                if (!adminContainer) {
-                    console.error('Application container not found.');
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Application container not found. Please refresh the page.</span>`;
-                    return;
-                }
-                adminContainer.style.display = 'flex';
-
-                // Populate all month selectors
-                ['month', 'contributionMonth', 'editMonthBalance', 'editMonthContribution'].forEach(id => {
-                    populateMonths(id);
-                });
-
-                // Add event listeners
-                document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
-                document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
-
-                // Initial data fetch
-                fetchData();
-                logAction('Page Load', 'Admin panel loaded');
-            } catch (error) {
-                console.error('Error initializing page:', error);
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to initialize page (${error.message}). Please refresh the page.</span>`;
-            }
+function aggregateMonthlyData(monthKeys, data, fields) {
+    return monthKeys.reduce((acc, month) => {
+        const curr = data.monthly_reports[month];
+        if (!curr) return acc;
+        fields.forEach(field => {
+            acc[field] = (acc[field] || 0) + (curr[field] || 0);
         });
-    </script>
+        return acc;
+    }, {});
+}
+
+function getPeriodData(data, period, availableMonths) {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    if (period === 'monthly' && availableMonths.length > 0) {
+        return { periodValue: availableMonths[availableMonths.length - 1], data: data.monthly_reports[availableMonths[availableMonths.length - 1]] || {} };
+    }
+
+    if (period === 'quarterly' && availableMonths.length > 0) {
+        const latestMonth = availableMonths[availableMonths.length - 1];
+        const [year, month] = latestMonth.split('-').map(Number);
+        const quarter = Math.ceil(month / 3);
+        const endMonth = quarter * 3;
+        const startMonth = endMonth - 2;
+        const quarterMonths = [];
+        for (let m = startMonth; m <= endMonth && m <= 12; m++) {
+            const monthKey = `${year}-${m.toString().padStart(2, '0')}`;
+            if (data.monthly_reports[monthKey]) {
+                quarterMonths.push(monthKey);
+            }
+        }
+        const aggregatedData = aggregateMonthlyData(quarterMonths, data, [
+            'opening_kcb_balance', 'opening_lofty_balance', 'total_member_contributions_kcb', 'total_loan_repayments_kcb',
+            'total_loan_repayments_lofty', 'interest_on_loans_kcb', 'interest_on_deposits_lofty', 'other_income_kcb',
+            'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
+            'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
+            'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
+            'total_inflows', 'total_outflows', 'kcb_balance', 'lofty_balance', 'total_balance'
+        ]);
+        return { periodValue: `${year}-Q${quarter}`, data: aggregatedData };
+    }
+
+    if (period === 'yearly' && availableMonths.length > 0) {
+        const periodValue = availableMonths[availableMonths.length - 1].split('-')[0];
+        const yearMonths = availableMonths.filter(m => m.startsWith(periodValue));
+        const aggregatedData = aggregateMonthlyData(yearMonths, data, [
+            'opening_kcb_balance', 'opening_lofty_balance', 'total_member_contributions_kcb', 'total_loan_repayments_kcb',
+            'total_loan_repayments_lofty', 'interest_on_loans_kcb', 'interest_on_deposits_lofty', 'other_income_kcb',
+            'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
+            'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
+            'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
+            'total_inflows', 'total_outflows', 'kcb_balance', 'lofty_balance', 'total_balance'
+        ]);
+        return { periodValue, data: aggregatedData };
+    }
+
+    return { periodValue: '', data: {} };
+}
+
+function showError(element, message) {
+    element.textContent = message;
+    element.style.display = 'block';
+}
+
+function clearErrors() {
+    Object.values(elements.errors).forEach(error => {
+        error.textContent = '';
+        error.style.display = 'none';
+    });
+}
+
+function validateLoanAmount(amount, loanType) {
+    const { min } = getLoanConfig(loanType);
+    return amount >= min ? null : `Amount for ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term loan must be at least ${min} KES.`;
+}
+
+function validateDateFields(dueDate, checkDate, month, year) {
+    const errors = [];
+    if (isNaN(dueDate.getTime())) {
+        showError(elements.errors.dueDate, 'Invalid due date.');
+        errors.push('Invalid due date');
+    }
+    if (isNaN(checkDate.getTime())) {
+        showError(elements.errors.checkDate, 'Invalid check date.');
+        errors.push('Invalid check date');
+    }
+    if (month && year && dueDate.getMonth() + 1 !== parseInt(month.split('-')[1]) || dueDate.getFullYear() !== parseInt(year)) {
+        showError(elements.errors.dueDate, 'Due date must match selected month and year.');
+        errors.push('Due date mismatch');
+    }
+    return errors;
+}
+
+function validateInputs() {
+    const errors = [];
+    const type = sanitizeInput(elements.type.value);
+    const amountInput = sanitizeNumericInput(elements.amount.value);
+    const amount = parseFloat(amountInput);
+    const year = sanitizeInput(elements.year.value);
+    const month = sanitizeInput(elements.month.value);
+    const loanType = sanitizeInput(elements.loanType.value);
+    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
+
+    clearErrors();
+
+    if (!type) {
+        showError(elements.errors.type, 'Please select a type.');
+        errors.push('Invalid type');
+    }
+
+    if (!isValidNumber(amount) || amount <= 0) {
+        showError(elements.errors.amount, 'Amount must be a positive number in KES.');
+        errors.push('Invalid amount');
+    } else if (type === 'existing_loan' || type === 'apply_loan') {
+        const amountError = validateLoanAmount(amount, loanType);
+        if (amountError) {
+            showError(elements.errors.amount, amountError);
+            errors.push(amountError);
+        }
+    }
+
+    if (type === 'contribution') {
+        if (!year) {
+            showError(elements.errors.year, 'Please select a year.');
+            errors.push('Invalid year');
+        }
+        if (!month) {
+            showError(elements.errors.month, 'Please select a month.');
+            errors.push('Invalid month');
+        }
+        const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+        const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+        errors.push(...validateDateFields(dueDate, checkDate, month, year));
+    }
+
+    if (type === 'existing_loan') {
+        if (!loanType) {
+            showError(elements.errors.loanType, 'Please select a loan type.');
+            errors.push('Invalid loan type');
+        }
+        const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+        const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+        errors.push(...validateDateFields(dueDate, checkDate));
+    }
+
+    if (type === 'apply_loan') {
+        if (!loanType) {
+            showError(elements.errors.loanType, 'Please select a loan type.');
+            errors.push('Invalid loan type');
+        }
+        if (!repaymentPeriod) {
+            showError(elements.errors.repaymentPeriod, 'Please select a repayment period.');
+            errors.push('Invalid repayment period');
+        }
+    }
+
+    return errors.length === 0 ? null : errors.join(', ');
+}
+
+function calculateContributionPenalty(amount, daysDelayed) {
+    if (daysDelayed < CONFIG.PENALTY_START_DAY) return 0;
+    if (daysDelayed <= 7) return amount * CONFIG.CONTRIBUTION_PENALTY;
+    return (amount * CONFIG.CONTRIBUTION_PENALTY) + (amount * CONFIG.CONTRIBUTION_DAILY_PENALTY * (daysDelayed - 7));
+}
+
+function calculateLoanOwed(amount, daysDelayed, loanType) {
+    const { interest: interestRate } = getLoanConfig(loanType);
+    const interest = amount * interestRate;
+    let totalOwed = amount + interest;
+    let penalty = 0;
+    let rollOverInterest = 0;
+
+    if (daysDelayed > 7) {
+        const rolledAmount = amount + interest;
+        rollOverInterest = rolledAmount * CONFIG.ROLLOVER_INTEREST;
+        penalty = rolledAmount * CONFIG.LOAN_DAILY_PENALTY * (daysDelayed - 7);
+        totalOwed = amount + interest + rollOverInterest + penalty;
+    }
+    return { totalOwed, interest, penalty, rollOverInterest };
+}
+
+function getLoanConfig(loanType) {
+    const configs = {
+        short: { interest: CONFIG.LOAN_SHORT_INTEREST, min: CONFIG.LOAN_SHORT_MINIMUM },
+        medium: { interest: CONFIG.LOAN_MEDIUM_INTEREST, min: CONFIG.LOAN_MEDIUM_MINIMUM },
+        long: { interest: CONFIG.LOAN_LONG_INTEREST, min: CONFIG.LOAN_LONG_MINIMUM }
+    };
+    return configs[loanType] || configs.short;
+}
+
+function calculateApplyLoan(amount, loanType, repaymentPeriod) {
+    const { interest: interestRate } = getLoanConfig(loanType);
+    const interest = amount * interestRate;
+    const totalOwed = amount + interest;
+    const monthlyPayment = totalOwed / repaymentPeriod;
+    const monthlyInterest = interest / repaymentPeriod;
+    const monthlyPrincipal = amount / repaymentPeriod;
+    let balance = totalOwed;
+    let schedule = [];
+    for (let i = 1; i <= repaymentPeriod; i++) {
+        balance -= monthlyPayment;
+        if (balance < 0) balance = 0;
+        schedule.push({
+            month: i,
+            payment: monthlyPayment.toFixed(2),
+            interest: monthlyInterest.toFixed(2),
+            principal: monthlyPrincipal.toFixed(2),
+            balance: balance.toFixed(2)
+        });
+    }
+    return { totalOwed, interest, amortization: schedule, termMonths: repaymentPeriod };
+}
+
+function generateTableRow(label, value, isBold = false) {
+    const boldStyle = isBold ? 'font-weight: bold;' : '';
+    return `<tr><td style="padding: 0.4rem; border: 1px solid #1a73e8; ${boldStyle}">${label}</td><td style="${boldStyle}">${value}</td></tr>`;
+}
+
+function generateAmortizationTable(amortization) {
+    if (!amortization.length) return '';
+    let html = `
+        <tr><td colspan="2" style="padding: 0.4rem; border: 1px solid #1a73e8; font-weight: bold;">Amortization Schedule</td></tr>
+        <tr><td colspan="2">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th>Month</th><th>Payment (KES)</th><th>Interest (KES)</th><th>Principal (KES)</th><th>Balance (KES)</th>
+                </tr>`;
+    amortization.forEach(row => {
+        html += `
+            <tr>
+                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.month}</td>
+                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.payment}</td>
+                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.interest}</td>
+                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.principal}</td>
+                <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${row.balance}</td>
+            </tr>`;
+    });
+    html += '</table></td></tr>';
+    return html;
+}
+
+function saveCalculation(data) {
+    try {
+        const history = JSON.parse(localStorage.getItem('calculations') || '[]');
+        history.push({ ...data, timestamp: new Date().toISOString() });
+        localStorage.setItem('calculations', JSON.stringify(history));
+    } catch (error) {
+        logError('Failed to save calculation', error);
+    }
+}
+
+async function submitContribution(amount, month) {
+    try {
+        const response = await fetchWithRetry(`${CONFIG.API_BASE_URL}/add-contribution`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': CONFIG.API_KEY
+            },
+            body: JSON.stringify({
+                month: month,
+                data: {
+                    member_name: "Anonymous",
+                    amount: amount,
+                    last_contribution_date: new Date().toISOString().split('T')[0],
+                    shares: 0,
+                    contributions: { [month]: amount }
+                }
+            })
+        });
+        if (response.success && response.message.includes('Contribution added')) {
+            showSuccessMessage(`Contribution of KES ${amount.toFixed(2)} added successfully.`);
+            dataCache = null;
+            localStorage.removeItem('financialData');
+            forceRefresh = true;
+            if (currentMainPage === 3) updateFinancialData();
+        } else {
+            throw new Error('Unexpected response from server');
+        }
+    } catch (error) {
+        logError('Failed to submit contribution', error);
+        elements.result.innerHTML = `<span style="color: #e74c3c;">Error submitting contribution: ${error.message}. Please try again.</span>`;
+    }
+}
+
+function populateYears() {
+    const yearSelect = elements.year;
+    yearSelect.innerHTML = '';
+    const currentYear = new Date().getFullYear();
+    for (let year = 2024; year <= currentYear + 1; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.text = year;
+        yearSelect.appendChild(option);
+    }
+    yearSelect.value = currentYear;
+    populateMonths();
+}
+
+function populateMonths() {
+    const year = parseInt(elements.year.value);
+    const monthSelect = elements.month;
+    monthSelect.innerHTML = '';
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const startMonth = year === 2024 ? 0 : 0;
+    const maxMonth = year === currentYear ? currentMonth + 1 : 11;
+    const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    for (let month = startMonth; month <= maxMonth; month++) {
+        const monthName = monthAbbr[month];
+        const optionValue = `${year}-${(month + 1).toString().padStart(2, '0')}`;
+        const option = document.createElement('option');
+        option.value = optionValue;
+        option.text = `${monthName} ${year}`;
+        monthSelect.appendChild(option);
+    }
+
+    if (monthSelect.children.length === 0) {
+        const option = document.createElement('option');
+        option.value = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}`;
+        option.text = `${monthAbbr[currentMonth]} ${currentYear}`;
+        monthSelect.appendChild(option);
+    }
+    updateDueDate();
+}
+
+function updateFinancialData() {
+    showSpinner(elements.spinners.balanceSheet);
+    showSpinner(elements.spinners.members);
+    localStorage.removeItem('financialData'); // Clear cache to force fresh fetch
+    forceRefresh = true; // Force fresh fetch
+    fetchDataIfStale(true).then(() => {
+        const data = dataCache || loadDataFromStorage();
+        console.log('Financial data fetched for Page 2:', data);
+        if (!data || !data.monthly_reports || Object.keys(data.monthly_reports).length === 0) {
+            console.warn('No data available in cache or storage');
+            if (currentMainPage === 2) {
+                document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">No financial data available. Please check admin updates or server connection.</td></tr>`;
+            }
+            if (currentMainPage === 3) {
+                document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">No member data available. Please check admin updates or server connection.</td></tr>`;
+            }
+            hideSpinner(elements.spinners.balanceSheet);
+            hideSpinner(elements.spinners.members);
+            return;
+        }
+
+        currentMembers = data.member_contributions || [];
+        if (currentMainPage === 3) {
+            displayMembers(currentMembers);
+        }
+
+        const period = document.getElementById('reportPeriod').value;
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const availableMonths = Object.keys(data.monthly_reports).filter(m => {
+            const [year, month] = m.split('-').map(Number);
+            return year <= currentYear && (year < currentYear || month <= currentMonth);
+        }).sort();
+
+        const { periodValue, data: monthlyData } = getPeriodData(data, period, availableMonths);
+
+        if (currentMainPage === 2) {
+            const balanceSheetBody = document.getElementById('balanceSheetBody');
+            const periodDisplay = periodValue ? ` - ${periodValue}` : '';
+            balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff; font-weight: bold;">
+                    <td colspan="2" style="text-align: center; padding: 0.5rem;">Balance Sheet${periodDisplay}</td>
+                </tr>
+                <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Members Contributions (KCB)</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Repayments (KCB)</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Repayments (Lofty)</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Loans (KCB)</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Deposits (Lofty)</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income (KCB)</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Income (Lofty)</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Disbursements (KCB)</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Loan Disbursements (Lofty)</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges (KCB)</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Bank Charges (Lofty)</td><td>KES ${(monthlyData.bank_charges_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized (KCB)</td><td>KES ${(monthlyData.petty_cash_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Petty Cash Utilized (Lofty)</td><td>KES ${(monthlyData.petty_cash_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation (KCB)</td><td>KES ${(monthlyData.agm_facilitation_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>AGM Facilitation (Lofty)</td><td>KES ${(monthlyData.agm_facilitation_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized (KCB)</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
+                <tr><td>Welfare Kitty Utilized (Lofty)</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
+                <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
+                <tr><td>Total Balance</td><td>KES ${(monthlyData.total_balance || 0).toFixed(2)}</td></tr>
+            ` : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
+        }
+
+        hideSpinner(elements.spinners.balanceSheet);
+        hideSpinner(elements.spinners.members);
+    }).catch(error => {
+        logError('Error loading financial data', error);
+        const errorMessage = `Failed to load data: ${error.message}. Please try again or contact support.`;
+        if (currentMainPage === 2) {
+            document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">${errorMessage}</td></tr>`;
+        }
+        if (currentMainPage === 3) {
+            document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">${errorMessage}</td></tr>`;
+        }
+        hideSpinner(elements.spinners.balanceSheet);
+        hideSpinner(elements.spinners.members);
+    });
+}
+
+function updateBehaviorReport() {
+    showSpinner(elements.spinners.behavior);
+    fetchDataIfStale(true).then(() => {
+        const data = dataCache || loadDataFromStorage();
+        if (!data || !data.monthly_reports) {
+            console.log('No monthly_reports data available:', data);
+            document.getElementById('behaviorReportBody').innerHTML = '<tr><td colspan="2">No report data available.</td></tr>';
+            hideSpinner(elements.spinners.behavior);
+            return;
+        }
+
+        const period = document.getElementById('behaviorPeriod').value;
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const availableMonths = Object.keys(data.monthly_reports).filter(m => {
+            const [year, month] = m.split('-').map(Number);
+            return year <= currentYear && (year < currentYear || month <= currentMonth);
+        }).sort();
+
+        const { periodValue, data: reportData } = getPeriodData(data, period, availableMonths);
+
+        const behaviorReportBody = document.getElementById('behaviorReportBody');
+        const totalAssets = (reportData.total_balance || 0) + (reportData.total_loan_disbursements_kcb || 0) + (reportData.total_loan_disbursements_lofty || 0);
+        const periodDisplay = periodValue ? ` - ${periodValue}` : '';
+
+        // Calculate performance metrics
+        const netIncome = (reportData.total_inflows || 0) - (reportData.total_outflows || 0);
+        const contributionRatio = reportData.total_inflows ? ((reportData.total_member_contributions_kcb || 0) / reportData.total_inflows * 100) : 0;
+        const loanToContributionRatio = reportData.total_member_contributions_kcb ? ((reportData.total_loan_disbursements_kcb || 0) / reportData.total_member_contributions_kcb) : 0;
+
+        behaviorReportBody.innerHTML = reportData && Object.keys(reportData).length > 0 ? `
+            <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff; font-weight: bold;">
+                <td colspan="2" style="text-align: center; padding: 0.5rem;">Company Behavior Report${periodDisplay}</td>
+            </tr>
+            <tr><td>Total Inflows</td><td>KES ${(reportData.total_inflows || 0).toFixed(2)}</td></tr>
+            <tr><td>Total Outflows</td><td>KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
+            <tr><td>Net Income</td><td>KES ${netIncome.toFixed(2)}</td></tr>
+            <tr><td>Total Balance</td><td>KES ${(reportData.total_balance || 0).toFixed(2)}</td></tr>
+            <tr><td>Members Contributions (KCB)</td><td>KES ${(reportData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
+            <tr><td>Loan Disbursements (KCB)</td><td>KES ${(reportData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
+            <tr><td>Loan Disbursements (Lofty)</td><td>KES ${(reportData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
+            <tr><td>Contribution Ratio</td><td>${contributionRatio.toFixed(1)}%</td></tr>
+            <tr><td>Loan-to-Contribution Ratio</td><td>${loanToContributionRatio.toFixed(2)}:1</td></tr>
+            <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff; font-weight: bold;"><td>Total Assets</td><td>KES ${totalAssets.toFixed(2)}</td></tr>
+        ` : '<tr><td colspan="2">No report data available for the selected period.</td></tr>';
+        hideSpinner(elements.spinners.behavior);
+    }).catch(error => {
+        logError('Error loading behavior report', error);
+        document.getElementById('behaviorReportBody').innerHTML = `<tr><td colspan="2">Failed to load report: ${error.message}. Please try again or contact support.</td></tr>`;
+        hideSpinner(elements.spinners.behavior);
+    });
+}
+
+function toggleRepaymentFields() {
+    const type = sanitizeInput(elements.type.value);
+    const loanType = sanitizeInput(elements.loanType.value);
+    elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
+    elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
+    elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
+    if (type === 'apply_loan' && loanType) {
+        let options = [];
+        if (loanType === 'short') {
+            options = [1];
+        } else if (loanType === 'medium') {
+            options = [2, 3];
+        } else if (loanType === 'long') {
+            options = [4, 5, 6, 7, 8, 9, 10, 11, 12];
+        }
+        options.forEach(months => {
+            const option = document.createElement('option');
+            option.value = months;
+            option.text = months;
+            elements.repaymentPeriod.appendChild(option);
+        });
+    }
+    updateButtonState();
+}
+
+function toggleFields() {
+    const type = sanitizeInput(elements.type.value);
+    elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
+    elements.contributionFields.classList.toggle('show', type === 'contribution');
+    elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
+    elements.loanFields.classList.toggle('show', type === 'existing_loan' || type === 'apply_loan');
+    elements.dateFields.style.display = (type === 'contribution' || type === 'existing_loan') ? 'block' : 'none';
+    elements.dateFields.classList.toggle('show', type === 'contribution' || type === 'existing_loan');
+    elements.dueDate.disabled = type === 'contribution';
+    if (type === 'contribution') {
+        populateYears();
+    } else {
+        elements.dueDate.value = '';
+        elements.checkDate.value = '';
+    }
+    toggleRepaymentFields();
+    updateButtonState();
+}
+
+function updateDueDate() {
+    const type = sanitizeInput(elements.type.value);
+    if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
+        const selectedMonth = elements.month.value.split('-');
+        const year = parseInt(selectedMonth[0]);
+        const month = parseInt(selectedMonth[1]) - 1;
+        let dueDate = new Date(Date.UTC(year, month + 1, 1, 12, 0, 0));
+        dueDate.setUTCDate(10);
+        elements.dueDate.value = isNaN(dueDate.getTime()) ? new Date().toISOString().split('T')[0] : new Date(dueDate).toISOString().split('T')[0];
+    }
+    updateButtonState();
+}
+
+function updateButtonState() {
+    const type = sanitizeInput(elements.type.value);
+    const amount = elements.amount.value;
+    const year = sanitizeInput(elements.year.value);
+    const month = sanitizeInput(elements.month.value);
+    const dueDate = elements.dueDate.value;
+    const checkDate = elements.checkDate.value;
+    const loanType = sanitizeInput(elements.loanType.value);
+    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
+
+    const isAmountValid = amount && parseFloat(amount) > 0;
+    let isValid = false;
+
+    if (type === 'contribution') {
+        isValid = isAmountValid && year && month && dueDate && checkDate;
+    } else if (type === 'existing_loan') {
+        isValid = isAmountValid && loanType && dueDate && checkDate;
+    } else if (type === 'apply_loan') {
+        isValid = isAmountValid && loanType && repaymentPeriod;
+    }
+
+    elements.calcButton.disabled = isCalculating || !isValid;
+}
+
+function refreshForm() {
+    elements.type.value = 'contribution';
+    elements.amount.value = '';
+    elements.year.value = '';
+    elements.month.value = '';
+    elements.dueDate.value = '';
+    elements.checkDate.value = '';
+    elements.loanType.value = 'short';
+    elements.repaymentPeriod.value = '';
+
+    Object.values(elements.errors).forEach(error => {
+        error.textContent = '';
+        error.style.display = 'none';
+    });
+
+    elements.result.innerHTML = '';
+    elements.modalResult.innerHTML = '';
+    elements.successMessage.style.display = 'none';
+    elements.resultModal.style.display = 'none';
+    lastResult = null;
+    lastResultText = '';
+
+    toggleFields();
+    populateYears();
+    updateButtonState();
+}
+
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let yOffset = 10;
+    const margin = 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('i-8 SMART BOT Financial Report', 105, yOffset, { align: 'center' });
+    yOffset += 10;
+
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${today}`, 200, yOffset, { align: 'right' });
+    yOffset += 10;
+
+    let content = `This document provides a detailed summary of your financial calculation from i-8 SMART BOT as of ${today}.`;
+    let lines = doc.splitTextToSize(content, 190);
+    doc.text(lines, margin, yOffset);
+    yOffset += lines.length * 6 + 10;
+
+    if (lastResult.type === 'contribution') {
+        const penalty = lastResult.penalty;
+        const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        const monthParts = lastResult.month.split('-');
+        const monthName = new Date(monthParts[0], monthParts[1] - 1).toLocaleString('en-GB', { month: 'long' });
+        content = `Deposit of KES ${lastResult.amount.toFixed(2)} for ${monthName} ${monthParts[0]} was due on ${dueDate}. `;
+        content += `A delay of ${lastResult.daysDelayed} days was recorded.\n\n`;
+        content += `Penalty Details:\n`;
+        content += penalty > 0
+            ? `- Flat penalty of 30% (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_PENALTY).toFixed(2)}) applies for delays up to 7 days.\n`
+            + `- Additional 1% per day (KES ${(lastResult.amount * CONFIG.CONTRIBUTION_DAILY_PENALTY).toFixed(2)}/day) for delays beyond 7 days.\n`
+            + `- Total Penalty: KES ${penalty.toFixed(2)}.\n`
+            : `- No penalty applied (delay less than ${CONFIG.PENALTY_START_DAY} day).\n`;
+        content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
+        lines = doc.splitTextToSize(content, 190);
+        doc.setFontSize(9);
+        doc.text(lines, margin, yOffset);
+        yOffset += lines.length * 6 + 10;
+    } else if (lastResult.type === 'existing_loan') {
+        const dueDate = new Date(lastResult.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        let loanType, interestRate;
+        if (lastResult.loanType === 'short') {
+            loanType = 'Short Term (30 Days)';
+            interestRate = '5%';
+        } else if (lastResult.loanType === 'medium') {
+            loanType = 'Medium Term (90 Days)';
+            interestRate = '10%';
+        } else {
+            loanType = 'Long Term (365 Days)';
+            interestRate = '15%';
+        }
+        content = `Your ${loanType} existing loan of KES ${lastResult.amount.toFixed(2)} was due on ${dueDate}, with a delay of ${lastResult.daysDelayed} days.\n\n`;
+        content += `Loan Details:\n`;
+        content += `- Initial Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+        if (lastResult.daysDelayed > 7) {
+            content += `- Roll-over Interest: KES ${lastResult.rollOverInterest.toFixed(2)} (5% of principal plus initial interest).\n`;
+            content += `- Penalty: KES ${lastResult.penalty.toFixed(2)} (0.5% per day after 7 days).\n`;
+        } else {
+            content += `- No roll-over interest or penalty applied (delay ≤ 7 days).\n`;
+        }
+        content += `\nTotal Amount Owed: KES ${lastResult.totalOwed.toFixed(2)}.`;
+        lines = doc.splitTextToSize(content, 190);
+        doc.setFontSize(9);
+        doc.text(lines, margin, yOffset);
+        yOffset += lines.length * 6 + 10;
+    } else if (lastResult.type === 'apply_loan') {
+        let loanType, interestRate;
+        if (lastResult.loanType === 'short') {
+            loanType = 'Short Term (30 Days)';
+            interestRate = '5%';
+        } else if (lastResult.loanType === 'medium') {
+            loanType = 'Medium Term (90 Days)';
+            interestRate = '10%';
+        } else {
+            loanType = 'Long Term (365 Days)';
+            interestRate = '15%';
+        }
+        content = `Your ${loanType} loan of KES ${lastResult.amount.toFixed(2)} over ${lastResult.repaymentPeriod} months.\n\n`;
+        content += `Loan Details:\n`;
+        content += `- Interest: KES ${lastResult.interest.toFixed(2)} (${interestRate} rate).\n`;
+        content += `- Total Amount to Pay: KES ${lastResult.totalOwed.toFixed(2)}.`;
+        lines = doc.splitTextToSize(content, 190);
+        doc.setFontSize(9);
+        doc.text(lines, margin, yOffset);
+        yOffset += lines.length * 6 + 10;
+
+        if (lastResult.amortization && lastResult.amortization.length > 0) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.text('Amortization Schedule:', margin, yOffset);
+            yOffset += 10;
+
+            const headers = ['Month', 'Payment (KES)', 'Interest (KES)', 'Principal (KES)', 'Balance (KES)'];
+            const tableData = lastResult.amortization.map(row => [
+                row.month.toString(),
+                row.payment,
+                row.interest,
+                row.principal,
+                row.balance
+            ]);
+            doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: yOffset,
+                styles: { fontSize: 10, cellPadding: 2 },
+                headStyles: { fillColor: [26, 115, 232], textColor: [255, 255, 255] },
+                alternateRowStyles: { fillColor: [245, 247, 250] }
+            });
+            yOffset = doc.lastAutoTable.finalY + 10;
+        }
+    }
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    content = `Kindly update your account to help i-8 Ltd grow and serve you better.`;
+    lines = doc.splitTextToSize(content, 190);
+    doc.text(lines, margin, yOffset);
+    yOffset += lines.length * 6;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Regards,', margin, yOffset);
+    yOffset += 6;
+    doc.setFont('helvetica', 'italic');
+    doc.text('i-8 Ltd. (insightfuleightcoltd@gmail.com)', margin, yOffset);
+
+    return doc.output('blob');
+}
+
+async function shareResults() {
+    if (!lastResult) {
+        alert('No results available to share. Please calculate first.');
+        return;
+    }
+    try {
+        const pdfBlob = await generatePDF();
+        const pdfFile = new File([pdfBlob], 'i8-smart-bot-result.pdf', { type: 'application/pdf' });
+        if (navigator.share) {
+            await navigator.share({
+                files: [pdfFile],
+                title: 'i-8 SMART BOT Calculation Results',
+                text: 'View your financial calculation results from i-8 SMART BOT.'
+            });
+        } else {
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'i8-smart-bot-result.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('PDF downloaded. You can now share it via WhatsApp or email.');
+        }
+    } catch (error) {
+        logError('Sharing failed', error);
+        const pdfBlob = await generatePDF();
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'i8-smart-bot-result.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('Sharing not supported. PDF downloaded for manual sharing.');
+    }
+}
+
+async function calculate() {
+    const validationError = validateInputs();
+    if (validationError) {
+        elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+        return;
+    }
+
+    isCalculating = true;
+    elements.calcButton.classList.add('loading');
+    elements.calcButton.disabled = true;
+    showProgress();
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const type = elements.type.value;
+        const amount = parseFloat(elements.amount.value);
+        let tableHTML = `
+            <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
+            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Field</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
+                </tr>
+        `;
+        let resultText = 'i-8 SMART BOT Calculation Results\n\n';
+
+        if (type === 'contribution') {
+            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+            const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+            const penalty = calculateContributionPenalty(amount, daysDelayed);
+            const totalOwed = amount + penalty;
+
+            tableHTML += generateTableRow('Days Delayed', daysDelayed);
+            tableHTML += generateTableRow('Penalty (KES)', penalty.toFixed(2));
+            tableHTML += generateTableRow('Total Amount Owed (KES)', totalOwed.toFixed(2), true);
+            tableHTML += '</table>';
+
+            lastResult = { type, amount, totalOwed, daysDelayed, penalty, dueDate: elements.dueDate.value, month: elements.month.value };
+            resultText += `Type: Deposit\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nPenalty: ${penalty.toFixed(2)} KES\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
+            await submitContribution(amount, elements.month.value);
+            saveCalculation(lastResult);
+        } else if (type === 'existing_loan') {
+            const dueDate = new Date(elements.dueDate.value + 'T00:00:00');
+            const checkDate = new Date(elements.checkDate.value + 'T00:00:00');
+            const daysDelayed = Math.max(0, Math.floor((checkDate - dueDate) / (24 * 60 * 60 * 1000)));
+            const { totalOwed, interest, penalty, rollOverInterest } = calculateLoanOwed(amount, daysDelayed, elements.loanType.value);
+
+            tableHTML += generateTableRow('Days Delayed', daysDelayed);
+            tableHTML += generateTableRow('Initial Interest (KES)', interest.toFixed(2));
+            if (daysDelayed > 7) {
+                tableHTML += generateTableRow('Roll-over Interest (KES)', rollOverInterest.toFixed(2));
+                tableHTML += generateTableRow('Penalty (KES)', penalty.toFixed(2));
+            }
+            tableHTML += generateTableRow('Total Amount Owed (KES)', totalOwed.toFixed(2), true);
+            tableHTML += '</table>';
+
+            lastResult = { type, amount, totalOwed, daysDelayed, interest, penalty, rollOverInterest, dueDate: elements.dueDate.value, loanType: elements.loanType.value };
+            resultText += `Type: Existing Loan\nAmount: ${amount.toFixed(2)} KES\nDays Delayed: ${daysDelayed}\nInitial Interest: ${interest.toFixed(2)} KES`;
+            if (daysDelayed > 7) {
+                resultText += `\nRoll-over Interest: ${rollOverInterest.toFixed(2)} KES\nPenalty: ${penalty.toFixed(2)} KES`;
+            }
+            resultText += `\nTotal Amount Owed: ${totalOwed.toFixed(2)} KES`;
+            saveCalculation(lastResult);
+        } else if (type === 'apply_loan') {
+            const repaymentPeriod = parseInt(elements.repaymentPeriod.value);
+            const loanType = elements.loanType.value;
+            const { totalOwed, interest, amortization, termMonths } = calculateApplyLoan(amount, loanType, repaymentPeriod);
+
+            tableHTML += generateTableRow('Interest (KES)', interest.toFixed(2));
+            tableHTML += generateTableRow('Total Amount to Pay (KES)', totalOwed.toFixed(2), true);
+            tableHTML += generateAmortizationTable(amortization);
+            tableHTML += '</table>';
+
+            resultText += `Type: New Loans\nLoan Type: ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term\nAmount: ${amount.toFixed(2)} KES\nInterest: ${interest.toFixed(2)} KES\nTotal Amount to Pay: ${totalOwed.toFixed(2)} KES\nRepayment Period: ${repaymentPeriod} months\n\nAmortization Schedule:\n`;
+            amortization.forEach(row => {
+                resultText += `Month ${row.month}: Payment ${row.payment} KES, Interest ${row.interest} KES, Principal ${row.principal} KES, Balance ${row.balance} KES\n`;
+            });
+
+            lastResult = { type, amount, totalOwed, interest, amortization, termMonths, repaymentPeriod, loanType };
+            saveCalculation(lastResult);
+        }
+        lastResultText = resultText;
+
+        if (window.innerHeight < 600) {
+            elements.modalResult.innerHTML = tableHTML;
+            elements.resultModal.style.display = 'flex';
+        } else {
+            elements.result.innerHTML = tableHTML;
+            elements.resultModal.style.display = 'none';
+        }
+
+    } catch (error) {
+        logError('Calculation failed', error);
+        elements.result.innerHTML = `<span style="color: #e74c3c;">An error occurred during calculation: ${error.message}. Please try again.</span>`;
+    } finally {
+        resetButton();
+        hideProgress();
+    }
+}
+
+function resetButton() {
+    isCalculating = false;
+    elements.calcButton.classList.remove('loading');
+    updateButtonState();
+}
+
+function closeResultModal() {
+    elements.resultModal.style.display = 'none';
+    elements.result.innerHTML = '';
+}
+
+function changeMainPage(direction) {
+    currentMainPage += direction;
+    if (currentMainPage < 1) currentMainPage = 1;
+    if (currentMainPage > 5) currentMainPage = 5;
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
+    }
+    document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
+    document.getElementById('prevMainPage').disabled = currentMainPage === 1;
+    document.getElementById('nextMainPage').disabled = currentMainPage === 5;
+    if (currentMainPage === 2) updateFinancialData();
+    if (currentMainPage === 3) updateFinancialData();
+    if (currentMainPage === 4) updateBehaviorReport();
+    if (currentMainPage === 5) runPerformanceAnalysis();
+    document.getElementById(`page${i}`).focus();
+}
+
+const MEMBER_CONFIG = {
+    defaultShares: 125,
+    loanLimitMultiplier: 0.9,
+    members: [
+        'Enoch Kamau Thumbi',
+        'John Waweru Njeri',
+        'Geoffrey Mugi Gicini',
+        'John Gatheru Iragu',
+        'James Njoroge Kamau',
+        'Joseph Wachira Waithaka',
+        'Paul Masharia Muchiri',
+        'Hempstone Mwangi Isaac',
+        'Isaac Thuku Maina',
+        'Nephat Njeru Muthee'
+    ],
+    memberShares: {
+        'Enoch Kamau Thumbi': 125,
+        'John Waweru Njeri': 125,
+        'Geoffrey Mugi Gicini': 125,
+        'John Gatheru Iragu': 125,
+        'James Njoroge Kamau': 125,
+        'Joseph Wachira Waithaka': 125,
+        'Paul Masharia Muchiri': 125,
+        'Hempstone Mwangi Isaac': 125,
+        'Isaac Thuku Maina': 0,
+        'Nephat Njeru Muthee': 0
+    }
+};
+
+function createMemberData(name, apiMember) {
+    const amount = apiMember ? apiMember.amount || 0 : 0;
+    const assignedShares = MEMBER_CONFIG.memberShares[name] || 0;
+    return {
+        member_name: name,
+        amount: amount,
+        shares: assignedShares, // Use pre-assigned shares from config
+        last_contribution_date: apiMember ? apiMember.last_contribution_date : null,
+        contributions: apiMember ? apiMember.contributions || {} : {},
+        loan_limit: amount * MEMBER_CONFIG.loanLimitMultiplier,
+        status: amount > 0 ? 'Active Contributor' : 'Active Member'
+    };
+}
+
+function generateMemberRow(member) {
+    const contributionMonths = member.contributions ?
+        Object.keys(member.contributions).sort().join(', ') : 'None';
+    return `
+        <tr>
+            <td>${sanitizeInput(member.member_name || 'Unknown')}</td>
+            <td>KES ${(member.amount || 0).toFixed(2)}</td>
+            <td>${member.shares || 0}</td>
+            <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
+            <td>${sanitizeInput(contributionMonths)}</td>
+            <td>KES ${(member.loan_limit || 0).toFixed(2)}</td>
+        </tr>
+    `;
+}
+
+function displayMembers(members) {
+    const memberTableBody = document.getElementById('memberTableBody');
+    if (!members || members.length === 0) {
+        memberTableBody.innerHTML = '<tr><td colspan="6">No member data available.</td></tr>';
+        return;
+    }
+    memberTableBody.innerHTML = members.map(member => generateMemberRow(member)).join('');
+}
+
+function runPerformanceAnalysis() {
+    const analysisResults = document.getElementById('analysisResults');
+    showSpinner(document.getElementById('analysisSpinner'));
+
+    fetchDataIfStale(true).then(() => {
+        const data = dataCache || loadDataFromStorage();
+        if (!data || !data.monthly_reports) {
+            analysisResults.innerHTML = '<p>No data available for analysis.</p>';
+            hideSpinner(document.getElementById('analysisSpinner'));
+            return;
+        }
+
+        const availableMonths = Object.keys(data.monthly_reports).sort();
+        const currentData = data.monthly_reports[availableMonths[availableMonths.length - 1]] || {};
+        const previousData = availableMonths.length > 1 ? data.monthly_reports[availableMonths[availableMonths.length - 2]] : null;
+
+        let balanceTrend = 'Stable';
+        let contributionTrend = 'Stable';
+        let riskAssessment = 'Low';
+        let recommendations = [];
+
+        if (previousData) {
+            const balanceChange = ((currentData.total_balance || 0) - (previousData.total_balance || 0)) / (previousData.total_balance || 1) * 100;
+            balanceTrend = balanceChange > 5 ? 'Positive' : balanceChange < -5 ? 'Negative' : 'Stable';
+            const contributionChange = ((currentData.total_member_contributions_kcb || 0) - (previousData.total_member_contributions_kcb || 0)) / (previousData.total_member_contributions_kcb || 1) * 100;
+            contributionTrend = contributionChange > 5 ? 'Positive' : contributionChange < -5 ? 'Negative' : 'Stable';
+
+            const loanToContributionRatio = (currentData.total_loan_disbursements_kcb || 0) / (currentData.total_member_contributions_kcb || 1);
+            riskAssessment = loanToContributionRatio > 2 ? 'High' : loanToContributionRatio > 1 ? 'Moderate' : 'Low';
+
+            if (balanceTrend === 'Negative') {
+                recommendations.push('⚠️ Balance is declining. Review expense management or increase contributions.');
+            }
+            if (contributionTrend === 'Negative') {
+                recommendations.push('⚠️ Contributions are decreasing. Engage members to boost participation.');
+            }
+            if (riskAssessment === 'High') {
+                recommendations.push('⚠️ High loan-to-contribution ratio. Consider tightening loan policies.');
+            }
+            if (recommendations.length === 0) {
+                recommendations.push('✅ Financials appear stable. Continue monitoring trends.');
+            }
+        }
+
+        analysisResults.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th style="padding: 0.4rem;">Metric</th>
+                    <th style="padding: 0.4rem;">Value</th>
+                </tr>
+                <tr><td>Balance Trend</td><td>${balanceTrend}</td></tr>
+                <tr><td>Contribution Trend</td><td>${contributionTrend}</td></tr>
+                <tr><td>Risk Assessment</td><td>${riskAssessment}</td></tr>
+                <tr><td>Recommendations</td><td>${recommendations.join('<br>')}</td></tr>
+            </table>
+        `;
+        hideSpinner(document.getElementById('analysisSpinner'));
+    }).catch(error => {
+        logError('Error running performance analysis', error);
+        analysisResults.innerHTML = `<p>Error analyzing data: ${error.message}</p>`;
+        hideSpinner(document.getElementById('analysisSpinner'));
+    });
+}
+
+function calculateGrowthRate(currentData, previousData) {
+    if (!currentData || !previousData) return 0.1; // Default growth rate if data is missing
+    const currentNetInflows = (currentData.total_inflows || 0) - (currentData.total_outflows || 0);
+    const previousNetInflows = (previousData.total_inflows || 0) - (previousData.total_outflows || 0);
+    if (previousNetInflows === 0) return 0.1; // Avoid division by zero
+    return (currentNetInflows - previousNetInflows) / Math.abs(previousNetInflows); // Percentage change
+}
+
+function performSimulation(currentData, months, newMembers) {
+    // Initialize starting values from currentData
+    let balance = currentData.total_balance || 0;
+    let contributions = currentData.total_member_contributions_kcb || 0;
+    let members = currentData.member_count || 10; // Fallback to 10 if member_count is unavailable
+    const initialBalance = balance;
+    const initialContributions = contributions;
+
+    // Get available months and fetch current and previous month data
+    const availableMonths = dataCache && dataCache.monthly_reports ? Object.keys(dataCache.monthly_reports).sort() : [];
+    const currentMonthData = currentData;
+    const previousMonthData = availableMonths.length > 1 ? dataCache.monthly_reports[availableMonths[availableMonths.length - 2]] : null;
+
+    // Calculate growth rate based on net inflows (inflows - outflows)
+    const growthRate = calculateGrowthRate(currentMonthData, previousMonthData);
+
+    // Calculate average monthly inflows and outflows from current data
+    const monthlyInflows = currentData.total_inflows || contributions;
+    const monthlyOutflows = currentData.total_outflows || (balance * 0.02); // Fallback to 2% of balance
+    const avgContributionPerMember = contributions / members;
+
+    // Track total new members added
+    let totalNewMembersAdded = 0;
+
+    for (let i = 0; i < months; i++) {
+        // Add new members quarterly
+        if (i % 3 === 0) {
+            const newMembersThisQuarter = Math.floor(newMembers / (months / 3)) || 0;
+            members += newMembersThisQuarter;
+            totalNewMembersAdded += newMembersThisQuarter;
+            // Add contributions from new members
+            contributions += newMembersThisQuarter * avgContributionPerMember;
+        }
+
+        // Apply growth rate to inflows (contributions, loan repayments, etc.)
+        const inflowGrowth = monthlyInflows * growthRate; // Linear growth
+        const adjustedInflows = monthlyInflows + inflowGrowth;
+
+        // Update contributions with growth (linear)
+        contributions += (contributions * growthRate) + (members * avgContributionPerMember * 0.1);
+
+        // Update balance: add inflows, subtract outflows
+        balance += adjustedInflows;
+        balance -= monthlyOutflows;
+        balance = Math.max(balance, 0); // Prevent negative balance
+    }
+
+    // Calculate metrics
+    const balanceChange = initialBalance ? ((balance - initialBalance) / initialBalance * 100) : 0;
+    const contributionGrowth = initialContributions ? ((contributions - initialContributions) / initialContributions * 100) : 0;
+    const growthPotential = Math.min(balanceChange + contributionGrowth, 200); // Cap at 200%
+
+    // Generate recommendations
+    const recommendations = [];
+    if (growthRate > 0.15) {
+        recommendations.push('⚠️ High growth rate detected. Consider conservative projections.');
+    }
+    if (balanceChange > 30) {
+        recommendations.push('📈 Strong balance growth. Explore loan program expansion.');
+    } else if (balanceChange < 5) {
+        recommendations.push('⚠️ Low balance growth. Review expense management.');
+    }
+    if (totalNewMembersAdded > 5) {
+        recommendations.push('👥 Significant member growth expected. Ensure robust onboarding.');
+    }
+    if (recommendations.length === 0) {
+        recommendations.push('✅ Stable growth projected. Monitor inflows and outflows.');
+    }
+
+    return {
+        finalBalance: balance,
+        balanceChange,
+        totalContributions: contributions,
+        contributionGrowth,
+        totalMembers: members,
+        newMembersAdded: totalNewMembersAdded,
+        growthPotential,
+        recommendations,
+        calculatedGrowthRate: growthRate * 100 // Return as percentage for display
+    };
+}
+
+function runSimulation() {
+    const projectionMonths = parseInt(document.getElementById('projectionMonths').value);
+    const newMembers = parseInt(document.getElementById('newMembers').value);
+
+    if (!projectionMonths || projectionMonths < 1 || projectionMonths > 48) {
+        document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">Please enter a valid projection period (1-48 months).</p>';
+        return;
+    }
+    if (isNaN(newMembers) || newMembers < 0) {
+        document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">Please enter a valid number of new members (0 or more).</p>';
+        return;
+    }
+
+    showSpinner(document.getElementById('analysisSpinner'));
+    fetchDataIfStale(true).then(() => {
+        const data = dataCache || loadDataFromStorage();
+        if (!data || !data.monthly_reports) {
+            document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">No financial data available for simulation.</p>';
+            hideSpinner(document.getElementById('analysisSpinner'));
+            return;
+        }
+
+        const availableMonths = Object.keys(data.monthly_reports).sort();
+        const currentData = data.monthly_reports[availableMonths[availableMonths.length - 1]] || {};
+
+        const simulationResults = performSimulation(currentData, projectionMonths, newMembers);
+
+        document.getElementById('simulationResults').innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th style="padding: 0.4rem;">Metric</th>
+                    <th style="padding: 0.4rem;">Value</th>
+                </tr>
+                <tr><td>Calculated Growth Rate</td><td>${simulationResults.calculatedGrowthRate.toFixed(2)}%</td></tr>
+                <tr><td>Projected Balance</td><td>KES ${simulationResults.finalBalance.toFixed(2)}</td></tr>
+                <tr><td>Balance Change</td><td>${simulationResults.balanceChange.toFixed(2)}%</td></tr>
+                <tr><td>Projected Contributions</td><td>KES ${simulationResults.totalContributions.toFixed(2)}</td></tr>
+                <tr><td>Contribution Growth</td><td>${simulationResults.contributionGrowth.toFixed(2)}%</td></tr>
+                <tr><td>Total Members</td><td>${simulationResults.totalMembers}</td></tr>
+                <tr><td>New Members Added</td><td>${simulationResults.newMembersAdded}</td></tr>
+                <tr><td>Growth Potential</td><td>${simulationResults.growthPotential.toFixed(2)}%</td></tr>
+                <tr><td>Recommendations</td><td>${simulationResults.recommendations.join('<br>')}</td></tr>
+            </table>
+        `;
+        hideSpinner(document.getElementById('analysisSpinner'));
+    }).catch(error => {
+        logError('Error running simulation', error);
+        document.getElementById('simulationResults').innerHTML = `<p style="color: #e74c3c;">Error running simulation: ${error.message}</p>`;
+        hideSpinner(document.getElementById('analysisSpinner'));
+    });
+}
+
+// Initialize the app
+document.addEventListener('DOMContentLoaded', () => {
+    toggleFields();
+    populateYears();
+    updateButtonState();
+
+    // Initialize page visibility
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
+    }
+    document.getElementById('prevMainPage').disabled = true;
+    document.getElementById('nextMainPage').disabled = false;
+
+    // Fetch initial data
+    fetchDataIfStale(true).then(() => {
+        if (currentMainPage === 2 || currentMainPage === 3) {
+            updateFinancialData();
+        }
+        if (currentMainPage === 4) {
+            updateBehaviorReport();
+        }
+        if (currentMainPage === 5) {
+            runPerformanceAnalysis();
+        }
+    }).catch(error => {
+        logError('Initial data fetch failed', error);
+    });
+
+    // Service worker registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker registered:', reg))
+            .catch(error => logError('Service Worker registration failed', error));
+    }
+});
+
+// Input event listeners for real-time validation
+elements.amount.addEventListener('input', updateButtonState);
+elements.type.addEventListener('change', toggleFields);
+elements.year.addEventListener('change', populateMonths);
+elements.month.addEventListener('change', updateDueDate);
+elements.dueDate.addEventListener('change', updateButtonState);
+elements.checkDate.addEventListener('change', updateButtonState);
+elements.loanType.addEventListener('change', toggleRepaymentFields);
+elements.repaymentPeriod.addEventListener('change', updateButtonState);
+</script>
 </body>
 </html>
