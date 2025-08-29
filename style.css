@@ -335,32 +335,35 @@ input[type="date"] {
 }
 
 .simulation-button {
-    background: linear-gradient(135deg, #34c759, #4cd964);
+    background: linear-gradient(135deg, #1a73e8, #4285f4);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: clamp(0.5rem, 1.5vw, 0.7rem) clamp(1rem, 2.5vw, 1.2rem);
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
+    border-radius: 6px;
+    padding: clamp(0.4rem, 1.2vw, 0.6rem) clamp(0.8rem, 2vw, 1rem);
+    font-size: clamp(0.75rem, 1.8vw, 0.85rem);
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-    box-shadow: 0 3px 8px rgba(52, 199, 89, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    text-transform: none;
+    letter-spacing: 0.3px;
+    min-width: auto;
+    width: auto;
 }
 
 .simulation-button:hover {
-    background: linear-gradient(135deg, #4cd964, #34c759);
-    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
-    transform: scale(1.05);
+    background: linear-gradient(135deg, #4285f4, #1a73e8);
+    box-shadow: 0 3px 8px rgba(26, 115, 232, 0.4);
+    transform: translateY(-1px);
 }
 
 .simulation-button:active {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    transform: scale(0.95);
+    background: linear-gradient(135deg, #1565c0, #1a73e8);
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(26, 115, 232, 0.4);
 }
 
 .simulation-button:disabled {
@@ -368,6 +371,7 @@ input[type="date"] {
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+    opacity: 0.6;
 }
 
 .progress-bar {
