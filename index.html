@@ -301,9 +301,34 @@ let dataCache = null;
 let forceRefresh = false;
 
 function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
+    if (typeof input !== 'string') return '';
+    // Remove potentially harmful characters and trim whitespace
+    return input.replace(/[<>\"'&]/g, '').trim();
+}
+
+function sanitizeNumericInput(input) {
+    if (typeof input !== 'string') return '';
+    // Allow only numbers, decimal points, and negative signs
+    return input.replace(/[^0-9.-]/g, '');
+}
+
+function isValidNumber(value) {
+    const num = parseFloat(value);
+    return !isNaN(num) && isFinite(num);
+}
+
+function safeGetElementById(id) {
+    try {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Element with ID '${id}' not found`);
+            return null;
+        }
+        return element;
+    } catch (error) {
+        console.error(`Error getting element with ID '${id}':`, error);
+        return null;
+    }
 }
 
 function logError(message, error) {
@@ -1196,20 +1221,29 @@ async function shareResults() {
 async function calculate() {
     const validationError = validateInputs();
     if (validationError) {
-        elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+        if (elements.result) {
+            elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+        }
         return;
     }
 
     isCalculating = true;
-    elements.calcButton.classList.add('loading');
-    elements.calcButton.disabled = true;
+    if (elements.calcButton) {
+        elements.calcButton.classList.add('loading');
+        elements.calcButton.disabled = true;
+    }
     showProgress();
 
     try {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const type = elements.type.value;
-        const amount = parseFloat(elements.amount.value);
+        const type = sanitizeInput(elements.type.value);
+        const amountInput = sanitizeNumericInput(elements.amount.value);
+        const amount = parseFloat(amountInput);
+
+        if (!isValidNumber(amount) || amount <= 0) {
+            throw new Error('Invalid amount provided');
+        }
         let tableHTML = `
             <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
             <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
@@ -1592,7 +1626,7 @@ function runSimulation() {
                     <div class="projection-card">
                         <h5>Projected Members</h5>
                         <p class="projection-value">${simulation.totalMembers}</p>
-                        <p class="projection-new">+${newMembers} new members</p>
+                        <p class="projection-new">+${simulation.newMembersAdded} new members</p>
                     </div>
                 </div>
 
@@ -1667,6 +1701,7 @@ function performSimulation(currentData, months, growthRate, newMembers) {
         totalContributions: contributions,
         contributionGrowth,
         totalMembers: members,
+        newMembersAdded: newMembers,
         growthPotential,
         recommendations
     };
