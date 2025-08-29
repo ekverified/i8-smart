@@ -186,33 +186,33 @@
 
         <!-- Page 5: Company Analysis & Future Simulation -->
         <div class="main-page" id="page5" style="display: none;">
-            <div class="financial-section">
-                <h2>Company Analysis & Future Simulation</h2>
-                <div class="analysis-section">
-                    <h3>Performance Analysis</h3>
-                    <div id="performanceAnalysis">
-                        <div class="loading-spinner" id="analysisSpinner" style="display: none;">
-                            <i class="fas fa-spinner fa-spin"></i> Analyzing...
-                        </div>
-                        <div id="analysisResults"></div>
-                    </div>
+    <div class="financial-section">
+        <h2>Company Analysis & Future Simulation</h2>
+        <div class="analysis-section">
+            <h3>Performance Analysis</h3>
+            <div id="performanceAnalysis">
+                <div class="loading-spinner" id="analysisSpinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Analyzing...
                 </div>
-
-                <div class="simulation-section">
-                    <h3>Future Simulation</h3>
-                    <form id="simulationForm">
-                        <label for="projectionMonths">Projection Period (Months):</label>
-                        <input type="number" id="projectionMonths" min="1" max="48" value="12" aria-label="Number of months to project">
-
-                        <label for="newMembers">New Members Expected:</label>
-                        <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
-
-                        <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
-                    </form>
-                    <div id="simulationResults"></div>
-                </div>
+                <div id="analysisResults"></div>
             </div>
         </div>
+
+        <div class="simulation-section">
+            <h3>Future Simulation</h3>
+            <form id="simulationForm">
+                <label for="projectionMonths">Projection Period (Months):</label>
+                <input type="number" id="projectionMonths" min="1" max="48" value="12" aria-label="Number of months to project">
+
+                <label for="newMembers">New Members Expected:</label>
+                <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
+
+                <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
+            </form>
+            <div id="simulationResults"></div>
+        </div>
+    </div>
+</div>
 
         <div class="pagination-controls">
             <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
@@ -1478,33 +1478,34 @@ function runPerformanceAnalysis() {
 }
 
 function calculateGrowthRate(currentData, previousData) {
-    if (!currentData || !previousData) return 0.1; // Default growth rate if data is missing
+    if (!currentData || !previousData) return 0.1; // Default to 10% if data is missing
     const currentNetInflows = (currentData.total_inflows || 0) - (currentData.total_outflows || 0);
     const previousNetInflows = (previousData.total_inflows || 0) - (previousData.total_outflows || 0);
     if (previousNetInflows === 0) return 0.1; // Avoid division by zero
-    return (currentNetInflows - previousNetInflows) / Math.abs(previousNetInflows); // Percentage change
+    const growthRate = (currentNetInflows - previousNetInflows) / Math.abs(previousNetInflows);
+    return Math.min(Math.max(growthRate, -0.1), 0.3); // Cap between -10% and 30% for realism
 }
 
 function performSimulation(currentData, months, newMembers) {
-    // Initialize starting values from currentData
+    // Initialize starting values
     let balance = currentData.total_balance || 0;
     let contributions = currentData.total_member_contributions_kcb || 0;
-    let members = currentData.member_count || 10; // Fallback to 10 if member_count is unavailable
+    let members = currentData.member_count || 10; // Fallback to 10
     const initialBalance = balance;
     const initialContributions = contributions;
 
     // Get available months and fetch current and previous month data
-    const availableMonths = dataCache && dataCache.monthly_reports ? Object.keys(dataCache.monthly_reports).sort() : [];
+    const availableMonths = dataCache && dataCache.monthly_reports ? Object.keys(data.monthly_reports).sort() : [];
     const currentMonthData = currentData;
     const previousMonthData = availableMonths.length > 1 ? dataCache.monthly_reports[availableMonths[availableMonths.length - 2]] : null;
 
-    // Calculate growth rate based on net inflows (inflows - outflows)
+    // Calculate growth rate based on net inflows
     const growthRate = calculateGrowthRate(currentMonthData, previousMonthData);
 
-    // Calculate average monthly inflows and outflows from current data
-    const monthlyInflows = currentData.total_inflows || contributions;
+    // Calculate average monthly inflows and outflows
+    const monthlyInflows = currentData.total_inflows || contributions || 0;
     const monthlyOutflows = currentData.total_outflows || (balance * 0.02); // Fallback to 2% of balance
-    const avgContributionPerMember = contributions / members;
+    const avgContributionPerMember = contributions / (members || 1);
 
     // Track total new members added
     let totalNewMembersAdded = 0;
@@ -1519,12 +1520,12 @@ function performSimulation(currentData, months, newMembers) {
             contributions += newMembersThisQuarter * avgContributionPerMember;
         }
 
-        // Apply growth rate to inflows (contributions, loan repayments, etc.)
-        const inflowGrowth = monthlyInflows * growthRate; // Linear growth
+        // Apply growth rate to inflows (contributions, loan repayments, interest)
+        const inflowGrowth = monthlyInflows * growthRate;
         const adjustedInflows = monthlyInflows + inflowGrowth;
 
-        // Update contributions with growth (linear)
-        contributions += (contributions * growthRate) + (members * avgContributionPerMember * 0.1);
+        // Update contributions (linear growth + regular contributions)
+        contributions += (avgContributionPerMember * members) + (contributions * growthRate * 0.5); // Moderated growth
 
         // Update balance: add inflows, subtract outflows
         balance += adjustedInflows;
@@ -1540,15 +1541,15 @@ function performSimulation(currentData, months, newMembers) {
     // Generate recommendations
     const recommendations = [];
     if (growthRate > 0.15) {
-        recommendations.push('⚠️ High growth rate detected. Consider conservative projections.');
+        recommendations.push('⚠️ High growth rate detected. Validate with actual trends.');
     }
     if (balanceChange > 30) {
-        recommendations.push('📈 Strong balance growth. Explore loan program expansion.');
+        recommendations.push('📈 Strong balance growth. Consider expanding loan programs.');
     } else if (balanceChange < 5) {
-        recommendations.push('⚠️ Low balance growth. Review expense management.');
+        recommendations.push('⚠️ Low balance growth. Optimize expense management.');
     }
     if (totalNewMembersAdded > 5) {
-        recommendations.push('👥 Significant member growth expected. Ensure robust onboarding.');
+        recommendations.push('👥 Significant member growth. Enhance onboarding processes.');
     }
     if (recommendations.length === 0) {
         recommendations.push('✅ Stable growth projected. Monitor inflows and outflows.');
@@ -1563,7 +1564,7 @@ function performSimulation(currentData, months, newMembers) {
         newMembersAdded: totalNewMembersAdded,
         growthPotential,
         recommendations,
-        calculatedGrowthRate: growthRate * 100 // Return as percentage for display
+        calculatedGrowthRate: growthRate * 100 // As percentage for display
     };
 }
 
