@@ -185,35 +185,37 @@
         </div>
 
         <!-- Page 5: Company Analysis & Future Simulation -->
-<div class="main-page" id="page5" style="display: none;">
-    <div class="financial-section">
-        <h2>Company Analysis & Future Simulation</h2>
-        <div class="analysis-section">
-            <h3>Performance Analysis</h3>
-            <div id="performanceAnalysis">
-                <div class="loading-spinner" id="analysisSpinner" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i> Analyzing...
+        <div class="main-page" id="page5" style="display: none;">
+            <div class="financial-section">
+                <h2>Company Analysis & Future Simulation</h2>
+                <div class="analysis-section">
+                    <h3>Performance Analysis</h3>
+                    <div id="performanceAnalysis">
+                        <div class="loading-spinner" id="analysisSpinner" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                        </div>
+                        <div id="analysisResults"></div>
+                    </div>
                 </div>
-                <div id="analysisResults"></div>
+
+                <div class="simulation-section">
+                    <h3>Future Simulation</h3>
+                    <form id="simulationForm">
+                        <label for="projectionMonths">Projection Period (Months):</label>
+                        <input type="number" id="projectionMonths" min="1" max="24" value="12" aria-label="Number of months to project">
+
+                        <label for="growthRate">Expected Growth Rate (%):</label>
+                        <input type="number" id="growthRate" min="-50" max="100" step="0.1" value="10" aria-label="Expected monthly growth rate">
+
+                        <label for="newMembers">New Members Expected:</label>
+                        <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
+
+                        <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
+                    </form>
+                    <div id="simulationResults"></div>
+                </div>
             </div>
         </div>
-
-        <div class="simulation-section">
-            <h3>Future Simulation</h3>
-            <form id="simulationForm">
-                <label for="projectionMonths">Projection Period (Months):</label>
-                <input type="number" id="projectionMonths" min="1" max="48" value="12" aria-label="Number of months to project">
-
-                <label for="newMembers">New Members Expected:</label>
-                <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
-
-                <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
-            </form>
-            <div id="simulationResults"></div>
-             </div>
-           </div>
-        </div>
-     
 
         <div class="pagination-controls">
             <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
@@ -253,40 +255,40 @@ const CONFIG = {
 };
 
 const elements = {
-    type: safeGetElementById('type'),
-    amount: safeGetElementById('amount'),
-    contributionFields: safeGetElementById('contributionFields'),
-    year: safeGetElementById('year'),
-    month: safeGetElementById('month'),
-    dateFields: safeGetElementById('dateFields'),
-    dueDate: safeGetElementById('dueDate'),
-    checkDate: safeGetElementById('checkDate'),
-    loanFields: safeGetElementById('loanFields'),
-    loanType: safeGetElementById('loanType'),
-    repaymentFields: safeGetElementById('repaymentFields'),
-    repaymentPeriod: safeGetElementById('repaymentPeriod'),
-    calcButton: safeGetElementById('calcButton'),
-    buttonContainer: safeGetElementById('buttonContainer'),
-    result: safeGetElementById('result'),
-    successMessage: safeGetElementById('successMessage'),
-    progressBar: safeGetElementById('progressBar'),
-    progressFill: safeGetElementById('progressFill'),
-    resultModal: safeGetElementById('resultModal'),
-    modalResult: safeGetElementById('modalResult'),
+    type: document.getElementById('type'),
+    amount: document.getElementById('amount'),
+    contributionFields: document.getElementById('contributionFields'),
+    year: document.getElementById('year'),
+    month: document.getElementById('month'),
+    dateFields: document.getElementById('dateFields'),
+    dueDate: document.getElementById('dueDate'),
+    checkDate: document.getElementById('checkDate'),
+    loanFields: document.getElementById('loanFields'),
+    loanType: document.getElementById('loanType'),
+    repaymentFields: document.getElementById('repaymentFields'),
+    repaymentPeriod: document.getElementById('repaymentPeriod'),
+    calcButton: document.getElementById('calcButton'),
+    buttonContainer: document.getElementById('buttonContainer'),
+    result: document.getElementById('result'),
+    successMessage: document.getElementById('successMessage'),
+    progressBar: document.getElementById('progressBar'),
+    progressFill: document.getElementById('progressFill'),
+    resultModal: document.getElementById('resultModal'),
+    modalResult: document.getElementById('modalResult'),
     errors: {
-        type: safeGetElementById('typeError'),
-        amount: safeGetElementById('amountError'),
-        year: safeGetElementById('yearError'),
-        month: safeGetElementById('monthError'),
-        dueDate: safeGetElementById('dueDateError'),
-        checkDate: safeGetElementById('checkDateError'),
-        loanType: safeGetElementById('loanTypeError'),
-        repaymentPeriod: safeGetElementById('repaymentPeriodError')
+        type: document.getElementById('typeError'),
+        amount: document.getElementById('amountError'),
+        year: document.getElementById('yearError'),
+        month: document.getElementById('monthError'),
+        dueDate: document.getElementById('dueDateError'),
+        checkDate: document.getElementById('checkDateError'),
+        loanType: document.getElementById('loanTypeError'),
+        repaymentPeriod: document.getElementById('repaymentPeriodError')
     },
     spinners: {
-        balanceSheet: safeGetElementById('balanceSheetSpinner'),
-        members: safeGetElementById('membersSpinner'),
-        behavior: safeGetElementById('behaviorSpinner')
+        balanceSheet: document.getElementById('balanceSheetSpinner'),
+        members: document.getElementById('membersSpinner'),
+        behavior: document.getElementById('behaviorSpinner')
     }
 };
 
@@ -562,13 +564,12 @@ function validateDateFields(dueDate, checkDate, month, year) {
 
 function validateInputs() {
     const errors = [];
-    const type = sanitizeInput(elements.type.value);
-    const amountInput = sanitizeNumericInput(elements.amount.value);
-    const amount = parseFloat(amountInput);
-    const year = sanitizeInput(elements.year.value);
-    const month = sanitizeInput(elements.month.value);
-    const loanType = sanitizeInput(elements.loanType.value);
-    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
+    const type = elements.type.value;
+    const amount = parseFloat(elements.amount.value) || 0;
+    const year = elements.year.value;
+    const month = elements.month.value;
+    const loanType = elements.loanType.value;
+    const repaymentPeriod = elements.repaymentPeriod.value;
 
     clearErrors();
 
@@ -577,7 +578,7 @@ function validateInputs() {
         errors.push('Invalid type');
     }
 
-    if (!isValidNumber(amount) || amount <= 0) {
+    if (amount <= 0 || isNaN(amount)) {
         showError(elements.errors.amount, 'Amount must be a positive number in KES.');
         errors.push('Invalid amount');
     } else if (type === 'existing_loan' || type === 'apply_loan') {
@@ -940,8 +941,8 @@ function updateBehaviorReport() {
 }
 
 function toggleRepaymentFields() {
-    const type = sanitizeInput(elements.type.value);
-    const loanType = sanitizeInput(elements.loanType.value);
+    const type = elements.type.value;
+    const loanType = elements.loanType.value;
     elements.repaymentFields.style.display = (type === 'apply_loan' && loanType) ? 'block' : 'none';
     elements.repaymentFields.classList.toggle('show', type === 'apply_loan' && loanType);
     elements.repaymentPeriod.innerHTML = '<option value="">Select months</option>';
@@ -965,7 +966,7 @@ function toggleRepaymentFields() {
 }
 
 function toggleFields() {
-    const type = sanitizeInput(elements.type.value);
+    const type = elements.type.value;
     elements.contributionFields.style.display = type === 'contribution' ? 'block' : 'none';
     elements.contributionFields.classList.toggle('show', type === 'contribution');
     elements.loanFields.style.display = (type === 'existing_loan' || type === 'apply_loan') ? 'block' : 'none';
@@ -984,7 +985,7 @@ function toggleFields() {
 }
 
 function updateDueDate() {
-    const type = sanitizeInput(elements.type.value);
+    const type = elements.type.value;
     if (type === 'contribution' && elements.contributionFields.style.display !== 'none') {
         const selectedMonth = elements.month.value.split('-');
         const year = parseInt(selectedMonth[0]);
@@ -997,14 +998,14 @@ function updateDueDate() {
 }
 
 function updateButtonState() {
-    const type = sanitizeInput(elements.type.value);
+    const type = elements.type.value;
     const amount = elements.amount.value;
-    const year = sanitizeInput(elements.year.value);
-    const month = sanitizeInput(elements.month.value);
+    const year = elements.year.value;
+    const month = elements.month.value;
     const dueDate = elements.dueDate.value;
     const checkDate = elements.checkDate.value;
-    const loanType = sanitizeInput(elements.loanType.value);
-    const repaymentPeriod = sanitizeInput(elements.repaymentPeriod.value);
+    const loanType = elements.loanType.value;
+    const repaymentPeriod = elements.repaymentPeriod.value;
 
     const isAmountValid = amount && parseFloat(amount) > 0;
     let isValid = false;
@@ -1220,20 +1221,29 @@ async function shareResults() {
 async function calculate() {
     const validationError = validateInputs();
     if (validationError) {
-        elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+        if (elements.result) {
+            elements.result.innerHTML = `<span style="color: #e74c3c;">${sanitizeInput(validationError)}</span>`;
+        }
         return;
     }
 
     isCalculating = true;
-    elements.calcButton.classList.add('loading');
-    elements.calcButton.disabled = true;
+    if (elements.calcButton) {
+        elements.calcButton.classList.add('loading');
+        elements.calcButton.disabled = true;
+    }
     showProgress();
 
     try {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const type = elements.type.value;
-        const amount = parseFloat(elements.amount.value);
+        const type = sanitizeInput(elements.type.value);
+        const amountInput = sanitizeNumericInput(elements.amount.value);
+        const amount = parseFloat(amountInput);
+
+        if (!isValidNumber(amount) || amount <= 0) {
+            throw new Error('Invalid amount provided');
+        }
         let tableHTML = `
             <button class="share-button" onclick="shareResults()" aria-label="Share results"><i class="fas fa-share-alt"></i> Share</button>
             <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
@@ -1344,7 +1354,7 @@ function changeMainPage(direction) {
     if (currentMainPage === 3) updateFinancialData();
     if (currentMainPage === 4) updateBehaviorReport();
     if (currentMainPage === 5) runPerformanceAnalysis();
-    document.getElementById(`page${i}`).focus();
+    document.getElementById(`page${currentMainPage}`).focus();
 }
 
 const MEMBER_CONFIG = {
@@ -1399,161 +1409,290 @@ function generateMemberRow(member) {
             <td>KES ${(member.amount || 0).toFixed(2)}</td>
             <td>${member.shares || 0}</td>
             <td>${member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</td>
-            <td>${sanitizeInput(contributionMonths)}</td>
-            <td>KES ${(member.loan_limit || 0).toFixed(2)}</td>
-        </tr>
-    `;
+            <td>${contributionMonths}</td>
+            <td>KES ${member.loan_limit.toFixed(2)}</td>
+        </tr>`;
 }
 
 function displayMembers(members) {
     const memberTableBody = document.getElementById('memberTableBody');
-    if (!members || members.length === 0) {
-        memberTableBody.innerHTML = '<tr><td colspan="6">No member data available.</td></tr>';
-        return;
+    memberTableBody.innerHTML = '';
+    console.log('Members data:', members);
+
+    const combinedMembers = MEMBER_CONFIG.members.map(name => {
+        const apiMember = members.find(m => m.member_name === name);
+        return createMemberData(name, apiMember);
+    });
+
+    if (!combinedMembers || combinedMembers.length === 0) {
+        memberTableBody.innerHTML = '<tr><td colspan="6">No members available.</td></tr>';
+    } else {
+        memberTableBody.innerHTML = combinedMembers.map(generateMemberRow).join('');
     }
-    memberTableBody.innerHTML = members.map(member => generateMemberRow(member)).join('');
 }
 
 function runPerformanceAnalysis() {
-    const analysisResults = document.getElementById('analysisResults');
     showSpinner(document.getElementById('analysisSpinner'));
-
     fetchDataIfStale(true).then(() => {
         const data = dataCache || loadDataFromStorage();
         if (!data || !data.monthly_reports) {
-            analysisResults.innerHTML = '<p>No data available for analysis.</p>';
+            document.getElementById('analysisResults').innerHTML = '<p>No data available for analysis.</p>';
             hideSpinner(document.getElementById('analysisSpinner'));
             return;
         }
 
         const availableMonths = Object.keys(data.monthly_reports).sort();
-        const currentData = data.monthly_reports[availableMonths[availableMonths.length - 1]] || {};
-        const previousData = availableMonths.length > 1 ? data.monthly_reports[availableMonths[availableMonths.length - 2]] : null;
+        const latestMonth = availableMonths[availableMonths.length - 1];
+        const currentData = data.monthly_reports[latestMonth];
 
-        let balanceTrend = 'Stable';
-        let contributionTrend = 'Stable';
-        let riskAssessment = 'Low';
-        let recommendations = [];
+        // Calculate trends
+        const trends = calculateTrends(data.monthly_reports, availableMonths);
 
-        if (previousData) {
-            const balanceChange = ((currentData.total_balance || 0) - (previousData.total_balance || 0)) / (previousData.total_balance || 1) * 100;
-            balanceTrend = balanceChange > 5 ? 'Positive' : balanceChange < -5 ? 'Negative' : 'Stable';
-            const contributionChange = ((currentData.total_member_contributions_kcb || 0) - (previousData.total_member_contributions_kcb || 0)) / (previousData.total_member_contributions_kcb || 1) * 100;
-            contributionTrend = contributionChange > 5 ? 'Positive' : contributionChange < -5 ? 'Negative' : 'Stable';
+        // Generate analysis report
+        const analysisHTML = `
+            <div class="analysis-report">
+                <h4>📊 Company Performance Analysis</h4>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <h5>Current Financial Health</h5>
+                        <p><strong>Total Balance:</strong> KES ${(currentData.total_balance || 0).toFixed(2)}</p>
+                        <p><strong>Net Income:</strong> KES ${((currentData.total_inflows || 0) - (currentData.total_outflows || 0)).toFixed(2)}</p>
+                        <p><strong>Active Members:</strong> ${data.member_contributions ? data.member_contributions.length : 0}</p>
+                    </div>
 
-            const loanToContributionRatio = (currentData.total_loan_disbursements_kcb || 0) / (currentData.total_member_contributions_kcb || 1);
-            riskAssessment = loanToContributionRatio > 2 ? 'High' : loanToContributionRatio > 1 ? 'Moderate' : 'Low';
+                    <div class="metric-card">
+                        <h5>Trends & Growth</h5>
+                        <p><strong>Balance Growth:</strong> ${trends.balanceGrowth >= 0 ? '+' : ''}${trends.balanceGrowth.toFixed(1)}%</p>
+                        <p><strong>Contribution Growth:</strong> ${trends.contributionGrowth >= 0 ? '+' : ''}${trends.contributionGrowth.toFixed(1)}%</p>
+                        <p><strong>Loan Activity:</strong> ${trends.loanActivity >= 0 ? '+' : ''}${trends.loanActivity.toFixed(1)}%</p>
+                    </div>
 
-            if (balanceTrend === 'Negative') {
-                recommendations.push('⚠️ Balance is declining. Review expense management or increase contributions.');
-            }
-            if (contributionTrend === 'Negative') {
-                recommendations.push('⚠️ Contributions are decreasing. Engage members to boost participation.');
-            }
-            if (riskAssessment === 'High') {
-                recommendations.push('⚠️ High loan-to-contribution ratio. Consider tightening loan policies.');
-            }
-            if (recommendations.length === 0) {
-                recommendations.push('✅ Financials appear stable. Continue monitoring trends.');
-            }
-        }
+                    <div class="metric-card">
+                        <h5>Risk Assessment</h5>
+                        <p><strong>Liquidity Ratio:</strong> ${trends.liquidityRatio.toFixed(2)}</p>
+                        <p><strong>Risk Level:</strong> <span class="${getRiskClass(trends.riskLevel)}">${trends.riskLevel}</span></p>
+                        <p><strong>Recommendations:</strong> ${trends.recommendations}</p>
+                    </div>
+                </div>
 
-        analysisResults.innerHTML = `
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                    <th style="padding: 0.4rem;">Metric</th>
-                    <th style="padding: 0.4rem;">Value</th>
-                </tr>
-                <tr><td>Balance Trend</td><td>${balanceTrend}</td></tr>
-                <tr><td>Contribution Trend</td><td>${contributionTrend}</td></tr>
-                <tr><td>Risk Assessment</td><td>${riskAssessment}</td></tr>
-                <tr><td>Recommendations</td><td>${recommendations.join('<br>')}</td></tr>
-            </table>
+                <div class="performance-insights">
+                    <h5>💡 Key Insights</h5>
+                    <ul>
+                        ${generateInsights(trends, currentData)}
+                    </ul>
+                </div>
+            </div>
         `;
+
+        document.getElementById('analysisResults').innerHTML = analysisHTML;
         hideSpinner(document.getElementById('analysisSpinner'));
     }).catch(error => {
-        logError('Error running performance analysis', error);
-        analysisResults.innerHTML = `<p>Error analyzing data: ${error.message}</p>`;
+        console.error('Analysis failed:', error);
+        document.getElementById('analysisResults').innerHTML = '<p>Error generating analysis. Please try again.</p>';
         hideSpinner(document.getElementById('analysisSpinner'));
     });
 }
 
-function calculateGrowthRate(currentData, previousData) {
-    if (!currentData || !previousData) return 0.05; // Default to 5% if data is missing
-    const currentNetInflows = (currentData.total_inflows || 0) - (currentData.total_outflows || 0);
-    const previousNetInflows = (previousData.total_inflows || 0) - (previousData.total_outflows || 0);
-    if (previousNetInflows === 0) return 0.05; // Avoid division by zero
-    const growthRate = (currentNetInflows - previousNetInflows) / Math.abs(previousNetInflows);
-    return Math.min(Math.max(growthRate, -0.05), 0.15); // Cap between -5% and 15% for realism
+function calculateTrends(monthlyReports, availableMonths) {
+    if (availableMonths.length < 2) {
+        return {
+            balanceGrowth: 0,
+            contributionGrowth: 0,
+            loanActivity: 0,
+            liquidityRatio: 0,
+            riskLevel: 'Unknown',
+            recommendations: 'Need more data for accurate analysis'
+        };
+    }
+
+    const latest = monthlyReports[availableMonths[availableMonths.length - 1]];
+    const previous = monthlyReports[availableMonths[availableMonths.length - 2]];
+
+    const balanceGrowth = previous.total_balance ?
+        ((latest.total_balance - previous.total_balance) / previous.total_balance * 100) : 0;
+
+    const contributionGrowth = previous.total_member_contributions_kcb ?
+        ((latest.total_member_contributions_kcb - previous.total_member_contributions_kcb) / previous.total_member_contributions_kcb * 100) : 0;
+
+    const loanActivity = previous.total_loan_disbursements_kcb ?
+        ((latest.total_loan_disbursements_kcb - previous.total_loan_disbursements_kcb) / previous.total_loan_disbursements_kcb * 100) : 0;
+
+    const liquidityRatio = latest.total_balance ?
+        (latest.total_balance / (latest.total_loan_disbursements_kcb || 1)) : 0;
+
+    let riskLevel = 'Low';
+    let recommendations = 'Company is performing well. Continue current strategies.';
+
+    if (balanceGrowth < -10) {
+        riskLevel = 'High';
+        recommendations = 'Significant balance decline detected. Review expenses and increase member contributions.';
+    } else if (balanceGrowth < 0) {
+        riskLevel = 'Medium';
+        recommendations = 'Balance is declining. Consider cost reduction measures.';
+    } else if (balanceGrowth > 20) {
+        riskLevel = 'Low';
+        recommendations = 'Excellent growth! Consider expanding loan offerings.';
+    }
+
+    if (liquidityRatio < 0.5) {
+        riskLevel = 'High';
+        recommendations += ' Low liquidity ratio indicates potential cash flow issues.';
+    }
+
+    return {
+        balanceGrowth,
+        contributionGrowth,
+        loanActivity,
+        liquidityRatio,
+        riskLevel,
+        recommendations
+    };
 }
 
-function performSimulation(currentData, months, newMembers) {
-    // Initialize starting values
-    let balance = currentData.total_balance || 334023.77; // Fallback to provided balance
-    let contributions = currentData.total_member_contributions_kcb || 38000; // Estimated from output
-    let members = currentData.member_count || 10; // Fallback to 10
-    const initialBalance = balance;
-    const initialContributions = contributions;
+function getRiskClass(riskLevel) {
+    switch (riskLevel.toLowerCase()) {
+        case 'low': return 'risk-low';
+        case 'medium': return 'risk-medium';
+        case 'high': return 'risk-high';
+        default: return 'risk-unknown';
+    }
+}
 
-    // Get available months and fetch current and previous month data
-    const availableMonths = dataCache && dataCache.monthly_reports ? Object.keys(data.monthly_reports).sort() : [];
-    const currentMonthData = currentData;
-    const previousMonthData = availableMonths.length > 1 ? dataCache.monthly_reports[availableMonths[availableMonths.length - 2]] : null;
+function generateInsights(trends, currentData) {
+    const insights = [];
 
-    // Calculate growth rate based on net inflows
-    const growthRate = calculateGrowthRate(currentMonthData, previousMonthData);
+    if (trends.contributionGrowth > 10) {
+        insights.push('<li>📈 Strong member contribution growth indicates healthy member engagement</li>');
+    } else if (trends.contributionGrowth < 0) {
+        insights.push('<li>⚠️ Declining contributions may require member retention strategies</li>');
+    }
 
-    // Use net income as a proxy for monthly inflows if total_inflows is unavailable
-    const monthlyInflows = currentData.total_inflows || (currentData.net_income || 54975.62); // Fallback to net income
-    const monthlyOutflows = currentData.total_outflows || (monthlyInflows * 0.8); // Assume outflows are 80% of inflows
-    const avgContributionPerMember = contributions / (members || 1);
+    if (trends.loanActivity > 15) {
+        insights.push('<li>💰 High loan activity suggests good demand for financial services</li>');
+    }
 
-    // Track total new members added
-    let totalNewMembersAdded = 0;
+    if (trends.liquidityRatio > 2) {
+        insights.push('<li>💵 Strong liquidity position provides good financial stability</li>');
+    } else if (trends.liquidityRatio < 1) {
+        insights.push('<li>⚠️ Low liquidity ratio may limit loan disbursement capacity</li>');
+    }
 
-    for (let i = 0; i < months; i++) {
-        // Add new members quarterly
-        if (i % 3 === 0) {
-            const newMembersThisQuarter = Math.floor(newMembers / Math.max(1, (months / 3))) || 0;
-            members += newMembersThisQuarter;
-            totalNewMembersAdded += newMembersThisQuarter;
-            // Add contributions from new members
-            contributions += newMembersThisQuarter * avgContributionPerMember;
+    const activeMembers = currentData.total_member_contributions_kcb ? Math.floor(currentData.total_member_contributions_kcb / 1000) : 0;
+    if (activeMembers > 5) {
+        insights.push('<li>👥 Good member base providing stable contribution income</li>');
+    }
+
+    return insights.length > 0 ? insights.join('') : '<li>Analysis in progress...</li>';
+}
+
+function runSimulation() {
+    const projectionMonths = parseInt(document.getElementById('projectionMonths').value) || 12;
+    const growthRate = parseFloat(document.getElementById('growthRate').value) || 10;
+    const newMembers = parseInt(document.getElementById('newMembers').value) || 2;
+
+    showSpinner(document.getElementById('analysisSpinner'));
+
+    fetchDataIfStale(true).then(() => {
+        const data = dataCache || loadDataFromStorage();
+        if (!data || !data.monthly_reports) {
+            document.getElementById('simulationResults').innerHTML = '<p>No data available for simulation.</p>';
+            hideSpinner(document.getElementById('analysisSpinner'));
+            return;
         }
 
-        // Apply growth rate to inflows
-        const inflowGrowth = monthlyInflows * growthRate;
-        const adjustedInflows = monthlyInflows + inflowGrowth;
+        const availableMonths = Object.keys(data.monthly_reports).sort();
+        const latestData = data.monthly_reports[availableMonths[availableMonths.length - 1]];
 
-        // Update contributions (base contributions + moderated growth)
-        contributions += (avgContributionPerMember * members * 0.1); // 10% of monthly contributions
+        const simulation = performSimulation(latestData, projectionMonths, growthRate / 100, newMembers);
 
-        // Update balance: add inflows, subtract outflows
-        balance += adjustedInflows;
-        balance -= monthlyOutflows;
-        balance = Math.max(balance, 0); // Prevent negative balance
+        const simulationHTML = `
+            <div class="simulation-report">
+                <h4>🔮 Future Projection Results</h4>
+                <div class="projection-summary">
+                    <div class="projection-card">
+                        <h5>Projected Balance</h5>
+                        <p class="projection-value">KES ${simulation.finalBalance.toFixed(2)}</p>
+                        <p class="projection-change ${simulation.balanceChange >= 0 ? 'positive' : 'negative'}">
+                            ${simulation.balanceChange >= 0 ? '+' : ''}${simulation.balanceChange.toFixed(1)}%
+                        </p>
+                    </div>
+
+                    <div class="projection-card">
+                        <h5>Projected Contributions</h5>
+                        <p class="projection-value">KES ${simulation.totalContributions.toFixed(2)}</p>
+                        <p class="projection-growth">+${simulation.contributionGrowth.toFixed(1)}%</p>
+                    </div>
+
+                    <div class="projection-card">
+                        <h5>Projected Members</h5>
+                        <p class="projection-value">${simulation.totalMembers}</p>
+                        <p class="projection-new">+${simulation.newMembersAdded} new members</p>
+                    </div>
+                </div>
+
+                <div class="projection-chart">
+                    <h5>Growth Trajectory</h5>
+                    <div class="chart-placeholder">
+                        <p>📊 Projected growth over ${projectionMonths} months at ${growthRate}% monthly rate</p>
+                        <div class="growth-bar" style="width: ${Math.min(simulation.growthPotential, 100)}%"></div>
+                        <p class="growth-label">${simulation.growthPotential.toFixed(1)}% growth potential</p>
+                    </div>
+                </div>
+
+                <div class="recommendations">
+                    <h5>🎯 Strategic Recommendations</h5>
+                    <ul>
+                        ${simulation.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('simulationResults').innerHTML = simulationHTML;
+        hideSpinner(document.getElementById('analysisSpinner'));
+    }).catch(error => {
+        console.error('Simulation failed:', error);
+        document.getElementById('simulationResults').innerHTML = '<p>Error running simulation. Please try again.</p>';
+        hideSpinner(document.getElementById('analysisSpinner'));
+    });
+}
+
+function performSimulation(currentData, months, growthRate, newMembers) {
+    let balance = currentData.total_balance || 0;
+    let contributions = currentData.total_member_contributions_kcb || 0;
+    let members = 10; // Assuming current member base
+
+    const monthlyContribution = contributions / members;
+    const initialBalance = balance;
+
+    for (let i = 0; i < months; i++) {
+        // Apply growth to contributions
+        contributions *= (1 + growthRate);
+        // Add new members
+        if (i % 3 === 0) { // Add new members quarterly
+            members += Math.floor(newMembers / 4);
+        }
+        // Update balance (simplified model)
+        balance += (contributions * 0.1); // Assume 10% of contributions go to balance
+        balance -= (balance * 0.02); // Account for expenses
     }
 
-    // Calculate metrics
-    const balanceChange = initialBalance ? ((balance - initialBalance) / initialBalance * 100) : 0;
-    const contributionGrowth = initialContributions ? ((contributions - initialContributions) / initialContributions * 100) : 0;
-    const growthPotential = Math.min(balanceChange + contributionGrowth, 150); // Cap at 150% for realism
+    const balanceChange = ((balance - initialBalance) / initialBalance * 100);
+    const contributionGrowth = ((contributions - (currentData.total_member_contributions_kcb || 0)) / (currentData.total_member_contributions_kcb || 1) * 100);
+    const growthPotential = Math.max(0, Math.min(balanceChange + contributionGrowth, 200));
 
-    // Generate recommendations
     const recommendations = [];
-    if (growthRate > 0.10) {
-        recommendations.push('⚠️ High growth rate detected. Validate with actual trends.');
+    if (growthRate > 0.15) {
+        recommendations.push('⚠️ High growth rate may be unrealistic. Consider more conservative projections.');
     }
-    if (balanceChange > 20) {
-        recommendations.push('📈 Strong balance growth. Consider expanding loan programs.');
-    } else if (balanceChange < 5) {
-        recommendations.push('⚠️ Low balance growth. Optimize expense management.');
+    if (balanceChange > 50) {
+        recommendations.push('📈 Excellent projected growth! Consider expanding operations.');
     }
-    if (totalNewMembersAdded > 3) {
-        recommendations.push('👥 Significant member growth. Enhance onboarding processes.');
+    if (newMembers > 10) {
+        recommendations.push('👥 Significant member growth expected. Ensure adequate onboarding processes.');
     }
     if (recommendations.length === 0) {
-        recommendations.push('✅ Stable growth projected. Monitor inflows and outflows.');
+        recommendations.push('✅ Steady growth projected. Continue current strategies with regular monitoring.');
     }
 
     return {
@@ -1562,110 +1701,45 @@ function performSimulation(currentData, months, newMembers) {
         totalContributions: contributions,
         contributionGrowth,
         totalMembers: members,
-        newMembersAdded: totalNewMembersAdded,
+        newMembersAdded: newMembers,
         growthPotential,
-        recommendations,
-        calculatedGrowthRate: growthRate * 100 // As percentage for display
+        recommendations
     };
 }
 
-function runSimulation() {
-    const projectionMonths = parseInt(document.getElementById('projectionMonths').value);
-    const newMembers = parseInt(document.getElementById('newMembers').value);
-
-    if (!projectionMonths || projectionMonths < 1 || projectionMonths > 48) {
-        document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">Please enter a valid projection period (1-48 months).</p>';
-        return;
-    }
-    if (isNaN(newMembers) || newMembers < 0) {
-        document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">Please enter a valid number of new members (0 or more).</p>';
-        return;
-    }
-
-    showSpinner(document.getElementById('analysisSpinner'));
-    fetchDataIfStale(true).then(() => {
-        const data = dataCache || loadDataFromStorage();
-        if (!data || !data.monthly_reports) {
-            document.getElementById('simulationResults').innerHTML = '<p style="color: #e74c3c;">No financial data available for simulation.</p>';
-            hideSpinner(document.getElementById('analysisSpinner'));
-            return;
-        }
-
-        const availableMonths = Object.keys(data.monthly_reports).sort();
-        const currentData = data.monthly_reports[availableMonths[availableMonths.length - 1]] || {};
-
-        const simulationResults = performSimulation(currentData, projectionMonths, newMembers);
-
-        document.getElementById('simulationResults').innerHTML = `
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                    <th style="padding: 0.4rem;">Metric</th>
-                    <th style="padding: 0.4rem;">Value</th>
-                </tr>
-                <tr><td>Calculated Growth Rate</td><td>${simulationResults.calculatedGrowthRate.toFixed(2)}%</td></tr>
-                <tr><td>Projected Balance</td><td>KES ${simulationResults.finalBalance.toFixed(2)}</td></tr>
-                <tr><td>Balance Change</td><td>${simulationResults.balanceChange.toFixed(2)}%</td></tr>
-                <tr><td>Projected Contributions</td><td>KES ${simulationResults.totalContributions.toFixed(2)}</td></tr>
-                <tr><td>Contribution Growth</td><td>${simulationResults.contributionGrowth.toFixed(2)}%</td></tr>
-                <tr><td>Total Members</td><td>${simulationResults.totalMembers}</td></tr>
-                <tr><td>New Members Added</td><td>${simulationResults.newMembersAdded}</td></tr>
-                <tr><td>Growth Potential</td><td>${simulationResults.growthPotential.toFixed(2)}%</td></tr>
-                <tr><td>Recommendations</td><td>${simulationResults.recommendations.join('<br>')}</td></tr>
-            </table>
-        `;
-        hideSpinner(document.getElementById('analysisSpinner'));
-    }).catch(error => {
-        logError('Error running simulation', error);
-        document.getElementById('simulationResults').innerHTML = `<p style="color: #e74c3c;">Error running simulation: ${error.message}</p>`;
-        hideSpinner(document.getElementById('analysisSpinner'));
-    });
-}
-
-// Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     toggleFields();
     populateYears();
     updateButtonState();
+    changeMainPage(0);
+    debugDataStructure();
 
-    // Initialize page visibility
-    for (let i = 1; i <= 5; i++) {
-        document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
-    }
-    document.getElementById('prevMainPage').disabled = true;
-    document.getElementById('nextMainPage').disabled = false;
+    elements.amount.addEventListener('input', updateButtonState);
+    elements.type.addEventListener('change', toggleFields);
+    elements.year.addEventListener('change', populateMonths);
+    elements.month.addEventListener('change', updateDueDate);
+    elements.dueDate.addEventListener('change', updateButtonState);
+    elements.checkDate.addEventListener('change', updateButtonState);
+    elements.loanType.addEventListener('change', toggleRepaymentFields);
+    elements.repaymentPeriod.addEventListener('change', updateButtonState);
 
-    // Fetch initial data
-    fetchDataIfStale(true).then(() => {
-        if (currentMainPage === 2 || currentMainPage === 3) {
-            updateFinancialData();
-        }
-        if (currentMainPage === 4) {
-            updateBehaviorReport();
-        }
-        if (currentMainPage === 5) {
-            runPerformanceAnalysis();
-        }
-    }).catch(error => {
-        logError('Initial data fetch failed', error);
+    document.getElementById('calcForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!elements.calcButton.disabled) calculate();
     });
-
-    // Service worker registration
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('Service Worker registered:', reg))
-            .catch(error => logError('Service Worker registration failed', error));
-    }
 });
 
-// Input event listeners for real-time validation
-elements.amount.addEventListener('input', updateButtonState);
-elements.type.addEventListener('change', toggleFields);
-elements.year.addEventListener('change', populateMonths);
-elements.month.addEventListener('change', updateDueDate);
-elements.dueDate.addEventListener('change', updateButtonState);
-elements.checkDate.addEventListener('change', updateButtonState);
-elements.loanType.addEventListener('change', toggleRepaymentFields);
-elements.repaymentPeriod.addEventListener('change', updateButtonState);
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                logError('Service Worker registration failed', error);
+            });
+    });
+}
 </script>
 </body>
-</html>
+</html>   fix the simulation accordingly
