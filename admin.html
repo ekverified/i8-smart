@@ -294,13 +294,11 @@
         // Input sanitization and validation utilities
         function sanitizeInput(input) {
             if (typeof input !== 'string') return '';
-            // Remove potentially harmful characters and trim whitespace
             return input.replace(/[<>\"'&]/g, '').trim();
         }
 
         function sanitizeNumericInput(input) {
             if (typeof input !== 'string') return '';
-            // Allow only numbers, decimal points, and negative signs
             return input.replace(/[^0-9.-]/g, '');
         }
 
@@ -390,27 +388,18 @@
         function fuzzyMatch(input, members) {
             const cleanInput = input.trim().toLowerCase();
             if (!cleanInput) return null;
-
             const inputParts = cleanInput.split(/\s+/).filter(part => part.length > 0);
-            if (inputParts.length < 2) {
-                return null;
-            }
-
+            if (inputParts.length < 2) return null;
             for (const member of members) {
                 const memberParts = member.toLowerCase().split(/\s+/);
                 let matchCount = 0;
-
                 for (const inputPart of inputParts) {
                     if (memberParts.some(memberPart => memberPart.includes(inputPart))) {
                         matchCount++;
                     }
                 }
-
-                if (matchCount >= 2) {
-                    return member;
-                }
+                if (matchCount >= 2) return member;
             }
-
             return null;
         }
 
@@ -437,14 +426,11 @@
             inputs.forEach(input => {
                 const element = document.getElementById(input.id);
                 const errorElement = document.getElementById(input.errorId);
-
                 if (!element || !errorElement) {
                     console.error(`DOM element not found: ${input.id} or ${input.errorId}`);
                     return;
                 }
-
                 errorElement.style.display = 'none';
-
                 if (input.id === 'month') {
                     if (!element.value) {
                         errorElement.textContent = input.message;
@@ -460,7 +446,6 @@
                     }
                 }
             });
-
             return errors.length === 0 ? null : errors.join(', ');
         }
 
@@ -476,14 +461,11 @@
             inputs.forEach(input => {
                 const element = document.getElementById(input.id);
                 const errorElement = document.getElementById(input.errorId);
-
                 if (!element || !errorElement) {
                     console.error(`DOM element not found: ${input.id} or ${input.errorId}`);
                     return;
                 }
-
                 errorElement.style.display = 'none';
-
                 if (input.id === 'memberSelect') {
                     if (!element.value.trim() || !fuzzyMatch(element.value, MEMBERS)) {
                         errorElement.textContent = input.message;
@@ -505,7 +487,6 @@
                     }
                 }
             });
-
             return errors.length === 0 ? null : errors.join(', ');
         }
 
@@ -542,11 +523,13 @@
         }
 
         function showLoadingSpinner() {
-            document.getElementById('loadingSpinner').style.display = 'flex';
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.style.display = 'flex';
         }
 
         function hideLoadingSpinner() {
-            document.getElementById('loadingSpinner').style.display = 'none';
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.style.display = 'none';
         }
 
         function showConfirmationModal(data, month, onConfirm) {
@@ -580,7 +563,6 @@
                 <p>Total Balance: KES ${data.total_balance.toFixed(2)}</p>
             `;
             modal.style.display = 'block';
-
             document.getElementById('confirmSubmit').onclick = () => {
                 setButtonLoading(document.getElementById('confirmSubmit'), true);
                 modal.style.display = 'none';
@@ -631,6 +613,269 @@
             }
         }
 
+        let dataCache = null;
+
+        async function fetchData() {
+            try {
+                showLoadingSpinner();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                dataCache = await response.json();
+                populateMonths('editMonthBalance');
+                populateYears('editContributionYear');
+                hideLoadingSpinner();
+                logAction('Fetch Data', 'Successfully fetched financial data');
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to fetch data (${error.message}).</span>`;
+                hideLoadingSpinner();
+            }
+        }
+
+        async function loadBalanceSheetData() {
+            const button = document.querySelector('#adminForm .action-button');
+            setButtonLoading(button, true);
+            const month = document.getElementById('editMonthBalance').value;
+            if (!month) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to load.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            try {
+                showLoadingSpinner();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data/${month}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('month').value = month;
+                document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || '';
+                document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || '';
+                document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || '';
+                document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || '';
+                document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || '';
+                document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || '';
+                document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || '';
+                document.getElementById('other_income').value = data.other_income_kcb || data.other_income_lofty || '';
+                document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('total_loan_disbursements').value = data.total_loan_disbursements_kcb || data.total_loan_disbursements_lofty || '';
+                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('bank_charges').value = data.bank_charges_kcb || data.bank_charges_lofty || '';
+                document.getElementById('bank_charges_account').value = data.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('petty_cash_utilized').value = data.petty_cash_utilized_kcb || data.petty_cash_utilized_lofty || '';
+                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('agm_facilitation').value = data.agm_facilitation_kcb || data.agm_facilitation_lofty || '';
+                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('welfare_kitty_utilized').value = data.welfare_kitty_utilized_kcb || data.welfare_kitty_utilized_lofty || '';
+                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_expenses').value = data.other_expenses_kcb || data.other_expenses_lofty || '';
+                document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Balance sheet data loaded for ${month}.</span>`;
+                logAction('Load Balance Sheet', `Loaded data for ${month}`);
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            } catch (error) {
+                console.error('Error loading balance sheet:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to load balance sheet (${error.message}).</span>`;
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function loadContributionData() {
+            const button = document.querySelector('#memberContributionForm .action-button');
+            setButtonLoading(button, true);
+            const member = document.getElementById('editMember').value;
+            const year = document.getElementById('editContributionYear').value;
+            const month = document.getElementById('editMonthContribution').value;
+            if (!member || !year || !month) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name, year, and month to load contribution.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const matchedMember = fuzzyMatch(member, MEMBERS);
+            if (!matchedMember) {
+                document.getElementById('editMemberError').textContent = 'Invalid member name.';
+                document.getElementById('editMemberError').style.display = 'block';
+                setButtonLoading(button, false);
+                return;
+            }
+            try {
+                showLoadingSpinner();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(matchedMember)}/${month}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('memberSelect').value = matchedMember;
+                document.getElementById('contributionYear').value = year;
+                document.getElementById('contributionMonth').value = month;
+                document.getElementById('contributionAmount').value = data.amount || '';
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution data loaded for ${matchedMember} in ${month}.</span>`;
+                logAction('Load Contribution', `Loaded contribution for ${matchedMember} in ${month}`);
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            } catch (error) {
+                console.error('Error loading contribution:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to load contribution (${error.message}).</span>`;
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            }
+        }
+
+        async function submitFinancialForm(event) {
+            event.preventDefault();
+            const button = document.getElementById('submitFinancialButton');
+            setButtonLoading(button, true);
+            const errors = validateFinancialInputs();
+            if (errors) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const data = {
+                month: document.getElementById('month').value,
+                opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
+                total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
+                total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
+                interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value) || 0,
+                opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value) || 0,
+                total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value) || 0,
+                interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value) || 0,
+                other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
+                other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
+                total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
+                total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
+                bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
+                bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
+                petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
+                petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
+                agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
+                agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
+                welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
+                welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
+                other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
+                other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
+                total_inflows: 0,
+                total_outflows: 0,
+                kcb_balance: 0,
+                lofty_balance: 0,
+                total_balance: 0
+            };
+            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.interest_on_loans_kcb +
+                                 data.total_loan_repayments_lofty + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
+            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb +
+                                  data.bank_charges_lofty + data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty +
+                                  data.agm_facilitation_kcb + data.agm_facilitation_lofty + data.welfare_kitty_utilized_kcb +
+                                  data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
+            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
+                               data.interest_on_loans_kcb + data.other_income_kcb - (data.total_loan_disbursements_kcb +
+                               data.bank_charges_kcb + data.petty_cash_utilized_kcb + data.agm_facilitation_kcb +
+                               data.welfare_kitty_utilized_kcb + data.other_expenses_kcb);
+            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
+                                 data.other_income_lofty - (data.total_loan_disbursements_lofty + data.bank_charges_lofty +
+                                 data.petty_cash_utilized_lofty + data.agm_facilitation_lofty + data.welfare_kitty_utilized_lofty +
+                                 data.other_expenses_lofty);
+            data.total_balance = data.kcb_balance + data.lofty_balance;
+            showConfirmationModal(data, data.month, async () => {
+                try {
+                    showLoadingSpinner();
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${CONFIG.API_KEY}`
+                        },
+                        body: JSON.stringify(data),
+                        timeout: CONFIG.FETCH_TIMEOUT
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data submitted successfully for ${data.month}.</span>`;
+                    logAction('Submit Financial Data', `Submitted financial data for ${data.month}`);
+                    document.getElementById('adminForm').reset();
+                    fetchData();
+                    hideLoadingSpinner();
+                    setButtonLoading(button, false);
+                } catch (error) {
+                    console.error('Error submitting financial data:', error);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit financial data (${error.message}).</span>`;
+                    hideLoadingSpinner();
+                    setButtonLoading(button, false);
+                }
+            });
+        }
+
+        async function submitContributionForm(event) {
+            event.preventDefault();
+            const button = document.getElementById('submitContributionButton');
+            setButtonLoading(button, true);
+            const errors = validateContributionInputs();
+            if (errors) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const member = fuzzyMatch(document.getElementById('memberSelect').value, MEMBERS);
+            const data = {
+                member,
+                month: document.getElementById('contributionMonth').value,
+                amount: parseFloat(document.getElementById('contributionAmount').value)
+            };
+            try {
+                showLoadingSpinner();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`
+                    },
+                    body: JSON.stringify(data),
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${data.month}.</span>`;
+                logAction('Submit Contribution', `Submitted contribution for ${member} in ${data.month}`);
+                document.getElementById('memberContributionForm').reset();
+                document.getElementById('contributionYear').value = '';
+                document.getElementById('contributionMonth').value = '';
+                fetchData();
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            } catch (error) {
+                console.error('Error submitting contribution:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit contribution (${error.message}).</span>`;
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            }
+        }
+
+        function downloadData() {
+            if (!dataCache) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data available to download.</span>`;
+                return;
+            }
+            const dataStr = JSON.stringify(dataCache, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financial_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logAction('Download Data', 'Downloaded financial data backup');
+            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data downloaded successfully.</span>`;
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             populateMonths('month');
             populateMonths('editMonthBalance');
@@ -642,7 +887,11 @@
             document.getElementById('editContributionYear').addEventListener('change', (e) => {
                 populateMonths('editMonthContribution', e.target.value);
             });
+            document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
+            document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
             fetchData();
             displayLogs();
         });
     </script>
+    </body>
+    </html>
