@@ -620,7 +620,7 @@
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data`, {
                     method: 'GET',
-                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -649,7 +649,7 @@
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data/${month}`, {
                     method: 'GET',
-                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -710,7 +710,7 @@
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(matchedMember)}/${month}`, {
                     method: 'GET',
-                    headers: { 'Authorization': `Bearer ${CONFIG.API_KEY}` },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -792,7 +792,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${CONFIG.API_KEY}`
+                            'x-api-key': CONFIG.API_KEY
                         },
                         body: JSON.stringify(data),
                         timeout: CONFIG.FETCH_TIMEOUT
@@ -835,7 +835,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${CONFIG.API_KEY}`
+                        'x-api-key': CONFIG.API_KEY
                     },
                     body: JSON.stringify(data),
                     timeout: CONFIG.FETCH_TIMEOUT
@@ -893,5 +893,5 @@
             displayLogs();
         });
     </script>
-    </body>
-    </html>
+</body>
+</html>s
