@@ -39,7 +39,7 @@
                         <span class="spinner-icon hidden"></span>
                     </button>
                     <select id="editBalanceYear" class="input-field" aria-label="Select year to edit balance sheet">
-                        <option value="">Select Year to Edit</option>
+                        <option value="">Select Year</option>
                     </select>
                     <select id="editBalanceMonth" class="input-field" aria-label="Select month to edit balance sheet">
                         <option value="">Select Month to Edit</option>
@@ -95,7 +95,7 @@
                         <div class="form-group">
                             <label for="total_loan_repayments_lofty" class="tooltip" title="Total loan repayments received in the Lofty account for the month (KES).">Members Loan Repayment Lofty (KES):</label>
                             <input type="number" id="total_loan_repayments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
-                            <span id="membersLoanRepaymentLoftyError" class="error"></span>
+                            <span id="membersmoderate_loan_repayments_loftyError" class="error"></span>
                         </div>
                         <div class="form-group">
                             <label for="interest_on_deposits_lofty" class="tooltip" title="Interest earned on deposits held in the Lofty account for the month (KES).">Interest on Deposits Lofty (KES):</label>
@@ -210,8 +210,8 @@
                     <select id="editContributionYear" class="input-field" aria-label="Select year to edit contribution">
                         <option value="">Select Year</option>
                     </select>
-                    <select id="editMonthContribution" class="input-field" aria-label="Select month to edit contribution">
-                        <option value="">Select Month to Edit</option>
+                    <select id="editContributionMonth" class="input-field" aria-label="Select month to edit contribution">
+                        <option value="">Select Month</option>
                     </select>
                 </div>
                 <form id="memberContributionForm" class="form-grid">
@@ -598,9 +598,12 @@
                 document.getElementById('adminForm').reset();
                 document.getElementById('memberContributionForm').reset();
                 document.getElementById('editMember').value = '';
-                document.getElementById('editMonthBalance').value = '';
+                document.getElementById('editBalanceYear').value = '';
+                document.getElementById('editBalanceMonth').value = '';
                 document.getElementById('editContributionYear').value = '';
-                document.getElementById('editMonthContribution').value = '';
+                document.getElementById('editContributionMonth').value = '';
+                document.getElementById('balanceYear').value = '';
+                document.getElementById('balanceMonth').value = '';
                 document.getElementById('contributionYear').value = '';
                 document.getElementById('contributionMonth').value = '';
                 document.querySelectorAll('.error').forEach(error => {
@@ -612,10 +615,10 @@
                 setButtonLoading(document.getElementById('submitContributionButton'), false);
                 localStorage.removeItem('financialData');
                 localStorage.removeItem('adminLogs');
-                populateMonths('month');
+                populateYears('balanceYear');
+                populateYears('editBalanceYear');
                 populateYears('contributionYear');
                 populateYears('editContributionYear');
-                populateMonths('editMonthBalance');
                 fetchData();
                 logAction('Refresh Form', 'Form reset and selectors repopulated');
             } catch (error) {
@@ -636,8 +639,6 @@
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 dataCache = await response.json();
-                populateMonths('editMonthBalance');
-                populateYears('editContributionYear');
                 hideLoadingSpinner();
                 logAction('Fetch Data', 'Successfully fetched financial data');
             } catch (error) {
@@ -647,12 +648,30 @@
             }
         }
 
+        async function checkExistingBalanceSheet(month) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${month}`, {
+                    method: 'GET',
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (response.status === 404) return false;
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                return !!data; // Returns true if data exists
+            } catch (error) {
+                console.error('Error checking existing balance sheet:', error);
+                return false;
+            }
+        }
+
         async function loadBalanceSheetData() {
             const button = document.querySelector('#adminForm .action-button');
             setButtonLoading(button, true);
-            const month = document.getElementById('editMonthBalance').value;
-            if (!month) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a month to load.</span>`;
+            const year = document.getElementById('editBalanceYear').value;
+            const month = document.getElementById('editBalanceMonth').value;
+            if (!year || !month) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a year and month to load.</span>`;
                 setButtonLoading(button, false);
                 return;
             }
@@ -663,9 +682,16 @@
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
+                if (response.status === 404) {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No balance sheet data found for ${month}. Please enter new data.</span>`;
+                    setButtonLoading(button, false);
+                    hideLoadingSpinner();
+                    return;
+                }
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
-                document.getElementById('month').value = month;
+                document.getElementById('balanceYear').value = year;
+                document.getElementById('balanceMonth').value = month;
                 document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || '';
                 document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || '';
                 document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || '';
@@ -699,12 +725,29 @@
             }
         }
 
+        async function checkExistingContribution(member, month) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(member)}/${month}`, {
+                    method: 'GET',
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (response.status === 404) return false;
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                return !!data; // Returns true if data exists
+            } catch (error) {
+                console.error('Error checking existing contribution:', error);
+                return false;
+            }
+        }
+
         async function loadContributionData() {
             const button = document.querySelector('#memberContributionForm .action-button');
             setButtonLoading(button, true);
             const member = document.getElementById('editMember').value;
             const year = document.getElementById('editContributionYear').value;
-            const month = document.getElementById('editMonthContribution').value;
+            const month = document.getElementById('editContributionMonth').value;
             if (!member || !year || !month) {
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name, year, and month to load contribution.</span>`;
                 setButtonLoading(button, false);
@@ -724,6 +767,12 @@
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
+                if (response.status === 404) {
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${month}. Please enter new data.</span>`;
+                    setButtonLoading(button, false);
+                    hideLoadingSpinner();
+                    return;
+                }
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 document.getElementById('memberSelect').value = matchedMember;
@@ -752,8 +801,21 @@
                 setButtonLoading(button, false);
                 return;
             }
+            const year = document.getElementById('balanceYear').value;
+            const month = document.getElementById('balanceMonth').value;
+            if (!year || !month) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a year and month.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const exists = await checkExistingBalanceSheet(month);
+            if (exists) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A balance sheet for ${month} already exists. Please load it to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
             const data = {
-                month: document.getElementById('month').value,
+                month: month,
                 opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
                 total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
                 total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
@@ -812,6 +874,8 @@
                     document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data submitted successfully for ${data.month}.</span>`;
                     logAction('Submit Financial Data', `Submitted financial data for ${data.month}`);
                     document.getElementById('adminForm').reset();
+                    document.getElementById('balanceYear').value = '';
+                    document.getElementById('balanceMonth').value = '';
                     fetchData();
                     hideLoadingSpinner();
                     setButtonLoading(button, false);
@@ -835,9 +899,17 @@
                 return;
             }
             const member = fuzzyMatch(document.getElementById('memberSelect').value, MEMBERS);
+            const year = document.getElementById('contributionYear').value;
+            const month = document.getElementById('contributionMonth').value;
+            const exists = await checkExistingContribution(member, month);
+            if (exists) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A contribution for ${member} in ${month} already exists. Please load it to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
             const data = {
                 member,
-                month: document.getElementById('contributionMonth').value,
+                month,
                 amount: parseFloat(document.getElementById('contributionAmount').value)
             };
             try {
@@ -852,8 +924,8 @@
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${data.month}.</span>`;
-                logAction('Submit Contribution', `Submitted contribution for ${member} in ${data.month}`);
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${month}.</span>`;
+                logAction('Submit Contribution', `Submitted contribution for ${member} in ${month}`);
                 document.getElementById('memberContributionForm').reset();
                 document.getElementById('contributionYear').value = '';
                 document.getElementById('contributionMonth').value = '';
@@ -888,15 +960,21 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            populateMonths('month');
-            populateMonths('editMonthBalance');
+            populateYears('balanceYear');
+            populateYears('editBalanceYear');
             populateYears('contributionYear');
             populateYears('editContributionYear');
+            document.getElementById('balanceYear').addEventListener('change', (e) => {
+                populateMonths('balanceMonth', e.target.value);
+            });
+            document.getElementById('editBalanceYear').addEventListener('change', (e) => {
+                populateMonths('editBalanceMonth', e.target.value);
+            });
             document.getElementById('contributionYear').addEventListener('change', (e) => {
                 populateMonths('contributionMonth', e.target.value);
             });
             document.getElementById('editContributionYear').addEventListener('change', (e) => {
-                populateMonths('editMonthContribution', e.target.value);
+                populateMonths('editContributionMonth', e.target.value);
             });
             document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
             document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
