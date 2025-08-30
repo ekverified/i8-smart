@@ -38,17 +38,27 @@
                         <i class="fas fa-folder-open"></i> Load Balance Sheet
                         <span class="spinner-icon hidden"></span>
                     </button>
-                    <select id="editMonthBalance" class="input-field" aria-label="Select month to edit balance sheet">
+                    <select id="editBalanceYear" class="input-field" aria-label="Select year to edit balance sheet">
+                        <option value="">Select Year to Edit</option>
+                    </select>
+                    <select id="editBalanceMonth" class="input-field" aria-label="Select month to edit balance sheet">
                         <option value="">Select Month to Edit</option>
                     </select>
                 </div>
                 <form id="adminForm" class="form-grid">
                     <div class="form-group">
-                        <label for="month" class="tooltip" title="Select the month for which financial data is being entered or updated.">Select Month:</label>
-                        <select id="month" class="input-field" aria-label="Select month for financial data" required>
+                        <label for="balanceYear" class="tooltip" title="Select the year for which financial data is being entered or updated.">Select Year:</label>
+                        <select id="balanceYear" class="input-field" aria-label="Select year for financial data" required>
+                            <option value="">Select Year</option>
+                        </select>
+                        <span id="balanceYearError" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="balanceMonth" class="tooltip" title="Select the month for which financial data is being entered or updated.">Select Month:</label>
+                        <select id="balanceMonth" class="input-field" aria-label="Select month for financial data" required>
                             <option value="">Select Month</option>
                         </select>
-                        <span id="monthError" class="error"></span>
+                        <span id="balanceMonthError" class="error"></span>
                     </div>
 
                     <details class="collapsible-section">
@@ -406,7 +416,8 @@
         function validateFinancialInputs() {
             const errors = [];
             const inputs = [
-                { id: 'month', errorId: 'monthError', message: 'Please select a month.' },
+                { id: 'balanceYear', errorId: 'balanceYearError', message: 'Please select a year.' },
+                { id: 'balanceMonth', errorId: 'balanceMonthError', message: 'Please select a month.' },
                 { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
                 { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
                 { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
@@ -431,7 +442,7 @@
                     return;
                 }
                 errorElement.style.display = 'none';
-                if (input.id === 'month') {
+                if (input.id === 'balanceYear' || input.id === 'balanceMonth') {
                     if (!element.value) {
                         errorElement.textContent = input.message;
                         errorElement.style.display = 'block';
@@ -618,7 +629,7 @@
         async function fetchData() {
             try {
                 showLoadingSpinner();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
                     method: 'GET',
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
@@ -647,7 +658,7 @@
             }
             try {
                 showLoadingSpinner();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data/${month}`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${month}`, {
                     method: 'GET',
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
@@ -788,13 +799,13 @@
             showConfirmationModal(data, data.month, async () => {
                 try {
                     showLoadingSpinner();
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/financial-data`, {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'x-api-key': CONFIG.API_KEY
                         },
-                        body: JSON.stringify(data),
+                        body: JSON.stringify({ action: 'updateBalanceSheet', month: data.month, data }),
                         timeout: CONFIG.FETCH_TIMEOUT
                     });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -894,4 +905,4 @@
         });
     </script>
 </body>
-</html>s
+</html>
