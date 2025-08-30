@@ -197,21 +197,8 @@
                         <div id="analysisResults"></div>
                     </div>
                 </div>
-
                 <div class="simulation-section">
-                    <h3>Future Simulation</h3>
-                    <form id="simulationForm">
-                        <label for="projectionMonths">Projection Period (Months):</label>
-                        <input type="number" id="projectionMonths" min="1" max="24" value="12" aria-label="Number of months to project">
-
-                        <label for="growthRate">Expected Growth Rate (%):</label>
-                        <input type="number" id="growthRate" min="-50" max="100" step="0.1" value="10" aria-label="Expected monthly growth rate">
-
-                        <label for="newMembers">New Members Expected:</label>
-                        <input type="number" id="newMembers" min="0" max="50" value="2" aria-label="Number of new members expected">
-
-                        <button type="button" onclick="runSimulation()" aria-label="Run future simulation">Run Simulation</button>
-                    </form>
+                    <h3>Future Simulation (12 Months)</h3>
                     <div id="simulationResults"></div>
                 </div>
             </div>
@@ -302,13 +289,11 @@ let forceRefresh = false;
 
 function sanitizeInput(input) {
     if (typeof input !== 'string') return '';
-    // Remove potentially harmful characters and trim whitespace
     return input.replace(/[<>\"'&]/g, '').trim();
 }
 
 function sanitizeNumericInput(input) {
     if (typeof input !== 'string') return '';
-    // Allow only numbers, decimal points, and negative signs
     return input.replace(/[^0-9.-]/g, '');
 }
 
@@ -912,7 +897,6 @@ function updateBehaviorReport() {
         const totalAssets = (reportData.total_balance || 0) + (reportData.total_loan_disbursements_kcb || 0) + (reportData.total_loan_disbursements_lofty || 0);
         const periodDisplay = periodValue ? ` - ${periodValue}` : '';
 
-        // Calculate performance metrics
         const netIncome = (reportData.total_inflows || 0) - (reportData.total_outflows || 0);
         const contributionRatio = reportData.total_inflows ? ((reportData.total_member_contributions_kcb || 0) / reportData.total_inflows * 100) : 0;
         const loanToContributionRatio = reportData.total_member_contributions_kcb ? ((reportData.total_loan_disbursements_kcb || 0) / reportData.total_member_contributions_kcb) : 0;
@@ -1392,7 +1376,7 @@ function createMemberData(name, apiMember) {
     return {
         member_name: name,
         amount: amount,
-        shares: assignedShares, // Use pre-assigned shares from config
+        shares: assignedShares,
         last_contribution_date: apiMember ? apiMember.last_contribution_date : null,
         contributions: apiMember ? apiMember.contributions || {} : {},
         loan_limit: amount * MEMBER_CONFIG.loanLimitMultiplier,
@@ -1431,315 +1415,259 @@ function displayMembers(members) {
     }
 }
 
-function runPerformanceAnalysis() {
-    showSpinner(document.getElementById('analysisSpinner'));
-    fetchDataIfStale(true).then(() => {
-        const data = dataCache || loadDataFromStorage();
-        if (!data || !data.monthly_reports) {
-            document.getElementById('analysisResults').innerHTML = '<p>No data available for analysis.</p>';
-            hideSpinner(document.getElementById('analysisSpinner'));
-            return;
-        }
-
-        const availableMonths = Object.keys(data.monthly_reports).sort();
-        const latestMonth = availableMonths[availableMonths.length - 1];
-        const currentData = data.monthly_reports[latestMonth];
-
-        // Calculate trends
-        const trends = calculateTrends(data.monthly_reports, availableMonths);
-
-        // Generate analysis report
-        const analysisHTML = `
-            <div class="analysis-report">
-                <h4>📊 Company Performance Analysis</h4>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <h5>Current Financial Health</h5>
-                        <p><strong>Total Balance:</strong> KES ${(currentData.total_balance || 0).toFixed(2)}</p>
-                        <p><strong>Net Income:</strong> KES ${((currentData.total_inflows || 0) - (currentData.total_outflows || 0)).toFixed(2)}</p>
-                        <p><strong>Active Members:</strong> ${data.member_contributions ? data.member_contributions.length : 0}</p>
-                    </div>
-
-                    <div class="metric-card">
-                        <h5>Trends & Growth</h5>
-                        <p><strong>Balance Growth:</strong> ${trends.balanceGrowth >= 0 ? '+' : ''}${trends.balanceGrowth.toFixed(1)}%</p>
-                        <p><strong>Contribution Growth:</strong> ${trends.contributionGrowth >= 0 ? '+' : ''}${trends.contributionGrowth.toFixed(1)}%</p>
-                        <p><strong>Loan Activity:</strong> ${trends.loanActivity >= 0 ? '+' : ''}${trends.loanActivity.toFixed(1)}%</p>
-                    </div>
-
-                    <div class="metric-card">
-                        <h5>Risk Assessment</h5>
-                        <p><strong>Liquidity Ratio:</strong> ${trends.liquidityRatio.toFixed(2)}</p>
-                        <p><strong>Risk Level:</strong> <span class="${getRiskClass(trends.riskLevel)}">${trends.riskLevel}</span></p>
-                        <p><strong>Recommendations:</strong> ${trends.recommendations}</p>
-                    </div>
-                </div>
-
-                <div class="performance-insights">
-                    <h5>💡 Key Insights</h5>
-                    <ul>
-                        ${generateInsights(trends, currentData)}
-                    </ul>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('analysisResults').innerHTML = analysisHTML;
-        hideSpinner(document.getElementById('analysisSpinner'));
-    }).catch(error => {
-        console.error('Analysis failed:', error);
-        document.getElementById('analysisResults').innerHTML = '<p>Error generating analysis. Please try again.</p>';
-        hideSpinner(document.getElementById('analysisSpinner'));
-    });
-}
-
 function calculateTrends(monthlyReports, availableMonths) {
-    if (availableMonths.length < 2) {
+    if (availableMonths.length < 4) {
         return {
             balanceGrowth: 0,
             contributionGrowth: 0,
             loanActivity: 0,
             liquidityRatio: 0,
+            netIncomeRatio: 0,
+            expenseRatio: 0,
+            loanToContributionRatio: 0,
             riskLevel: 'Unknown',
-            recommendations: 'Need more data for accurate analysis'
+            recommendations: 'Need more data for accurate analysis',
+            riskFactors: []
         };
     }
 
     const latest = monthlyReports[availableMonths[availableMonths.length - 1]];
-    const previous = monthlyReports[availableMonths[availableMonths.length - 2]];
+    const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]];
+    const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]];
+    const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]];
 
-    const balanceGrowth = previous.total_balance ?
-        ((latest.total_balance - previous.total_balance) / previous.total_balance * 100) : 0;
+    const balanceGrowth = prev3.total_balance ?
+        ((latest.total_balance - prev3.total_balance) / prev3.total_balance * 100) : 0;
 
-    const contributionGrowth = previous.total_member_contributions_kcb ?
-        ((latest.total_member_contributions_kcb - previous.total_member_contributions_kcb) / previous.total_member_contributions_kcb * 100) : 0;
+    const contributionGrowth = prev3.total_member_contributions_kcb ?
+        ((latest.total_member_contributions_kcb - prev3.total_member_contributions_kcb) / prev3.total_member_contributions_kcb * 100) : 0;
 
-    const loanActivity = previous.total_loan_disbursements_kcb ?
-        ((latest.total_loan_disbursements_kcb - previous.total_loan_disbursements_kcb) / previous.total_loan_disbursements_kcb * 100) : 0;
+    const loanActivity = prev3.total_loan_disbursements_kcb ?
+        ((latest.total_loan_disbursements_kcb - prev3.total_loan_disbursements_kcb) / prev3.total_loan_disbursements_kcb * 100) : 0;
 
     const liquidityRatio = latest.total_balance ?
         (latest.total_balance / (latest.total_loan_disbursements_kcb || 1)) : 0;
 
-    let riskLevel = 'Low';
-    let recommendations = 'Company is performing well. Continue current strategies.';
+    const netIncome = (latest.total_inflows || 0) - (latest.total_outflows || 0);
+    const netIncomeRatio = latest.total_inflows ? (netIncome / latest.total_inflows * 100) : 0;
 
-    if (balanceGrowth < -10) {
-        riskLevel = 'High';
-        recommendations = 'Significant balance decline detected. Review expenses and increase member contributions.';
-    } else if (balanceGrowth < 0) {
-        riskLevel = 'Medium';
-        recommendations = 'Balance is declining. Consider cost reduction measures.';
-    } else if (balanceGrowth > 20) {
-        riskLevel = 'Low';
-        recommendations = 'Excellent growth! Consider expanding loan offerings.';
-    }
+    const expenseRatio = latest.total_inflows ?
+        (((latest.bank_charges_kcb || 0) + (latest.bank_charges_lofty || 0) +
+          (latest.petty_cash_utilized_kcb || 0) + (latest.petty_cash_utilized_lofty || 0) +
+          (latest.agm_facilitation_kcb || 0) + (latest.agm_facilitation_lofty || 0) +
+          (latest.welfare_kitty_utilized_kcb || 0) + (latest.welfare_kitty_utilized_lofty || 0) +
+          (latest.other_expenses || 0)) / latest.total_inflows * 100) : 0;
+
+    const loanToContributionRatio = latest.total_member_contributions_kcb ?
+        (latest.total_loan_disbursements_kcb / latest.total_member_contributions_kcb) : 0;
+
+    let riskLevel = 'Low';
+    const riskFactors = [];
 
     if (liquidityRatio < 0.5) {
         riskLevel = 'High';
-        recommendations += ' Low liquidity ratio indicates potential cash flow issues.';
+        riskFactors.push('Low liquidity ratio indicates potential cash flow issues.');
+    } else if (liquidityRatio < 1) {
+        riskLevel = 'Moderate';
+        riskFactors.push('Moderate liquidity ratio suggests limited cash reserves relative to loans.');
+    }
+
+    if (loanToContributionRatio > 2) {
+        riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
+        riskFactors.push('High loan-to-contribution ratio indicates heavy reliance on loans.');
+    }
+
+    if (netIncomeRatio < 0) {
+        riskLevel = 'High';
+        riskFactors.push('Negative net income indicates losses.');
+    } else if (netIncomeRatio < 5) {
+        riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
+        riskFactors.push('Low net income ratio suggests limited profitability.');
+    }
+
+    let recommendations = '';
+    if (riskLevel === 'High') {
+        recommendations = 'Immediate action required: Reduce loan disbursements, increase member contributions, and cut discretionary expenses.';
+    } else if (riskLevel === 'Moderate') {
+        recommendations = 'Monitor closely: Optimize loan policies and improve expense management.';
+    } else {
+        recommendations = 'Maintain current strategy with periodic reviews.';
     }
 
     return {
-        balanceGrowth,
-        contributionGrowth,
-        loanActivity,
-        liquidityRatio,
+        balanceGrowth: balanceGrowth.toFixed(2),
+        contributionGrowth: contributionGrowth.toFixed(2),
+        loanActivity: loanActivity.toFixed(2),
+        liquidityRatio: liquidityRatio.toFixed(2),
+        netIncomeRatio: netIncomeRatio.toFixed(2),
+        expenseRatio: expenseRatio.toFixed(2),
+        loanToContributionRatio: loanToContributionRatio.toFixed(2),
         riskLevel,
-        recommendations
+        recommendations,
+        riskFactors
     };
 }
 
-function getRiskClass(riskLevel) {
-    switch (riskLevel.toLowerCase()) {
-        case 'low': return 'risk-low';
-        case 'medium': return 'risk-medium';
-        case 'high': return 'risk-high';
-        default: return 'risk-unknown';
+function generateFutureProjections(monthlyReports, availableMonths) {
+    if (availableMonths.length < 3) {
+        return {
+            projections: [],
+            newMembers: 0
+        };
     }
+
+    const latest = monthlyReports[availableMonths[availableMonths.length - 1]];
+    const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]];
+    const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]];
+
+    // Calculate average growth rates
+    const contributionGrowthRate = (
+        ((latest.total_member_contributions_kcb - prev1.total_member_contributions_kcb) / prev1.total_member_contributions_kcb +
+         (prev1.total_member_contributions_kcb - prev2.total_member_contributions_kcb) / prev2.total_member_contributions_kcb) / 2
+    ) || 0.02; // Default to 2% if no data
+
+    const loanGrowthRate = (
+        ((latest.total_loan_disbursements_kcb - prev1.total_loan_disbursements_kcb) / prev1.total_loan_disbursements_kcb +
+         (prev1.total_loan_disbursements_kcb - prev2.total_loan_disbursements_kcb) / prev2.total_loan_disbursements_kcb) / 2
+    ) || 0.015; // Default to 1.5%
+
+    const incomeGrowthRate = (
+        ((latest.total_inflows - prev1.total_inflows) / prev1.total_inflows +
+         (prev1.total_inflows - prev2.total_inflows) / prev2.total_inflows) / 2
+    ) || 0.01; // Default to 1%
+
+    const newMemberGrowthRate = 0.05; // Assume 5% monthly new member growth
+    const currentMembers = monthlyReports[availableMonths[availableMonths.length - 1]].member_count || 10;
+    let projectedMembers = currentMembers;
+
+    const projections = [];
+    let currentBalance = latest.total_balance || 0;
+    let currentContributions = latest.total_member_contributions_kcb || 0;
+    let currentLoans = latest.total_loan_disbursements_kcb || 0;
+    let currentIncome = latest.total_inflows || 0;
+
+    for (let i = 1; i <= 12; i++) {
+        currentBalance = currentBalance * (1 + (balanceGrowth / 100 / 12));
+        currentContributions = currentContributions * (1 + contributionGrowthRate);
+        currentLoans = currentLoans * (1 + loanGrowthRate);
+        currentIncome = currentIncome * (1 + incomeGrowthRate);
+        projectedMembers = projectedMembers * (1 + newMemberGrowthRate);
+
+        projections.push({
+            month: i,
+            projectedBalance: currentBalance.toFixed(2),
+            projectedContributions: currentContributions.toFixed(2),
+            projectedLoans: currentLoans.toFixed(2),
+            projectedIncome: currentIncome.toFixed(2),
+            projectedGrowthRate: ((currentBalance - latest.total_balance) / latest.total_balance * 100).toFixed(2),
+            projectedNewMembers: Math.round(projectedMembers - currentMembers)
+        });
+    }
+
+    return {
+        projections,
+        newMembers: Math.round(projectedMembers - currentMembers)
+    };
 }
 
-function generateInsights(trends, currentData) {
-    const insights = [];
+function runPerformanceAnalysis() {
+    const analysisResults = document.getElementById('analysisResults');
+    const simulationResults = document.getElementById('simulationResults');
+    const analysisSpinner = document.getElementById('analysisSpinner');
 
-    if (trends.contributionGrowth > 10) {
-        insights.push('<li>📈 Strong member contribution growth indicates healthy member engagement</li>');
-    } else if (trends.contributionGrowth < 0) {
-        insights.push('<li>⚠️ Declining contributions may require member retention strategies</li>');
-    }
-
-    if (trends.loanActivity > 15) {
-        insights.push('<li>💰 High loan activity suggests good demand for financial services</li>');
-    }
-
-    if (trends.liquidityRatio > 2) {
-        insights.push('<li>💵 Strong liquidity position provides good financial stability</li>');
-    } else if (trends.liquidityRatio < 1) {
-        insights.push('<li>⚠️ Low liquidity ratio may limit loan disbursement capacity</li>');
-    }
-
-    const activeMembers = currentData.total_member_contributions_kcb ? Math.floor(currentData.total_member_contributions_kcb / 1000) : 0;
-    if (activeMembers > 5) {
-        insights.push('<li>👥 Good member base providing stable contribution income</li>');
-    }
-
-    return insights.length > 0 ? insights.join('') : '<li>Analysis in progress...</li>';
-}
-
-function runSimulation() {
-    const projectionMonths = parseInt(document.getElementById('projectionMonths').value) || 12;
-    const growthRate = parseFloat(document.getElementById('growthRate').value) || 10;
-    const newMembers = parseInt(document.getElementById('newMembers').value) || 2;
-
-    showSpinner(document.getElementById('analysisSpinner'));
-
+    showSpinner(analysisSpinner);
     fetchDataIfStale(true).then(() => {
         const data = dataCache || loadDataFromStorage();
-        if (!data || !data.monthly_reports) {
-            document.getElementById('simulationResults').innerHTML = '<p>No data available for simulation.</p>';
-            hideSpinner(document.getElementById('analysisSpinner'));
+        if (!data || !data.monthly_reports || Object.keys(data.monthly_reports).length === 0) {
+            analysisResults.innerHTML = '<p>No analysis data available. Please check admin updates or server connection.</p>';
+            simulationResults.innerHTML = '<p>No simulation data available.</p>';
+            hideSpinner(analysisSpinner);
             return;
         }
 
         const availableMonths = Object.keys(data.monthly_reports).sort();
-        const latestData = data.monthly_reports[availableMonths[availableMonths.length - 1]];
+        const trends = calculateTrends(data.monthly_reports, availableMonths);
+        const { projections, newMembers } = generateFutureProjections(data.monthly_reports, availableMonths);
 
-        const simulation = performSimulation(latestData, projectionMonths, growthRate / 100, newMembers);
-
-        const simulationHTML = `
-            <div class="simulation-report">
-                <h4>🔮 Future Projection Results</h4>
-                <div class="projection-summary">
-                    <div class="projection-card">
-                        <h5>Projected Balance</h5>
-                        <p class="projection-value">KES ${simulation.finalBalance.toFixed(2)}</p>
-                        <p class="projection-change ${simulation.balanceChange >= 0 ? 'positive' : 'negative'}">
-                            ${simulation.balanceChange >= 0 ? '+' : ''}${simulation.balanceChange.toFixed(1)}%
-                        </p>
-                    </div>
-
-                    <div class="projection-card">
-                        <h5>Projected Contributions</h5>
-                        <p class="projection-value">KES ${simulation.totalContributions.toFixed(2)}</p>
-                        <p class="projection-growth">+${simulation.contributionGrowth.toFixed(1)}%</p>
-                    </div>
-
-                    <div class="projection-card">
-                        <h5>Projected Members</h5>
-                        <p class="projection-value">${simulation.totalMembers}</p>
-                        <p class="projection-new">+${simulation.newMembersAdded} new members</p>
-                    </div>
-                </div>
-
-                <div class="projection-chart">
-                    <h5>Growth Trajectory</h5>
-                    <div class="chart-placeholder">
-                        <p>📊 Projected growth over ${projectionMonths} months at ${growthRate}% monthly rate</p>
-                        <div class="growth-bar" style="width: ${Math.min(simulation.growthPotential, 100)}%"></div>
-                        <p class="growth-label">${simulation.growthPotential.toFixed(1)}% growth potential</p>
-                    </div>
-                </div>
-
-                <div class="recommendations">
-                    <h5>🎯 Strategic Recommendations</h5>
-                    <ul>
-                        ${simulation.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                    </ul>
-                </div>
-            </div>
+        let analysisHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Metric</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
+                </tr>
+                <tr><td>Balance Growth (%)</td><td>${trends.balanceGrowth}%</td></tr>
+                <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth}%</td></tr>
+                <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity}%</td></tr>
+                <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio}:1</td></tr>
+                <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio}%</td></tr>
+                <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio}%</td></tr>
+                <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio}:1</td></tr>
+                <tr><td>Risk Level</td><td>${trends.riskLevel}</td></tr>
+                <tr><td>Recommendations</td><td>${trends.recommendations}</td></tr>
+                <tr><td>Risk Factors</td><td>${trends.riskFactors.length > 0 ? trends.riskFactors.join('<br>') : 'None'}</td></tr>
+            </table>
         `;
 
-        document.getElementById('simulationResults').innerHTML = simulationHTML;
-        hideSpinner(document.getElementById('analysisSpinner'));
+        let simulationHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Month</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Balance (KES)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Contributions (KES)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Loan Uptake (KES)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Income (KES)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Growth Rate (%)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected New Members</th>
+                </tr>
+        `;
+        projections.forEach(proj => {
+            simulationHTML += `
+                <tr>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.month}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedBalance}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedContributions}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedLoans}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedIncome}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}</td>
+                    <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedNewMembers}</td>
+                </tr>
+            `;
+        });
+        simulationHTML += `</table>
+            <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
+        `;
+
+        analysisResults.innerHTML = analysisHTML;
+        simulationResults.innerHTML = simulationHTML;
+        hideSpinner(analysisSpinner);
     }).catch(error => {
-        console.error('Simulation failed:', error);
-        document.getElementById('simulationResults').innerHTML = '<p>Error running simulation. Please try again.</p>';
-        hideSpinner(document.getElementById('analysisSpinner'));
+        logError('Error running performance analysis', error);
+        analysisResults.innerHTML = `<p>Failed to load analysis: ${error.message}. Please try again or contact support.</p>`;
+        simulationResults.innerHTML = `<p>Failed to load simulation: ${error.message}. Please try again or contact support.</p>`;
+        hideSpinner(analysisSpinner);
     });
-}
-
-function performSimulation(currentData, months, growthRate, newMembers) {
-    let balance = currentData.total_balance || 0;
-    let contributions = currentData.total_member_contributions_kcb || 0;
-    let members = 10; // Assuming current member base
-
-    const monthlyContribution = contributions / members;
-    const initialBalance = balance;
-
-    for (let i = 0; i < months; i++) {
-        // Apply growth to contributions
-        contributions *= (1 + growthRate);
-        // Add new members
-        if (i % 3 === 0) { // Add new members quarterly
-            members += Math.floor(newMembers / 4);
-        }
-        // Update balance (simplified model)
-        balance += (contributions * 0.1); // Assume 10% of contributions go to balance
-        balance -= (balance * 0.02); // Account for expenses
-    }
-
-    const balanceChange = ((balance - initialBalance) / initialBalance * 100);
-    const contributionGrowth = ((contributions - (currentData.total_member_contributions_kcb || 0)) / (currentData.total_member_contributions_kcb || 1) * 100);
-    const growthPotential = Math.max(0, Math.min(balanceChange + contributionGrowth, 200));
-
-    const recommendations = [];
-    if (growthRate > 0.15) {
-        recommendations.push('⚠️ High growth rate may be unrealistic. Consider more conservative projections.');
-    }
-    if (balanceChange > 50) {
-        recommendations.push('📈 Excellent projected growth! Consider expanding operations.');
-    }
-    if (newMembers > 10) {
-        recommendations.push('👥 Significant member growth expected. Ensure adequate onboarding processes.');
-    }
-    if (recommendations.length === 0) {
-        recommendations.push('✅ Steady growth projected. Continue current strategies with regular monitoring.');
-    }
-
-    return {
-        finalBalance: balance,
-        balanceChange,
-        totalContributions: contributions,
-        contributionGrowth,
-        totalMembers: members,
-        newMembersAdded: newMembers,
-        growthPotential,
-        recommendations
-    };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     toggleFields();
     populateYears();
     updateButtonState();
-    changeMainPage(0);
-    debugDataStructure();
-
-    elements.amount.addEventListener('input', updateButtonState);
-    elements.type.addEventListener('change', toggleFields);
-    elements.year.addEventListener('change', populateMonths);
-    elements.month.addEventListener('change', updateDueDate);
-    elements.dueDate.addEventListener('change', updateButtonState);
-    elements.checkDate.addEventListener('change', updateButtonState);
-    elements.loanType.addEventListener('change', toggleRepaymentFields);
-    elements.repaymentPeriod.addEventListener('change', updateButtonState);
-
-    document.getElementById('calcForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (!elements.calcButton.disabled) calculate();
+    const inputs = [
+        elements.type, elements.amount, elements.year, elements.month,
+        elements.dueDate, elements.checkDate, elements.loanType, elements.repaymentPeriod
+    ];
+    inputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', updateButtonState);
+            input.addEventListener('change', updateButtonState);
+        }
     });
+    if (currentMainPage === 2) updateFinancialData();
+    if (currentMainPage === 3) updateFinancialData();
+    if (currentMainPage === 4) updateBehaviorReport();
+    if (currentMainPage === 5) runPerformanceAnalysis();
 });
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-                console.log('Service Worker registered with scope:', registration.scope);
-            })
-            .catch(error => {
-                logError('Service Worker registration failed', error);
-            });
-    });
-}
 </script>
 </body>
 </html>
