@@ -25,228 +25,12 @@
                 <button class="sidebar-button" onclick="downloadData()" aria-label="Download data backup">
                     <i class="fas fa-download"></i> Download Backup
                 </button>
-                <button class="sidebar-button" onclick="showChangePasswordModal()" aria-label="Change password">
-                    <i class="fas fa-key"></i> Change Password
-                </button>
                 <button class="sidebar-button logout-button" onclick="logout()" aria-label="Log out of admin panel">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </nav>
         </aside>
         <main class="main-content">
-            <div class="card">
-                <h2>Update Financial Data</h2>
-                <div class="edit-controls">
-                    <button class="action-button" onclick="loadBalanceSheetData()" aria-label="Load existing balance sheet data for editing">
-                        <i class="fas fa-folder-open"></i> Load Balance Sheet
-                        <span class="spinner-icon hidden"></span>
-                    </button>
-                    <select id="editBalanceYear" class="input-field" aria-label="Select year to edit balance sheet">
-                        <option value="">Select Year</option>
-                    </select>
-                    <select id="editBalanceMonth" class="input-field" aria-label="Select month to edit balance sheet">
-                        <option value="">Select Month to Edit</option>
-                    </select>
-                </div>
-                <form id="adminForm" class="form-grid">
-                    <div class="form-group">
-                        <label for="balanceYear" class="tooltip" title="Select the year for which financial data is being entered or updated.">Select Year:</label>
-                        <select id="balanceYear" class="input-field" aria-label="Select year for financial data" required>
-                            <option value="">Select Year</option>
-                        </select>
-                        <span id="balanceYearError" class="error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="balanceMonth" class="tooltip" title="Select the month for which financial data is being entered or updated.">Select Month:</label>
-                        <select id="balanceMonth" class="input-field" aria-label="Select month for financial data" required>
-                            <option value="">Select Month</option>
-                        </select>
-                        <span id="balanceMonthError" class="error"></span>
-                    </div>
-
-                    <details class="collapsible-section">
-                        <summary>KCB Accounts</summary>
-                        <div class="form-group">
-                            <label for="opening_kcb_balance" class="tooltip" title="The starting balance in the KCB account for the selected month (KES).">Opening KCB Balance (KES):</label>
-                            <input type="number" id="opening_kcb_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening KCB balance in KES">
-                            <span id="openingKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_member_contributions_kcb" class="tooltip" title="Total contributions made by members to the KCB account for the month (KES).">Members Contribution KCB (KES):</label>
-                            <input type="number" id="total_member_contributions_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members contribution KCB in KES">
-                            <span id="membersContributionKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_loan_repayments_kcb" class="tooltip" title="Total loan repayments received in the KCB account for the month (KES).">Members Loan Repayment KCB (KES):</label>
-                            <input type="number" id="total_loan_repayments_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
-                            <span id="membersLoanRepaymentKcbError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="interest_on_loans_kcb" class="tooltip" title="Interest earned on loans issued from the KCB account for the month (KES).">Interest on Loans KCB (KES):</label>
-                            <input type="number" id="interest_on_loans_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
-                            <span id="interestOnLoansKcbError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Lofty Accounts</summary>
-                        <div class="form-group">
-                            <label for="opening_lofty_balance" class="tooltip" title="The starting balance in the Lofty account for the selected month (KES).">Opening Lofty Balance (KES):</label>
-                            <input type="number" id="opening_lofty_balance" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Opening Lofty balance in KES">
-                            <span id="openingLoftyError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="total_loan_repayments_lofty" class="tooltip" title="Total loan repayments received in the Lofty account for the month (KES).">Members Loan Repayment Lofty (KES):</label>
-                            <input type="number" id="total_loan_repayments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
-                            <span id="membersmoderate_loan_repayments_loftyError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="interest_on_deposits_lofty" class="tooltip" title="Interest earned on deposits held in the Lofty account for the month (KES).">Interest on Deposits Lofty (KES):</label>
-                            <input type="number" id="interest_on_deposits_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
-                            <span id="interestOnDepositsLoftyError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Other Inflows</summary>
-                        <div class="form-group">
-                            <label for="other_income" class="tooltip" title="Miscellaneous income not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Income (KES):</label>
-                            <div class="input-group">
-                                <select id="other_income_account" class="input-field" aria-label="Select account for other income">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="other_income" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other income in KES">
-                            </div>
-                            <span id="otherIncomeError" class="error"></span>
-                        </div>
-                    </details>
-
-                    <details class="collapsible-section">
-                        <summary>Outflows</summary>
-                        <div class="form-group">
-                            <label for="total_loan_disbursements" class="tooltip" title="Total loans disbursed to members from either KCB or Lofty account for the month (KES).">Loans Advanced to Members (KES):</label>
-                            <div class="input-group">
-                                <select id="total_loan_disbursements_account" class="input-field" aria-label="Select account for loans advanced">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="total_loan_disbursements" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Loans advanced to members in KES">
-                            </div>
-                            <span id="loansAdvancedError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="bank_charges" class="tooltip" title="Charges incurred from banking services, assigned to either KCB or Lofty account (KES).">Bank Charges (KES):</label>
-                            <div class="input-group">
-                                <select id="bank_charges_account" class="input-field" aria-label="Select account for bank charges">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="bank_charges" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Bank charges in KES">
-                            </div>
-                            <span id="bankChargesError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="petty_cash_utilized" class="tooltip" title="Petty cash used for minor expenses, assigned to either KCB or Lofty account (KES).">Petty Cash Utilized (KES):</label>
-                            <div class="input-group">
-                                <select id="petty_cash_utilized_account" class="input-field" aria-label="Select account for petty cash utilized">
-                                    <option value="kcb">KCB</option>
-                                    <option value="lofty">Lofty</option>
-                                </select>
-                                <input type="number" id="petty_cash_utilized" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Petty cash utilized in KES">
-                            </div>
-                            <span id="pettyCashUtilizedError" class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="agm_facilitation" class="tooltip" title="Expenses related to facilitating the Annual General Meeting, assigned to either KCB or Lofty account (KES).">AGM Facilitation (KES):</label>
-                            <div class="input-group">
-                                <select id="agm_facilitation_account" class="input-field" aria-label="Select account for AGM facilitation">
-jącego
-
-System: <xaiArtifact artifact_id="f4817da7-4acd-4a0a-8aff-9752c36df060" artifact_version_id="1271c983-6f1d-4baa-892f-7f36f9f75ce3" title="index.html" contentType="text/html">
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="i-8 SMART BOT Admin: Update financial data and member contributions for the SACCO.">
-    <meta name="author" content="Insightful Eight Co. Ltd.">
-    <title>i-8 SMART BOT Admin</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .modal-content h3 {
-            margin-top: 0;
-        }
-        .modal-content .form-group {
-            margin-bottom: 15px;
-        }
-        .modal-content .action-button {
-            margin-right: 10px;
-        }
-        .modal-content .error {
-            color: #e74c3c;
-            font-size: 0.9em;
-            display: none;
-        }
-        .modal-content .link {
-            color: #1a73e8;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .main-content.hidden {
-            display: none;
-        }
-        .sidebar.hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <aside class="sidebar hidden">
-            <div class="sidebar-header">
-                <div class="logo">i-8 SMART</div>
-                <div class="logo-sub">Admin</div>
-            </div>
-            <nav class="sidebar-nav">
-                <button class="sidebar-button" onclick="refreshForm()" aria-label="Refresh form and clear inputs">
-                    <i class="fas fa-sync-alt"></i> Refresh Form
-                </button>
-                <button class="sidebar-button" onclick="downloadData()" aria-label="Download data backup">
-                    <i class="fas fa-download"></i> Download Backup
-                </button>
-                <button class="sidebar-button" onclick="showChangePasswordModal()" aria-label="Change password">
-                    <i class="fas fa-key"></i> Change Password
-                </button>
-                <button class="sidebar-button logout-button" onclick="logout()" aria-label="Log out of admin panel">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </nav>
-        </aside>
-        <main class="main-content hidden">
             <div class="card">
                 <h2>Update Financial Data</h2>
                 <div class="edit-controls">
@@ -396,8 +180,7 @@ System: <xaiArtifact artifact_id="f4817da7-4acd-4a0a-8aff-9752c36df060" artifact
                             <label for="other_expenses" class="tooltip" title="Miscellaneous expenses not categorized elsewhere, assigned to either KCB or Lofty account (KES).">Other Expenses (KES):</label>
                             <div class="input-group">
                                 <select id="other_expenses_account" class="input-field" aria-label="Select account for other expenses">
-                                    <option value="xaiArtifact artifact_id="e8e616e0-d894-4936-a3f5-391682ee794c" title="index.html" contentType="text/html">
-kcb">KCB</option>
+                                    <option value="kcb">KCB</option>
                                     <option value="lofty">Lofty</option>
                                 </select>
                                 <input type="number" id="other_expenses" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Other expenses in KES">
@@ -488,88 +271,6 @@ kcb">KCB</option>
                         <i class="fas fa-times"></i> Cancel
                     </button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Login Modal -->
-        <div id="loginModal" class="modal">
-            <div class="modal-content">
-                <h3>Admin Login</h3>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="loginEmail">Email:</label>
-                        <input type="email" id="loginEmail" class="input-field" value="insightfuleightcoltd@gmail.com" aria-label="Enter email for login" required>
-                        <span id="loginEmailError" class="error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="loginPassword">Password:</label>
-                        <input type="password" id="loginPassword" class="input-field" placeholder="Enter password" aria-label="Enter password for login" required>
-                        <span id="loginPasswordError" class="error"></span>
-                    </div>
-                    <div class="modal-buttons">
-                        <button type="submit" id="loginButton" class="action-button primary" aria-label="Login to admin panel">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                            <span class="spinner-icon hidden"></span>
-                        </button>
-                    </div>
-                    <p><span class="link" onclick="showResetPasswordModal()">Reset Password</span></p>
-                </form>
-            </div>
-        </div>
-
-        <!-- Change Password Modal -->
-        <div id="changePasswordModal" class="modal">
-            <div class="modal-content">
-                <h3>Change Password</h3>
-                <form id="changePasswordForm">
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password:</label>
-                        <input type="password" id="currentPassword" class="input-field" placeholder="Enter current password" aria-label="Enter current password" required>
-                        <span id="currentPasswordError" class="error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password:</label>
-                        <input type="password" id="newPassword" class="input-field" placeholder="Enter new password" aria-label="Enter new password" required>
-                        <span id="newPasswordError" class="error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmNewPassword">Confirm New Password:</label>
-                        <input type="password" id="confirmNewPassword" class="input-field" placeholder="Confirm new password" aria-label="Confirm new password" required>
-                        <span id="confirmNewPasswordError" class="error"></span>
-                    </div>
-                    <div class="modal-buttons">
-                        <button type="submit" id="changePasswordButton" class="action-button primary" aria-label="Change password">
-                            <i class="fas fa-key"></i> Change Password
-                            <span class="spinner-icon hidden"></span>
-                        </button>
-                        <button type="button" id="cancelChangePassword" class="action-button secondary" aria-label="Cancel password change">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Reset Password Modal -->
-        <div id="resetPasswordModal" class="modal">
-            <div class="modal-content">
-                <h3>Reset Password</h3>
-                <form id="resetPasswordForm">
-                    <div class="form-group">
-                        <label for="resetEmail">Email:</label>
-                        <input type="email" id="resetEmail" class="input-field" value="insightfuleightcoltd@gmail.com" aria-label="Enter email for password reset" required>
-                        <span id="resetEmailError" class="error"></span>
-                    </div>
-                    <div class="modal-buttons">
-                        <button type="submit" id="resetPasswordButton" class="action-button primary" aria-label="Send password reset link">
-                            <i class="fas fa-envelope"></i> Send Reset Link
-                            <span class="spinner-icon hidden"></span>
-                        </button>
-                        <button type="button" id="cancelResetPassword" class="action-button secondary" aria-label="Cancel password reset">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
 
@@ -884,195 +585,12 @@ kcb">KCB</option>
             };
         }
 
-        // Authentication functions
-        function showLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
-            document.getElementById('main-content').classList.add('hidden');
-            document.getElementById('sidebar').classList.add('hidden');
-        }
-
-        function hideLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-            document.getElementById('main-content').classList.remove('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-        }
-
-        function showChangePasswordModal() {
-            document.getElementById('changePasswordModal').style.display = 'block';
-        }
-
-        function hideChangePasswordModal() {
-            document.getElementById('changePasswordModal').style.display = 'none';
-            document.getElementById('changePasswordForm').reset();
-            document.getElementById('currentPasswordError').style.display = 'none';
-            document.getElementById('newPasswordError').style.display = 'none';
-            document.getElementById('confirmNewPasswordError').style.display = 'none';
-        }
-
-        function showResetPasswordModal() {
-            document.getElementById('loginModal').style.display = 'none';
-            document.getElementById('resetPasswordModal').style.display = 'block';
-        }
-
-        function hideResetPasswordModal() {
-            document.getElementById('resetPasswordModal').style.display = 'none';
-            document.getElementById('loginModal').style.display = 'block';
-            document.getElementById('resetPasswordForm').reset();
-            document.getElementById('resetEmailError').style.display = 'none';
-        }
-
-        async function login(event) {
-            event.preventDefault();
-            const button = document.getElementById('loginButton');
-            setButtonLoading(button, true);
-            const email = sanitizeInput(document.getElementById('loginEmail').value);
-            const password = document.getElementById('loginPassword').value;
-            document.getElementById('loginEmailError').style.display = 'none';
-            document.getElementById('loginPasswordError').style.display = 'none';
-
-            if (!email || !password) {
-                document.getElementById('loginEmailError').textContent = 'Email and password are required.';
-                document.getElementById('loginEmailError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            try {
-                showLoadingSpinner();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY
-                    },
-                    body: JSON.stringify({ email, password }),
-                    timeout: CONFIG.FETCH_TIMEOUT
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('adminEmail', email);
-                hideLoginModal();
-                logAction('Login', `User logged in with email ${email}`);
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged in successfully.</span>`;
-                fetchData();
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            } catch (error) {
-                console.error('Error logging in:', error);
-                document.getElementById('loginPasswordError').textContent = 'Invalid email or password.';
-                document.getElementById('loginPasswordError').style.display = 'block';
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            }
-        }
-
-        async function changePassword(event) {
-            event.preventDefault();
-            const button = document.getElementById('changePasswordButton');
-            setButtonLoading(button, true);
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-            document.getElementById('currentPasswordError').style.display = 'none';
-            document.getElementById('newPasswordError').style.display = 'none';
-            document.getElementById('confirmNewPasswordError').style.display = 'none';
-
-            if (!currentPassword || !newPassword || !confirmNewPassword) {
-                document.getElementById('newPasswordError').textContent = 'All fields are required.';
-                document.getElementById('newPasswordError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            if (newPassword !== confirmNewPassword) {
-                document.getElementById('confirmNewPasswordError').textContent = 'New passwords do not match.';
-                document.getElementById('confirmNewPasswordError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            if (newPassword.length < 8) {
-                document.getElementById('newPasswordError').textContent = 'New password must be at least 8 characters long.';
-                document.getElementById('newPasswordError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            try {
-                showLoadingSpinner();
-                const email = localStorage.getItem('adminEmail');
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/change-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
-                    body: JSON.stringify({ email, currentPassword, newPassword }),
-                    timeout: CONFIG.FETCH_TIMEOUT
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                hideChangePasswordModal();
-                logAction('Change Password', 'Password changed successfully');
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Password changed successfully.</span>`;
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            } catch (error) {
-                console.error('Error changing password:', error);
-                document.getElementById('currentPasswordError').textContent = 'Invalid current password or server error.';
-                document.getElementById('currentPasswordError').style.display = 'block';
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            }
-        }
-
-        async function resetPassword(event) {
-            event.preventDefault();
-            const button = document.getElementById('resetPasswordButton');
-            setButtonLoading(button, true);
-            const email = sanitizeInput(document.getElementById('resetEmail').value);
-            document.getElementById('resetEmailError').style.display = 'none';
-
-            if (!email) {
-                document.getElementById('resetEmailError').textContent = 'Email is required.';
-                document.getElementById('resetEmailError').style.display = 'block';
-                setButtonLoading(button, false);
-                return;
-            }
-
-            try {
-                showLoadingSpinner();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': CONFIG.API_KEY
-                    },
-                    body: JSON.stringify({ email }),
-                    timeout: CONFIG.FETCH_TIMEOUT
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                hideResetPasswordModal();
-                logAction('Reset Password', `Password reset link sent to ${email}`);
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Password reset link sent to ${email}. Check your email.</span>`;
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            } catch (error) {
-                console.error('Error sending reset link:', error);
-                document.getElementById('resetEmailError').textContent = 'Error sending reset link. Please try again.';
-                document.getElementById('resetEmailError').style.display = 'block';
-                hideLoadingSpinner();
-                setButtonLoading(button, false);
-            }
-        }
-
         function logout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('adminEmail');
             logAction('Logout', 'User logged out of admin panel');
             document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged out successfully.</span>`;
-            showLoginModal();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         }
 
         function refreshForm() {
@@ -1116,10 +634,7 @@ kcb">KCB</option>
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
                     method: 'GET',
-                    headers: { 
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -1137,10 +652,7 @@ kcb">KCB</option>
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${month}`, {
                     method: 'GET',
-                    headers: { 
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (response.status === 404) return false;
@@ -1163,14 +675,11 @@ kcb">KCB</option>
                 setButtonLoading(button, false);
                 return;
             }
-            tryogadgets {
+            try {
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${month}`, {
                     method: 'GET',
-                    headers: { 
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (response.status === 404) {
@@ -1220,10 +729,7 @@ kcb">KCB</option>
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(member)}/${month}`, {
                     method: 'GET',
-                    headers: { 
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (response.status === 404) return false;
@@ -1258,10 +764,7 @@ kcb">KCB</option>
                 showLoadingSpinner();
                 const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(matchedMember)}/${month}`, {
                     method: 'GET',
-                    headers: { 
-                        'x-api-key': CONFIG.API_KEY,
-                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                    },
+                    headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (response.status === 404) {
@@ -1288,208 +791,196 @@ kcb">KCB</option>
             }
         }
 
-            async function submitFinancialForm(event) {
-                event.preventDefault();
-                const button = document.getElementById('submitFinancialButton');
-                setButtonLoading(button, true);
-                const errors = validateFinancialInputs();
-                if (errors) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-                const year = document.getElementById('balanceYear').value;
-                const month = document.getElementById('balanceMonth').value;
-                if (!year || !month) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a year and month.</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-                const exists = await checkExistingBalanceSheet(month);
-                if (exists) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A balance sheet for ${month} already exists. Please load it to edit.</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-                const data = {
-                    month: month,
-                    opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
-                    total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
-                    total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
-                    interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value) || 0,
-                    opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value) || 0,
-                    total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value) || 0,
-                    interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value) || 0,
-                    other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
-                    other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
-                    total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
-                    total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
-                    bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
-                    bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
-                    petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
-                    petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
-                    agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
-                    agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
-                    welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
-                    welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
-                    other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
-                    other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
-                    total_inflows: 0,
-                    total_outflows: 0,
-                    kcb_balance: 0,
-                    lofty_balance: 0,
-                    total_balance: 0
-                };
-                data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.interest_on_loans_kcb +
-                                     data.total_loan_repayments_lofty + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-                data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb +
-                                      data.bank_charges_lofty + data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty +
-                                      data.agm_facilitation_kcb + data.agm_facilitation_lofty + data.welfare_kitty_utilized_kcb +
-                                      data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-                data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                                   data.interest_on_loans_kcb + data.other_income_kcb - (data.total_loan_disbursements_kcb +
-                                   data.bank_charges_kcb + data.petty_cash_utilized_kcb + data.agm_facilitation_kcb +
-                                   data.welfare_kitty_utilized_kcb + data.other_expenses_kcb);
-                data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                                     data.other_income_lofty - (data.total_loan_disbursements_lofty + data.bank_charges_lofty +
-                                     data.petty_cash_utilized_lofty + data.agm_facilitation_lofty + data.welfare_kitty_utilized_lofty +
-                                     data.other_expenses_lofty);
-                data.total_balance = data.kcb_balance + data.lofty_balance;
-                showConfirmationModal(data, data.month, async () => {
-                    try {
-                        showLoadingSpinner();
-                        const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-api-key': CONFIG.API_KEY,
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({ action: 'updateBalanceSheet', month: data.month, data }),
-                            timeout: CONFIG.FETCH_TIMEOUT
-                        });
-                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                        document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data submitted successfully for ${data.month}.</span>`;
-                        logAction('Submit Financial Data', `Submitted financial data for ${data.month}`);
-                        document.getElementById('adminForm').reset();
-                        document.getElementById('balanceYear').value = '';
-                        document.getElementById('balanceMonth').value = '';
-                        fetchData();
-                        hideLoadingSpinner();
-                        setButtonLoading(button, false);
-                    } catch (error) {
-                        console.error('Error submitting financial data:', error);
-                        document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit financial data (${error.message}).</span>`;
-                        hideLoadingSpinner();
-                        setButtonLoading(button, false);
-                    }
-                });
+        async function submitFinancialForm(event) {
+            event.preventDefault();
+            const button = document.getElementById('submitFinancialButton');
+            setButtonLoading(button, true);
+            const errors = validateFinancialInputs();
+            if (errors) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+                setButtonLoading(button, false);
+                return;
             }
-
-            async function submitContributionForm(event) {
-                event.preventDefault();
-                const button = document.getElementById('submitContributionButton');
-                setButtonLoading(button, true);
-                const errors = validateContributionInputs();
-                if (errors) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-                const member = fuzzyMatch(document.getElementById('memberSelect').value, MEMBERS);
-                const year = document.getElementById('contributionYear').value;
-                const month = document.getElementById('contributionMonth').value;
-                const exists = await checkExistingContribution(member, month);
-                if (exists) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A contribution for ${member} in ${month} already exists. Please load it to edit.</span>`;
-                    setButtonLoading(button, false);
-                    return;
-                }
-                const data = {
-                    member,
-                    month,
-                    amount: parseFloat(document.getElementById('contributionAmount').value)
-                };
+            const year = document.getElementById('balanceYear').value;
+            const month = document.getElementById('balanceMonth').value;
+            if (!year || !month) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a year and month.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const exists = await checkExistingBalanceSheet(month);
+            if (exists) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A balance sheet for ${month} already exists. Please load it to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const data = {
+                month: month,
+                opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
+                total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
+                total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
+                interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value) || 0,
+                opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value) || 0,
+                total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value) || 0,
+                interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value) || 0,
+                other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
+                other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
+                total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
+                total_loan_disbursements_lofty: document.getElementById('total_loan_disbursements_account').value === 'lofty' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
+                bank_charges_kcb: document.getElementById('bank_charges_account').value === 'kcb' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
+                bank_charges_lofty: document.getElementById('bank_charges_account').value === 'lofty' ? parseFloat(document.getElementById('bank_charges').value) || 0 : 0,
+                petty_cash_utilized_kcb: document.getElementById('petty_cash_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
+                petty_cash_utilized_lofty: document.getElementById('petty_cash_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('petty_cash_utilized').value) || 0 : 0,
+                agm_facilitation_kcb: document.getElementById('agm_facilitation_account').value === 'kcb' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
+                agm_facilitation_lofty: document.getElementById('agm_facilitation_account').value === 'lofty' ? parseFloat(document.getElementById('agm_facilitation').value) || 0 : 0,
+                welfare_kitty_utilized_kcb: document.getElementById('welfare_kitty_utilized_account').value === 'kcb' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
+                welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
+                other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
+                other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
+                total_inflows: 0,
+                total_outflows: 0,
+                kcb_balance: 0,
+                lofty_balance: 0,
+                total_balance: 0
+            };
+            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.interest_on_loans_kcb +
+                                 data.total_loan_repayments_lofty + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
+            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb +
+                                  data.bank_charges_lofty + data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty +
+                                  data.agm_facilitation_kcb + data.agm_facilitation_lofty + data.welfare_kitty_utilized_kcb +
+                                  data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
+            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
+                               data.interest_on_loans_kcb + data.other_income_kcb - (data.total_loan_disbursements_kcb +
+                               data.bank_charges_kcb + data.petty_cash_utilized_kcb + data.agm_facilitation_kcb +
+                               data.welfare_kitty_utilized_kcb + data.other_expenses_kcb);
+            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
+                                 data.other_income_lofty - (data.total_loan_disbursements_lofty + data.bank_charges_lofty +
+                                 data.petty_cash_utilized_lofty + data.agm_facilitation_lofty + data.welfare_kitty_utilized_lofty +
+                                 data.other_expenses_lofty);
+            data.total_balance = data.kcb_balance + data.lofty_balance;
+            showConfirmationModal(data, data.month, async () => {
                 try {
                     showLoadingSpinner();
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/contributions`, {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-api-key': CONFIG.API_KEY,
-                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            'x-api-key': CONFIG.API_KEY
                         },
-                        body: JSON.stringify(data),
+                        body: JSON.stringify({ action: 'updateBalanceSheet', month: data.month, data }),
                         timeout: CONFIG.FETCH_TIMEOUT
                     });
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${month}.</span>`;
-                    logAction('Submit Contribution', `Submitted contribution for ${member} in ${month}`);
-                    document.getElementById('memberContributionForm').reset();
-                    document.getElementById('contributionYear').value = '';
-                    document.getElementById('contributionMonth').value = '';
+                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data submitted successfully for ${data.month}.</span>`;
+                    logAction('Submit Financial Data', `Submitted financial data for ${data.month}`);
+                    document.getElementById('adminForm').reset();
+                    document.getElementById('balanceYear').value = '';
+                    document.getElementById('balanceMonth').value = '';
                     fetchData();
                     hideLoadingSpinner();
                     setButtonLoading(button, false);
                 } catch (error) {
-                    console.error('Error submitting contribution:', error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit contribution (${error.message}).</span>`;
+                    console.error('Error submitting financial data:', error);
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit financial data (${error.message}).</span>`;
                     hideLoadingSpinner();
                     setButtonLoading(button, false);
                 }
-            }
-
-            function downloadData() {
-                if (!dataCache) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data available to download.</span>`;
-                    return;
-                }
-                const dataStr = JSON.stringify(dataCache, null, 2);
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `financial_data_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                logAction('Download Data', 'Downloaded financial data backup');
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data downloaded successfully.</span>`;
-            }
-
-            window.addEventListener('DOMContentLoaded', () => {
-                // Check if user is logged in
-                if (!localStorage.getItem('authToken')) {
-                    showLoginModal();
-                } else {
-                    fetchData();
-                    displayLogs();
-                }
-                populateYears('balanceYear');
-                populateYears('editBalanceYear');
-                populateYears('contributionYear');
-                populateYears('editContributionYear');
-                document.getElementById('balanceYear').addEventListener('change', (e) => {
-                    populateMonths('balanceMonth', e.target.value);
-                });
-                document.getElementById('editBalanceYear').addEventListener('change', (e) => {
-                    populateMonths('editBalanceMonth', e.target.value);
-                });
-                document.getElementById('contributionYear').addEventListener('change', (e) => {
-                    populateMonths('contributionMonth', e.target.value);
-                });
-                document.getElementById('editContributionYear').addEventListener('change', (e) => {
-                    populateMonths('editContributionMonth', e.target.value);
-                });
-                document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
-                document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
-                document.getElementById('loginForm').addEventListener('submit', login);
-                document.getElementById('changePasswordForm').addEventListener('submit', changePassword);
-                document.getElementById('resetPasswordForm').addEventListener('submit', resetPassword);
-                document.getElementById('cancelChangePassword').addEventListener('click', hideChangePasswordModal);
-                document.getElementById('cancelResetPassword').addEventListener('click', hideResetPasswordModal);
             });
-        </script>
-    </body>
+        }
+
+        async function submitContributionForm(event) {
+            event.preventDefault();
+            const button = document.getElementById('submitContributionButton');
+            setButtonLoading(button, true);
+            const errors = validateContributionInputs();
+            if (errors) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const member = fuzzyMatch(document.getElementById('memberSelect').value, MEMBERS);
+            const year = document.getElementById('contributionYear').value;
+            const month = document.getElementById('contributionMonth').value;
+            const exists = await checkExistingContribution(member, month);
+            if (exists) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A contribution for ${member} in ${month} already exists. Please load it to edit.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            const data = {
+                member,
+                month,
+                amount: parseFloat(document.getElementById('contributionAmount').value)
+            };
+            try {
+                showLoadingSpinner();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: JSON.stringify(data),
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${month}.</span>`;
+                logAction('Submit Contribution', `Submitted contribution for ${member} in ${month}`);
+                document.getElementById('memberContributionForm').reset();
+                document.getElementById('contributionYear').value = '';
+                document.getElementById('contributionMonth').value = '';
+                fetchData();
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            } catch (error) {
+                console.error('Error submitting contribution:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit contribution (${error.message}).</span>`;
+                hideLoadingSpinner();
+                setButtonLoading(button, false);
+            }
+        }
+
+        function downloadData() {
+            if (!dataCache) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data available to download.</span>`;
+                return;
+            }
+            const dataStr = JSON.stringify(dataCache, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financial_data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            logAction('Download Data', 'Downloaded financial data backup');
+            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data downloaded successfully.</span>`;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populateYears('balanceYear');
+            populateYears('editBalanceYear');
+            populateYears('contributionYear');
+            populateYears('editContributionYear');
+            document.getElementById('balanceYear').addEventListener('change', (e) => {
+                populateMonths('balanceMonth', e.target.value);
+            });
+            document.getElementById('editBalanceYear').addEventListener('change', (e) => {
+                populateMonths('editBalanceMonth', e.target.value);
+            });
+            document.getElementById('contributionYear').addEventListener('change', (e) => {
+                populateMonths('contributionMonth', e.target.value);
+            });
+            document.getElementById('editContributionYear').addEventListener('change', (e) => {
+                populateMonths('editContributionMonth', e.target.value);
+            });
+            document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
+            document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
+            fetchData();
+            displayLogs();
+        });
+    </script>
+</body>
 </html>
