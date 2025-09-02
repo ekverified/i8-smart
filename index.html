@@ -423,7 +423,6 @@ async function fetchDataIfStale(force = false) {
     try {
         console.log('Fetching fresh data from /api/data');
         const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
-        console.log('API Response:', data); // Log the raw API response
         if (!data || Object.keys(data).length === 0) {
             throw new Error('Empty or invalid data received from API');
         }
@@ -437,7 +436,7 @@ async function fetchDataIfStale(force = false) {
         localStorage.removeItem('financialData');
         throw error;
     }
-}}
+}
 
 function debugDataStructure() {
     fetchDataIfStale(true).then(() => {
@@ -1417,209 +1416,158 @@ function displayMembers(members) {
 }
 
 function calculateTrends(monthlyReports, availableMonths) {
-    // Initialize default metrics
-    let trends = {
-        balanceGrowth: 0,
-        contributionGrowth: 0,
-        loanActivity: 0,
-        liquidityRatio: '0.00',
-        netIncomeRatio: '0.00',
-        expenseRatio: '0.00',
-        loanToContributionRatio: '0.00',
-        riskLevel: 'Unknown',
-        recommendations: 'No data available for analysis.',
-        riskFactors: ['Insufficient data for trend analysis.']
+    if (availableMonths.length < 4) {
+        return {
+            balanceGrowth: 0,
+            contributionGrowth: 0,
+            loanActivity: 0,
+            liquidityRatio: 0,
+            netIncomeRatio: 0,
+            expenseRatio: 0,
+            loanToContributionRatio: 0,
+            riskLevel: 'Unknown',
+            recommendations: 'Need more data for accurate analysis',
+            riskFactors: []
+        };
+    }
+
+    const latest = monthlyReports[availableMonths[availableMonths.length - 1]];
+    const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]];
+    const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]];
+    const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]];
+
+    const balanceGrowth = prev3.total_balance ?
+        ((latest.total_balance - prev3.total_balance) / prev3.total_balance * 100) : 0;
+
+    const contributionGrowth = prev3.total_member_contributions_kcb ?
+        ((latest.total_member_contributions_kcb - prev3.total_member_contributions_kcb) / prev3.total_member_contributions_kcb * 100) : 0;
+
+    const loanActivity = prev3.total_loan_disbursements_kcb ?
+        ((latest.total_loan_disbursements_kcb - prev3.total_loan_disbursements_kcb) / prev3.total_loan_disbursements_kcb * 100) : 0;
+
+    const liquidityRatio = latest.total_balance ?
+        (latest.total_balance / (latest.total_loan_disbursements_kcb || 1)) : 0;
+
+    const netIncome = (latest.total_inflows || 0) - (latest.total_outflows || 0);
+    const netIncomeRatio = latest.total_inflows ? (netIncome / latest.total_inflows * 100) : 0;
+
+    const expenseRatio = latest.total_inflows ?
+        (((latest.bank_charges_kcb || 0) + (latest.bank_charges_lofty || 0) +
+          (latest.petty_cash_utilized_kcb || 0) + (latest.petty_cash_utilized_lofty || 0) +
+          (latest.agm_facilitation_kcb || 0) + (latest.agm_facilitation_lofty || 0) +
+          (latest.welfare_kitty_utilized_kcb || 0) + (latest.welfare_kitty_utilized_lofty || 0) +
+          (latest.other_expenses || 0)) / latest.total_inflows * 100) : 0;
+
+    const loanToContributionRatio = latest.total_member_contributions_kcb ?
+        (latest.total_loan_disbursements_kcb / latest.total_member_contributions_kcb) : 0;
+
+    let riskLevel = 'Low';
+    const riskFactors = [];
+
+    if (liquidityRatio < 0.5) {
+        riskLevel = 'High';
+        riskFactors.push('Low liquidity ratio indicates potential cash flow issues.');
+    } else if (liquidityRatio < 1) {
+        riskLevel = 'Moderate';
+        riskFactors.push('Moderate liquidity ratio suggests limited cash reserves relative to loans.');
+    }
+
+    if (loanToContributionRatio > 2) {
+        riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
+        riskFactors.push('High loan-to-contribution ratio indicates heavy reliance on loans.');
+    }
+
+    if (netIncomeRatio < 0) {
+        riskLevel = 'High';
+        riskFactors.push('Negative net income indicates losses.');
+    } else if (netIncomeRatio < 5) {
+        riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
+        riskFactors.push('Low net income ratio suggests limited profitability.');
+    }
+
+    let recommendations = '';
+    if (riskLevel === 'High') {
+        recommendations = 'Immediate action required: Reduce loan disbursements, increase member contributions, and cut discretionary expenses.';
+    } else if (riskLevel === 'Moderate') {
+        recommendations = 'Monitor closely: Optimize loan policies and improve expense management.';
+    } else {
+        recommendations = 'Maintain current strategy with periodic reviews.';
+    }
+
+    return {
+        balanceGrowth: balanceGrowth.toFixed(2),
+        contributionGrowth: contributionGrowth.toFixed(2),
+        loanActivity: loanActivity.toFixed(2),
+        liquidityRatio: liquidityRatio.toFixed(2),
+        netIncomeRatio: netIncomeRatio.toFixed(2),
+        expenseRatio: expenseRatio.toFixed(2),
+        loanToContributionRatio: loanToContributionRatio.toFixed(2),
+        riskLevel,
+        recommendations,
+        riskFactors
     };
-
-    // Check if data is valid
-    if (!monthlyReports || !availableMonths || availableMonths.length === 0) {
-        console.warn('No valid monthly reports or available months for trend analysis');
-        return trends;
-    }
-
-    try {
-        if (availableMonths.length < 2) {
-            const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-            const netIncome = (latest.total_inflows || 0) - (latest.total_outflows || 0);
-            const liquidityRatio = latest.total_balance
-                ? (latest.total_balance / (latest.total_loan_disbursements_kcb || 1))
-                : 0;
-            const netIncomeRatio = latest.total_inflows
-                ? (netIncome / latest.total_inflows * 100)
-                : 0;
-            const expenseRatio = latest.total_inflows
-                ? (((latest.bank_charges_kcb || 0) +
-                    (latest.bank_charges_lofty || 0) +
-                    (latest.petty_cash_utilized_kcb || 0) +
-                    (latest.petty_cash_utilized_lofty || 0) +
-                    (latest.agm_facilitation_kcb || 0) +
-                    (latest.agm_facilitation_lofty || 0) +
-                    (latest.welfare_kitty_utilized_kcb || 0) +
-                    (latest.welfare_kitty_utilized_lofty || 0) +
-                    (latest.other_expenses || 0)) /
-                    latest.total_inflows * 100)
-                : 0;
-            const loanToContributionRatio = latest.total_member_contributions_kcb
-                ? (latest.total_loan_disbursements_kcb / latest.total_member_contributions_kcb)
-                : 0;
-
-            let riskLevel = 'Low';
-            const riskFactors = [];
-            if (liquidityRatio < 0.5) {
-                riskLevel = 'High';
-                riskFactors.push('Low liquidity ratio indicates potential cash flow issues.');
-            } else if (liquidityRatio < 1) {
-                riskLevel = 'Moderate';
-                riskFactors.push('Moderate liquidity ratio suggests limited cash reserves relative to loans.');
-            }
-            if (loanToContributionRatio > 2) {
-                riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-                riskFactors.push('High loan-to-contribution ratio indicates heavy reliance on loans.');
-            }
-            if (netIncomeRatio < 0) {
-                riskLevel = 'High';
-                riskFactors.push('Negative net income indicates losses.');
-            } else if (netIncomeRatio < 5) {
-                riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-                riskFactors.push('Low net income ratio suggests limited profitability.');
-            }
-            const recommendations = riskLevel === 'High'
-                ? 'Immediate action required: Reduce loan disbursements, increase contributions.'
-                : riskLevel === 'Moderate'
-                ? 'Monitor closely: Optimize loan policies.'
-                : 'Maintain current strategy.';
-
-            trends = {
-                balanceGrowth: 0,
-                contributionGrowth: 0,
-                loanActivity: 0,
-                liquidityRatio: liquidityRatio.toFixed(2),
-                netIncomeRatio: netIncomeRatio.toFixed(2),
-                expenseRatio: expenseRatio.toFixed(2),
-                loanToContributionRatio: loanToContributionRatio.toFixed(2),
-                riskLevel,
-                recommendations,
-                riskFactors
-            };
-        } else {
-            // Implement multi-month logic
-            const firstMonth = monthlyReports[availableMonths[0]] || {};
-            const lastMonth = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-            const balanceGrowth = firstMonth.total_balance && lastMonth.total_balance
-                ? ((lastMonth.total_balance - firstMonth.total_balance) / firstMonth.total_balance * 100)
-                : 0;
-            const contributionGrowth = firstMonth.total_member_contributions_kcb && lastMonth.total_member_contributions_kcb
-                ? ((lastMonth.total_member_contributions_kcb - firstMonth.total_member_contributions_kcb) /
-                   firstMonth.total_member_contributions_kcb * 100)
-                : 0;
-            const loanActivity = firstMonth.total_loan_disbursements_kcb && lastMonth.total_loan_disbursements_kcb
-                ? ((lastMonth.total_loan_disbursements_kcb - firstMonth.total_loan_disbursements_kcb) /
-                   firstMonth.total_loan_disbursements_kcb * 100)
-                : 0;
-
-            const netIncome = (lastMonth.total_inflows || 0) - (lastMonth.total_outflows || 0);
-            const liquidityRatio = lastMonth.total_balance
-                ? (lastMonth.total_balance / (lastMonth.total_loan_disbursements_kcb || 1))
-                : 0;
-            const netIncomeRatio = lastMonth.total_inflows
-                ? (netIncome / lastMonth.total_inflows * 100)
-                : 0;
-            const expenseRatio = lastMonth.total_inflows
-                ? (((lastMonth.bank_charges_kcb || 0) +
-                    (lastMonth.bank_charges_lofty || 0) +
-                    (lastMonth.petty_cash_utilized_kcb || 0) +
-                    (lastMonth.petty_cash_utilized_lofty || 0) +
-                    (lastMonth.agm_facilitation_kcb || 0) +
-                    (lastMonth.agm_facilitation_lofty || 0) +
-                    (lastMonth.welfare_kitty_utilized_kcb || 0) +
-                    (lastMonth.welfare_kitty_utilized_lofty || 0) +
-                    (lastMonth.other_expenses || 0)) /
-                    lastMonth.total_inflows * 100)
-                : 0;
-            const loanToContributionRatio = lastMonth.total_member_contributions_kcb
-                ? (lastMonth.total_loan_disbursements_kcb / lastMonth.total_member_contributions_kcb)
-                : 0;
-
-            let riskLevel = 'Low';
-            const riskFactors = [];
-            if (liquidityRatio < 0.5) {
-                riskLevel = 'High';
-                riskFactors.push('Low liquidity ratio indicates potential cash flow issues.');
-            } else if (liquidityRatio < 1) {
-                riskLevel = 'Moderate';
-                riskFactors.push('Moderate liquidity ratio suggests limited cash reserves relative to loans.');
-            }
-            if (loanToContributionRatio > 2) {
-                riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-                riskFactors.push('High loan-to-contribution ratio indicates heavy reliance on loans.');
-            }
-            if (netIncomeRatio < 0) {
-                riskLevel = 'High';
-                riskFactors.push('Negative net income indicates losses.');
-            } else if (netIncomeRatio < 5) {
-                riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-                riskFactors.push('Low net income ratio suggests limited profitability.');
-            }
-            const recommendations = riskLevel === 'High'
-                ? 'Immediate action required: Reduce loan disbursements, increase contributions.'
-                : riskLevel === 'Moderate'
-                ? 'Monitor closely: Optimize loan policies.'
-                : 'Maintain current strategy.';
-
-            trends = {
-                balanceGrowth: balanceGrowth.toFixed(2),
-                contributionGrowth: contributionGrowth.toFixed(2),
-                loanActivity: loanActivity.toFixed(2),
-                liquidityRatio: liquidityRatio.toFixed(2),
-                netIncomeRatio: netIncomeRatio.toFixed(2),
-                expenseRatio: expenseRatio.toFixed(2),
-                loanToContributionRatio: loanToContributionRatio.toFixed(2),
-                riskLevel,
-                recommendations,
-                riskFactors
-            };
-        }
-    } catch (error) {
-        console.error('Error in calculateTrends:', error);
-        // Return default trends object to prevent undefined errors
-    }
-
-    return trends;
 }
 
 function generateFutureProjections(monthlyReports, availableMonths) {
-    if (availableMonths.length < 1) {
-        return { projections: [], newMembers: 0 };
+    if (availableMonths.length < 3) {
+        return {
+            projections: [],
+            newMembers: 0
+        };
     }
+
     const latest = monthlyReports[availableMonths[availableMonths.length - 1]];
-    const contributionGrowthRate = 0.02; // Default 2%
-    const loanGrowthRate = 0.015; // Default 1.5%
-    const incomeGrowthRate = 0.01; // Default 1%
-    const newMemberGrowthRate = 0.05; // Default 5%
-    const currentMembers = latest.member_count || 10;
+    const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]];
+    const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]];
+
+    // Calculate average growth rates
+    const contributionGrowthRate = (
+        ((latest.total_member_contributions_kcb - prev1.total_member_contributions_kcb) / prev1.total_member_contributions_kcb +
+         (prev1.total_member_contributions_kcb - prev2.total_member_contributions_kcb) / prev2.total_member_contributions_kcb) / 2
+    ) || 0.02; // Default to 2% if no data
+
+    const loanGrowthRate = (
+        ((latest.total_loan_disbursements_kcb - prev1.total_loan_disbursements_kcb) / prev1.total_loan_disbursements_kcb +
+         (prev1.total_loan_disbursements_kcb - prev2.total_loan_disbursements_kcb) / prev2.total_loan_disbursements_kcb) / 2
+    ) || 0.015; // Default to 1.5%
+
+    const incomeGrowthRate = (
+        ((latest.total_inflows - prev1.total_inflows) / prev1.total_inflows +
+         (prev1.total_inflows - prev2.total_inflows) / prev2.total_inflows) / 2
+    ) || 0.01; // Default to 1%
+
+    const newMemberGrowthRate = 0.05; // Assume 5% monthly new member growth
+    const currentMembers = monthlyReports[availableMonths[availableMonths.length - 1]].member_count || 10;
     let projectedMembers = currentMembers;
+
+    const projections = [];
     let currentBalance = latest.total_balance || 0;
     let currentContributions = latest.total_member_contributions_kcb || 0;
     let currentLoans = latest.total_loan_disbursements_kcb || 0;
     let currentIncome = latest.total_inflows || 0;
-    const projections = [];
+
     for (let i = 1; i <= 12; i++) {
-        currentBalance = currentBalance * (1 + (0 / 100 / 12)); // No growth data
+        currentBalance = currentBalance * (1 + (balanceGrowth / 100 / 12));
         currentContributions = currentContributions * (1 + contributionGrowthRate);
         currentLoans = currentLoans * (1 + loanGrowthRate);
         currentIncome = currentIncome * (1 + incomeGrowthRate);
         projectedMembers = projectedMembers * (1 + newMemberGrowthRate);
+
         projections.push({
             month: i,
             projectedBalance: currentBalance.toFixed(2),
             projectedContributions: currentContributions.toFixed(2),
             projectedLoans: currentLoans.toFixed(2),
             projectedIncome: currentIncome.toFixed(2),
-            projectedGrowthRate: ((currentBalance - latest.total_balance) / (latest.total_balance || 1) * 100).toFixed(2),
+            projectedGrowthRate: ((currentBalance - latest.total_balance) / latest.total_balance * 100).toFixed(2),
             projectedNewMembers: Math.round(projectedMembers - currentMembers)
         });
     }
-    return { projections, newMembers: Math.round(projectedMembers - currentMembers) };
+
+    return {
+        projections,
+        newMembers: Math.round(projectedMembers - currentMembers)
+    };
 }
 
 function runPerformanceAnalysis() {
