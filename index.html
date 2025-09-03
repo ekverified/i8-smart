@@ -1651,13 +1651,33 @@ function generateFutureProjections(monthlyReports, availableMonths) {
 }
 
 function runPerformanceAnalysis() {
+    const analysisResults = document.getElementById('analysisResults');
+    const simulationResults = document.getElementById('simulationResults');
+    const analysisSpinner = document.getElementById('analysisSpinner');
+
     try {
+        showSpinner(analysisSpinner);
+        // Check if dataCache is populated; if not, attempt to load from storage
+        if (!dataCache) {
+            dataCache = loadDataFromStorage();
+        }
         if (!dataCache || !dataCache.monthly_reports) {
             console.log('No data available for analysis');
+            analysisResults.innerHTML = 'No data available for performance analysis. Please check data source or try again later.';
+            simulationResults.innerHTML = 'No data available for future simulation. Please check data source or try again later.';
+            hideSpinner(analysisSpinner);
             return;
         }
 
         const availableMonths = Object.keys(dataCache.monthly_reports).sort();
+        if (availableMonths.length === 0) {
+            console.log('Empty monthly_reports');
+            analysisResults.innerHTML = 'No monthly report data available. Please contact admin to update financial data.';
+            simulationResults.innerHTML = 'No projection data available. Please contact admin to update financial data.';
+            hideSpinner(analysisSpinner);
+            return;
+        }
+
         const trends = calculateTrends(dataCache.monthly_reports, availableMonths);
         const { projections, newMembers } = generateFutureProjections(dataCache.monthly_reports, availableMonths);
 
@@ -1679,7 +1699,7 @@ function runPerformanceAnalysis() {
             </table>
             <p><strong>Recommendations:</strong> ${trends.recommendations}</p>
             <p><strong>Risk Factors:</strong></p>
-            <ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('')}</ul>
+            <ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('') || '<li>None</li>'}</ul>
         `;
 
         let simulationHTML = `
@@ -1696,7 +1716,7 @@ function runPerformanceAnalysis() {
                 </tr>
         `;
         if (projections.length === 0) {
-            simulationHTML += `<tr><td colspan="7">No projection data available.</td></tr>`;
+            simulationHTML += `<tr><td colspan="7">No projection data available. Please ensure at least one month of financial data is available.</td></tr>`;
         } else {
             projections.forEach(proj => {
                 simulationHTML += `
@@ -1716,15 +1736,16 @@ function runPerformanceAnalysis() {
             <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
         `;
 
-        document.getElementById('performanceResults').innerHTML = analysisHTML;
-        document.getElementById('simulationResults').innerHTML = simulationHTML;
+        analysisResults.innerHTML = analysisHTML;
+        simulationResults.innerHTML = simulationHTML;
     } catch (error) {
         console.error('Error in runPerformanceAnalysis:', error);
-        document.getElementById('performanceResults').innerHTML = 'Error loading performance analysis.';
-        document.getElementById('simulationResults').innerHTML = 'Error loading future simulation.';
+        analysisResults.innerHTML = `Failed to load performance analysis: ${error.message}. Please try again or contact support.`;
+        simulationResults.innerHTML = `Failed to load future simulation: ${error.message}. Please try again or contact support.`;
+    } finally {
+        hideSpinner(analysisSpinner);
     }
 }
-
 document.addEventListener('DOMContentLoaded', () => {
     toggleFields();
     populateYears();
