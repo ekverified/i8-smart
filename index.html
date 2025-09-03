@@ -423,6 +423,7 @@ async function fetchDataIfStale(force = false) {
     try {
         console.log('Fetching fresh data from /api/data');
         const data = await fetchWithRetry(`${CONFIG.API_BASE_URL}/data`);
+        console.log('API Response:', data); // Log the raw API response
         if (!data || Object.keys(data).length === 0) {
             throw new Error('Empty or invalid data received from API');
         }
@@ -1527,6 +1528,7 @@ function calculateTrends(monthlyReports, availableMonths) {
 function generateFutureProjections(monthlyReports, availableMonths) {
     try {
         if (!monthlyReports || availableMonths.length < 1) {
+            console.log('No data available for projections:', { monthlyReports, availableMonths });
             return {
                 projections: [],
                 newMembers: 0
@@ -1534,29 +1536,66 @@ function generateFutureProjections(monthlyReports, availableMonths) {
         }
 
         const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-        let contributionGrowthRate = 0.02; // Default 2%
-        let loanGrowthRate = 0.015; // Default 1.5%
-        let incomeGrowthRate = 0.01; // Default 1%
+        console.log('Latest data:', latest);
+
+        // Default growth rates
+        let contributionGrowthRate = 0.02; // 2%
+        let loanGrowthRate = 0.015; // 1.5%
+        let incomeGrowthRate = 0.01; // 1%
+        let balanceGrowthRate = 0.01; // 1% for balance
+
+        // Cap for growth rates to prevent unrealistic values
+        const MAX_GROWTH_RATE = 0.1; // 10% max per month
 
         // Calculate growth rates if at least 3 months are available
         if (availableMonths.length >= 3) {
             const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]] || {};
             const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]] || {};
-            contributionGrowthRate = (
-                ((latest.total_member_contributions_kcb - prev1.total_member_contributions_kcb) / (prev1.total_member_contributions_kcb || 1) +
-                 (prev1.total_member_contributions_kcb - prev2.total_member_contributions_kcb) / (prev2.total_member_contributions_kcb || 1)) / 2
-            ) || 0.02;
-            loanGrowthRate = (
-                ((latest.total_loan_disbursements_kcb - prev1.total_loan_disbursements_kcb) / (prev1.total_loan_disbursements_kcb || 1) +
-                 (prev1.total_loan_disbursements_kcb - prev2.total_loan_disbursements_kcb) / (prev2.total_loan_disbursements_kcb || 1)) / 2
-            ) || 0.015;
-            incomeGrowthRate = (
-                ((latest.total_inflows - prev1.total_inflows) / (prev1.total_inflows || 1) +
-                 (prev1.total_inflows - prev2.total_inflows) / (prev2.total_inflows || 1)) / 2
-            ) || 0.01;
+
+            // Calculate contribution growth rate
+            const contribDiff1 = latest.total_member_contributions_kcb - (prev1.total_member_contributions_kcb || 0);
+            const contribDiff2 = prev1.total_member_contributions_kcb - (prev2.total_member_contributions_kcb || 0);
+            const contribRate1 = prev1.total_member_contributions_kcb ? contribDiff1 / prev1.total_member_contributions_kcb : 0;
+            const contribRate2 = prev2.total_member_contributions_kcb ? contribDiff2 / prev2.total_member_contributions_kcb : 0;
+            contributionGrowthRate = Math.min((contribRate1 + contribRate2) / 2, MAX_GROWTH_RATE) || 0.02;
+
+            // Calculate loan growth rate
+            const loanDiff1 = latest.total_loan_disbursements_kcb - (prev1.total_loan_disbursements_kcb || 0);
+            const loanDiff2 = prev1.total_loan_disbursements_kcb - (prev2.total_loan_disbursements_kcb || 0);
+            const loanRate1 = prev1.total_loan_disbursements_kcb ? loanDiff1 / prev1.total_loan_disbursements_kcb : 0;
+            const loanRate2 = prev2.total_loan_disbursements_kcb ? loanDiff2 / prev2.total_loan_disbursements_kcb : 0;
+            loanGrowthRate = Math.min((loanRate1 + loanRate2) / 2, MAX_GROWTH_RATE) || 0.015;
+
+            // Calculate income growth rate
+            const incomeDiff1 = latest.total_inflows - (prev1.total_inflows || 0);
+            const incomeDiff2 = prev1.total_inflows - (prev2.total_inflows || 0);
+            const incomeRate1 = prev1.total_inflows ? incomeDiff1 / prev1.total_inflows : 0;
+            const incomeRate2 = prev2.total_inflows ? incomeDiff2 / prev2.total_inflows : 0;
+            incomeGrowthRate = Math.min((incomeRate1 + incomeRate2) / 2, MAX_GROWTH_RATE) || 0.01;
+
+            // Calculate balance growth rate
+            const balanceDiff1 = latest.total_balance - (prev1.total_balance || 0);
+            const balanceDiff2 = prev1.total_balance - (prev2.total_balance || 0);
+            const balanceRate1 = prev1.total_balance ? balanceDiff1 / prev1.total_balance : 0;
+            const balanceRate2 = prev2.total_balance ? balanceDiff2 / prev2.total_balance : 0;
+            balanceGrowthRate = Math.min((balanceRate1 + balanceRate2) / 2, MAX_GROWTH_RATE) || 0.01;
+
+            console.log('Calculated growth rates:', {
+                contributionGrowthRate,
+                loanGrowthRate,
+                incomeGrowthRate,
+                balanceGrowthRate
+            });
+        } else {
+            console.log('Using default growth rates due to insufficient data:', {
+                contributionGrowthRate,
+                loanGrowthRate,
+                incomeGrowthRate,
+                balanceGrowthRate
+            });
         }
 
-        const newMemberGrowthRate = 0.05; // Assume 5% monthly new member growth
+        const newMemberGrowthRate = 0.05; // 5% monthly
         const currentMembers = latest.member_count || 10;
         let projectedMembers = currentMembers;
 
@@ -1567,11 +1606,11 @@ function generateFutureProjections(monthlyReports, availableMonths) {
         let currentIncome = latest.total_inflows || 0;
 
         for (let i = 1; i <= 12; i++) {
-            currentBalance = currentBalance * (1 + (0 / 100 / 12)); // No balance growth with <4 months
+            currentBalance = currentBalance * (1 + balanceGrowthRate);
             currentContributions = currentContributions * (1 + contributionGrowthRate);
             currentLoans = currentLoans * (1 + loanGrowthRate);
             currentIncome = currentIncome * (1 + incomeGrowthRate);
-            projectedMembers = projectedMembers * (1 + newMemberGrowthRate);
+            projectedMembers = projectedMembers * (1 + newMemberGrowthRate); // Fixed from 0.1 + newMemberGrowthRate
 
             projections.push({
                 month: i,
@@ -1579,10 +1618,12 @@ function generateFutureProjections(monthlyReports, availableMonths) {
                 projectedContributions: currentContributions.toFixed(2),
                 projectedLoans: currentLoans.toFixed(2),
                 projectedIncome: currentIncome.toFixed(2),
-                projectedGrowthRate: 0, // No growth rate with <4 months
+                projectedGrowthRate: ((contributionGrowthRate + loanGrowthRate + incomeGrowthRate + balanceGrowthRate) / 4 * 100).toFixed(2),
                 projectedNewMembers: Math.round(projectedMembers - currentMembers)
             });
         }
+
+        console.log('Projections:', projections);
 
         return {
             projections,
