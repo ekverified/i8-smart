@@ -1418,10 +1418,10 @@ function displayMembers(members) {
 
 function calculateTrends(monthlyReports, availableMonths) {
     try {
-        // Return default metrics if insufficient data
         if (!monthlyReports || availableMonths.length < 1) {
+            console.log('No data for trends:', { monthlyReports, availableMonths });
             return {
-                balanceGrowth: 0,
+                assetsGrowth: 0,
                 contributionGrowth: 0,
                 loanActivity: 0,
                 liquidityRatio: 0,
@@ -1435,83 +1435,84 @@ function calculateTrends(monthlyReports, availableMonths) {
         }
 
         const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-        let balanceGrowth = 0;
+        let assetsGrowth = 0;
         let contributionGrowth = 0;
         let loanActivity = 0;
-
-        // Calculate growth metrics only if at least 4 months are available
-        if (availableMonths.length >= 4) {
-            const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]] || {};
-            balanceGrowth = prev3.total_balance ?
-                ((latest.total_balance - prev3.total_balance) / prev3.total_balance * 100) : 0;
-            contributionGrowth = prev3.total_member_contributions_kcb ?
-                ((latest.total_member_contributions_kcb - prev3.total_member_contributions_kcb) / prev3.total_member_contributions_kcb * 100) : 0;
-            loanActivity = prev3.total_loan_disbursements_kcb ?
-                ((latest.total_loan_disbursements_kcb - prev3.total_loan_disbursements_kcb) / prev3.total_loan_disbursements_kcb * 100) : 0;
-        }
-
-        const netIncome = (latest.total_inflows || 0) - (latest.total_outflows || 0);
-        const liquidityRatio = latest.total_balance ?
-            (latest.total_balance / (latest.total_loan_disbursements_kcb || 1)) : 0;
-        const netIncomeRatio = latest.total_inflows ? (netIncome / latest.total_inflows * 100) : 0;
-        const expenseRatio = latest.total_inflows ?
-            (((latest.bank_charges_kcb || 0) + (latest.bank_charges_lofty || 0) +
-              (latest.petty_cash_utilized_kcb || 0) + (latest.petty_cash_utilized_lofty || 0) +
-              (latest.agm_facilitation_kcb || 0) + (latest.agm_facilitation_lofty || 0) +
-              (latest.welfare_kitty_utilized_kcb || 0) + (latest.welfare_kitty_utilized_lofty || 0) +
-              (latest.other_expenses || 0)) / latest.total_inflows * 100) : 0;
-        const loanToContributionRatio = latest.total_member_contributions_kcb ?
-            (latest.total_loan_disbursements_kcb / latest.total_member_contributions_kcb) : 0;
-
+        let liquidityRatio = 0;
+        let netIncomeRatio = 0;
+        let expenseRatio = 0;
+        let loanToContributionRatio = 0;
         let riskLevel = 'Low';
-        const riskFactors = [];
-
-        if (liquidityRatio < 0.5) {
-            riskLevel = 'High';
-            riskFactors.push('Low liquidity ratio indicates potential cash flow issues.');
-        } else if (liquidityRatio < 1) {
-            riskLevel = 'Moderate';
-            riskFactors.push('Moderate liquidity ratio suggests limited cash reserves.');
-        }
-
-        if (loanToContributionRatio > 2) {
-            riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-            riskFactors.push('High loan-to-contribution ratio indicates heavy reliance on loans.');
-        }
-
-        if (netIncomeRatio < 0) {
-            riskLevel = 'High';
-            riskFactors.push('Negative net income indicates losses.');
-        } else if (netIncomeRatio < 5) {
-            riskLevel = riskLevel === 'High' ? 'High' : 'Moderate';
-            riskFactors.push('Low net income ratio suggests limited profitability.');
-        }
-
         let recommendations = '';
-        if (riskLevel === 'High') {
+        let riskFactors = [];
+
+        if (availableMonths.length >= 4) {
+            const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]] || {};
+            const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]] || {};
+            const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]] || {};
+
+            // Calculate assets growth
+            assetsGrowth = (
+                ((latest.total_assets || latest.total_balance || 0) - (prev1.total_assets || prev1.total_balance || 0)) / (prev1.total_assets || prev1.total_balance || 1) +
+                ((prev1.total_assets || prev1.total_balance || 0) - (prev2.total_assets || prev2.total_balance || 0)) / (prev2.total_assets || prev2.total_balance || 1) +
+                ((prev2.total_assets || prev2.total_balance || 0) - (prev3.total_assets || prev3.total_balance || 0)) / (prev3.total_assets || prev3.total_balance || 1)
+            ) / 3 * 100;
+
+            contributionGrowth = (
+                ((latest.total_member_contributions_kcb || 0) - (prev1.total_member_contributions_kcb || 0)) / (prev1.total_member_contributions_kcb || 1) +
+                ((prev1.total_member_contributions_kcb || 0) - (prev2.total_member_contributions_kcb || 0)) / (prev2.total_member_contributions_kcb || 1) +
+                ((prev2.total_member_contributions_kcb || 0) - (prev3.total_member_contributions_kcb || 0)) / (prev3.total_member_contributions_kcb || 1)
+            ) / 3 * 100;
+
+            loanActivity = (
+                ((latest.total_loan_disbursements_kcb || 0) - (prev1.total_loan_disbursements_kcb || 0)) / (prev1.total_loan_disbursements_kcb || 1) +
+                ((prev1.total_loan_disbursements_kcb || 0) - (prev2.total_loan_disbursements_kcb || 0)) / (prev2.total_loan_disbursements_kcb || 1) +
+                ((prev2.total_loan_disbursements_kcb || 0) - (prev3.total_loan_disbursements_kcb || 0)) / (prev3.total_loan_disbursements_kcb || 1)
+            ) / 3 * 100;
+        }
+
+        liquidityRatio = (latest.total_balance || latest.total_assets || 0) / (latest.total_loan_disbursements_kcb || 1);
+        netIncomeRatio = ((latest.total_inflows || 0) - (latest.total_outflows || 0)) / (latest.total_inflows || 1) * 100;
+        expenseRatio = (latest.total_outflows || 0) / (latest.total_inflows || 1) * 100;
+        loanToContributionRatio = (latest.total_loan_disbursements_kcb || 0) / (latest.total_member_contributions_kcb || 1);
+
+        // Risk level and recommendations
+        if (liquidityRatio < 0.5 || netIncomeRatio < -10 || loanToContributionRatio > 5) {
+            riskLevel = 'High';
             recommendations = 'Immediate action required: Reduce loan disbursements, increase member contributions, and cut discretionary expenses.';
-        } else if (riskLevel === 'Moderate') {
-            recommendations = 'Monitor closely: Optimize loan policies and improve expense management.';
+            riskFactors.push(
+                liquidityRatio < 0.5 ? 'Low liquidity ratio indicates insufficient cash reserves.' : 'Moderate liquidity ratio suggests limited cash reserves.',
+                loanToContributionRatio > 5 ? 'High loan-to-contribution ratio indicates heavy reliance on loans.' : '',
+                netIncomeRatio < 0 ? 'Negative net income indicates losses.' : ''
+            );
+        } else if (liquidityRatio < 1 || netIncomeRatio < 0) {
+            riskLevel = 'Moderate';
+            recommendations = 'Monitor closely: Increase contributions and review expense allocation.';
+            riskFactors.push(
+                liquidityRatio < 1 ? 'Liquidity ratio below 1 suggests potential cash flow issues.' : '',
+                netIncomeRatio < 0 ? 'Negative net income indicates losses.' : ''
+            );
         } else {
+            riskLevel = 'Low';
             recommendations = 'Maintain current strategy with periodic reviews.';
         }
 
         return {
-            balanceGrowth: balanceGrowth.toFixed(2),
-            contributionGrowth: contributionGrowth.toFixed(2),
-            loanActivity: loanActivity.toFixed(2),
-            liquidityRatio: liquidityRatio.toFixed(2),
-            netIncomeRatio: netIncomeRatio.toFixed(2),
-            expenseRatio: expenseRatio.toFixed(2),
-            loanToContributionRatio: loanToContributionRatio.toFixed(2),
+            assetsGrowth,
+            contributionGrowth,
+            loanActivity,
+            liquidityRatio,
+            netIncomeRatio,
+            expenseRatio,
+            loanToContributionRatio,
             riskLevel,
             recommendations,
-            riskFactors
+            riskFactors: riskFactors.filter(factor => factor)
         };
     } catch (error) {
         console.error('Error in calculateTrends:', error);
         return {
-            balanceGrowth: 0,
+            assetsGrowth: 0,
             contributionGrowth: 0,
             loanActivity: 0,
             liquidityRatio: 0,
@@ -1528,7 +1529,7 @@ function calculateTrends(monthlyReports, availableMonths) {
 function generateFutureProjections(monthlyReports, availableMonths) {
     try {
         if (!monthlyReports || availableMonths.length < 1) {
-            console.log('No data available for projections:', { monthlyReports, availableMonths });
+            console.log('No data for projections:', { monthlyReports, availableMonths });
             return {
                 projections: [],
                 newMembers: 0
@@ -1538,88 +1539,99 @@ function generateFutureProjections(monthlyReports, availableMonths) {
         const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
         console.log('Latest data:', latest);
 
-        // Default growth rates
+        // Default growth rates (non-negative)
         let contributionGrowthRate = 0.02; // 2%
         let loanGrowthRate = 0.015; // 1.5%
         let incomeGrowthRate = 0.01; // 1%
-        let balanceGrowthRate = 0.01; // 1% for balance
+        let assetsGrowthRate = 0.01; // 1% for assets
 
-        // Cap for growth rates to prevent unrealistic values
-        const MAX_GROWTH_RATE = 0.1; // 10% max per month
+        // Cap growth rates to prevent unrealistic values
+        const MAX_GROWTH_RATE = 0.05; // 5% max per month
 
         // Calculate growth rates if at least 3 months are available
         if (availableMonths.length >= 3) {
             const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]] || {};
             const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]] || {};
 
-            // Calculate contribution growth rate
-            const contribDiff1 = latest.total_member_contributions_kcb - (prev1.total_member_contributions_kcb || 0);
-            const contribDiff2 = prev1.total_member_contributions_kcb - (prev2.total_member_contributions_kcb || 0);
+            // Contribution growth
+            const contribDiff1 = (latest.total_member_contributions_kcb || 0) - (prev1.total_member_contributions_kcb || 0);
+            const contribDiff2 = (prev1.total_member_contributions_kcb || 0) - (prev2.total_member_contributions_kcb || 0);
             const contribRate1 = prev1.total_member_contributions_kcb ? contribDiff1 / prev1.total_member_contributions_kcb : 0;
             const contribRate2 = prev2.total_member_contributions_kcb ? contribDiff2 / prev2.total_member_contributions_kcb : 0;
-            contributionGrowthRate = Math.min((contribRate1 + contribRate2) / 2, MAX_GROWTH_RATE) || 0.02;
+            contributionGrowthRate = Math.min(Math.max((contribRate1 + contribRate2) / 2, 0), MAX_GROWTH_RATE) || 0.02;
 
-            // Calculate loan growth rate
-            const loanDiff1 = latest.total_loan_disbursements_kcb - (prev1.total_loan_disbursements_kcb || 0);
-            const loanDiff2 = prev1.total_loan_disbursements_kcb - (prev2.total_loan_disbursements_kcb || 0);
+            // Loan growth
+            const loanDiff1 = (latest.total_loan_disbursements_kcb || 0) - (prev1.total_loan_disbursements_kcb || 0);
+            const loanDiff2 = (prev1.total_loan_disbursements_kcb || 0) - (prev2.total_loan_disbursements_kcb || 0);
             const loanRate1 = prev1.total_loan_disbursements_kcb ? loanDiff1 / prev1.total_loan_disbursements_kcb : 0;
             const loanRate2 = prev2.total_loan_disbursements_kcb ? loanDiff2 / prev2.total_loan_disbursements_kcb : 0;
-            loanGrowthRate = Math.min((loanRate1 + loanRate2) / 2, MAX_GROWTH_RATE) || 0.015;
+            loanGrowthRate = Math.min(Math.max((loanRate1 + loanRate2) / 2, 0), MAX_GROWTH_RATE) || 0.015;
 
-            // Calculate income growth rate
-            const incomeDiff1 = latest.total_inflows - (prev1.total_inflows || 0);
-            const incomeDiff2 = prev1.total_inflows - (prev2.total_inflows || 0);
+            // Income growth
+            const incomeDiff1 = (latest.total_inflows || 0) - (prev1.total_inflows || 0);
+            const incomeDiff2 = (prev1.total_inflows || 0) - (prev2.total_inflows || 0);
             const incomeRate1 = prev1.total_inflows ? incomeDiff1 / prev1.total_inflows : 0;
             const incomeRate2 = prev2.total_inflows ? incomeDiff2 / prev2.total_inflows : 0;
-            incomeGrowthRate = Math.min((incomeRate1 + incomeRate2) / 2, MAX_GROWTH_RATE) || 0.01;
+            incomeGrowthRate = Math.min(Math.max((incomeRate1 + incomeRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
 
-            // Calculate balance growth rate
-            const balanceDiff1 = latest.total_balance - (prev1.total_balance || 0);
-            const balanceDiff2 = prev1.total_balance - (prev2.total_balance || 0);
-            const balanceRate1 = prev1.total_balance ? balanceDiff1 / prev1.total_balance : 0;
-            const balanceRate2 = prev2.total_balance ? balanceDiff2 / prev2.total_balance : 0;
-            balanceGrowthRate = Math.min((balanceRate1 + balanceRate2) / 2, MAX_GROWTH_RATE) || 0.01;
+            // Assets growth
+            const assetsDiff1 = (latest.total_assets || 0) - (prev1.total_assets || 0);
+            const assetsDiff2 = (prev1.total_assets || 0) - (prev2.total_assets || 0);
+            const assetsRate1 = prev1.total_assets ? assetsDiff1 / prev1.total_assets : 0;
+            const assetsRate2 = prev2.total_assets ? assetsDiff2 / prev2.total_assets : 0;
+            assetsGrowthRate = Math.min(Math.max((assetsRate1 + assetsRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
 
             console.log('Calculated growth rates:', {
                 contributionGrowthRate,
                 loanGrowthRate,
                 incomeGrowthRate,
-                balanceGrowthRate
+                assetsGrowthRate
             });
         } else {
-            console.log('Using default growth rates due to insufficient data:', {
+            console.log('Using default growth rates:', {
                 contributionGrowthRate,
                 loanGrowthRate,
                 incomeGrowthRate,
-                balanceGrowthRate
+                assetsGrowthRate
             });
         }
 
-        const newMemberGrowthRate = 0.05; // 5% monthly
         const currentMembers = latest.member_count || 10;
         let projectedMembers = currentMembers;
+        const totalNewMembersCap = 1; // Max 1 new member over 12 months
 
         const projections = [];
-        let currentBalance = latest.total_balance || 0;
+        let currentAssets = latest.total_assets || latest.total_balance || 0; // Fallback to total_balance if total_assets is missing
         let currentContributions = latest.total_member_contributions_kcb || 0;
         let currentLoans = latest.total_loan_disbursements_kcb || 0;
         let currentIncome = latest.total_inflows || 0;
 
+        console.log('Initial values:', {
+            currentAssets,
+            currentContributions,
+            currentLoans,
+            currentIncome,
+            currentMembers
+        });
+
         for (let i = 1; i <= 12; i++) {
-            currentBalance = currentBalance * (1 + balanceGrowthRate);
+            currentAssets = currentAssets * (1 + assetsGrowthRate);
             currentContributions = currentContributions * (1 + contributionGrowthRate);
             currentLoans = currentLoans * (1 + loanGrowthRate);
             currentIncome = currentIncome * (1 + incomeGrowthRate);
-            projectedMembers = projectedMembers * (1 + newMemberGrowthRate); // Fixed from 0.1 + newMemberGrowthRate
+
+            // Cap new members to 1 over 12 months (e.g., add 1 in month 12)
+            const newMembersThisMonth = i === 12 ? 1 : 0;
+            projectedMembers = currentMembers + newMembersThisMonth;
 
             projections.push({
                 month: i,
-                projectedBalance: currentBalance.toFixed(2),
+                projectedAssets: currentAssets.toFixed(2), // Changed from projectedBalance
                 projectedContributions: currentContributions.toFixed(2),
                 projectedLoans: currentLoans.toFixed(2),
                 projectedIncome: currentIncome.toFixed(2),
-                projectedGrowthRate: ((contributionGrowthRate + loanGrowthRate + incomeGrowthRate + balanceGrowthRate) / 4 * 100).toFixed(2),
-                projectedNewMembers: Math.round(projectedMembers - currentMembers)
+                projectedGrowthRate: ((contributionGrowthRate + loanGrowthRate + incomeGrowthRate + assetsGrowthRate) / 4 * 100).toFixed(2),
+                projectedNewMembers: newMembersThisMonth
             });
         }
 
@@ -1627,7 +1639,7 @@ function generateFutureProjections(monthlyReports, availableMonths) {
 
         return {
             projections,
-            newMembers: Math.round(projectedMembers - currentMembers)
+            newMembers: totalNewMembersCap
         };
     } catch (error) {
         console.error('Error in generateFutureProjections:', error);
@@ -1639,48 +1651,43 @@ function generateFutureProjections(monthlyReports, availableMonths) {
 }
 
 function runPerformanceAnalysis() {
-    const analysisResults = document.getElementById('analysisResults');
-    const simulationResults = document.getElementById('simulationResults');
-    const analysisSpinner = document.getElementById('analysisSpinner');
-
-    showSpinner(analysisSpinner);
-    fetchDataIfStale(true).then(() => {
-        const data = dataCache || loadDataFromStorage();
-        if (!data || !data.monthly_reports || Object.keys(data.monthly_reports).length === 0) {
-            analysisResults.innerHTML = '<p>No analysis data available. Please check admin updates or server connection.</p>';
-            simulationResults.innerHTML = '<p>No simulation data available.</p>';
-            hideSpinner(analysisSpinner);
+    try {
+        if (!dataCache || !dataCache.monthly_reports) {
+            console.log('No data available for analysis');
             return;
         }
 
-        const availableMonths = Object.keys(data.monthly_reports).sort();
-        const trends = calculateTrends(data.monthly_reports, availableMonths);
-        const { projections, newMembers } = generateFutureProjections(data.monthly_reports, availableMonths);
+        const availableMonths = Object.keys(dataCache.monthly_reports).sort();
+        const trends = calculateTrends(dataCache.monthly_reports, availableMonths);
+        const { projections, newMembers } = generateFutureProjections(dataCache.monthly_reports, availableMonths);
 
         let analysisHTML = `
+            <h3>Performance Analysis</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
                 <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Metric</th>
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
                 </tr>
-                <tr><td>Balance Growth (%)</td><td>${trends.balanceGrowth}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio}:1</td></tr>
-                <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio}%</td></tr>
-                <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio}%</td></tr>
-                <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio}:1</td></tr>
+                <tr><td>Assets Growth (%)</td><td>${trends.assetsGrowth.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
+                <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
+                <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
+                <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio.toFixed(2)}:1</td></tr>
+                <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio.toFixed(2)}%</td></tr>
+                <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio.toFixed(2)}%</td></tr>
+                <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio.toFixed(2)}:1</td></tr>
                 <tr><td>Risk Level</td><td>${trends.riskLevel}</td></tr>
-                <tr><td>Recommendations</td><td>${trends.recommendations}</td></tr>
-                <tr><td>Risk Factors</td><td>${trends.riskFactors.length > 0 ? trends.riskFactors.join('<br>') : 'None'}</td></tr>
             </table>
+            <p><strong>Recommendations:</strong> ${trends.recommendations}</p>
+            <p><strong>Risk Factors:</strong></p>
+            <ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('')}</ul>
         `;
 
         let simulationHTML = `
+            <h3>Future Simulation (12 Months)</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
                 <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Month</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Balance (KES)</th>
+                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Total Assets (KES)</th>
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Contributions (KES)</th>
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Loan Uptake (KES)</th>
                     <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Income (KES)</th>
@@ -1695,11 +1702,11 @@ function runPerformanceAnalysis() {
                 simulationHTML += `
                     <tr>
                         <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.month}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedBalance}</td>
+                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedAssets}</td>
                         <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedContributions}</td>
                         <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedLoans}</td>
                         <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedIncome}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td>
+                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}%</td>
                         <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedNewMembers}</td>
                     </tr>
                 `;
@@ -1709,15 +1716,13 @@ function runPerformanceAnalysis() {
             <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
         `;
 
-        analysisResults.innerHTML = analysisHTML;
-        simulationResults.innerHTML = simulationHTML;
-        hideSpinner(analysisSpinner);
-    }).catch(error => {
+        document.getElementById('performanceResults').innerHTML = analysisHTML;
+        document.getElementById('simulationResults').innerHTML = simulationHTML;
+    } catch (error) {
         console.error('Error in runPerformanceAnalysis:', error);
-        analysisResults.innerHTML = `<p>Failed to load analysis: ${error.message}. Please try again or contact support.</p>`;
-        simulationResults.innerHTML = `<p>Failed to load simulation: ${error.message}. Please try again or contact support.</p>`;
-        hideSpinner(analysisSpinner);
-    });
+        document.getElementById('performanceResults').innerHTML = 'Error loading performance analysis.';
+        document.getElementById('simulationResults').innerHTML = 'Error loading future simulation.';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
