@@ -1429,8 +1429,8 @@ function calculateTrends(monthlyReports, availableMonths) {
                 expenseRatio: 0,
                 loanToContributionRatio: 0,
                 riskLevel: 'Unknown',
-                recommendations: 'No data available for analysis',
-                riskFactors: []
+                recommendations: 'No data available for analysis. Please ensure at least one month of financial data is available.',
+                riskFactors: ['No monthly data available']
             };
         }
 
@@ -1438,10 +1438,10 @@ function calculateTrends(monthlyReports, availableMonths) {
         let assetsGrowth = 0;
         let contributionGrowth = 0;
         let loanActivity = 0;
-        let liquidityRatio = 0;
-        let netIncomeRatio = 0;
-        let expenseRatio = 0;
-        let loanToContributionRatio = 0;
+        let liquidityRatio = (latest.total_balance || 0) / (latest.total_loan_disbursements_kcb || 1);
+        let netIncomeRatio = ((latest.total_inflows || 0) - (latest.total_outflows || 0)) / (latest.total_inflows || 1) * 100;
+        let expenseRatio = (latest.total_outflows || 0) / (latest.total_inflows || 1) * 100;
+        let loanToContributionRatio = (latest.total_loan_disbursements_kcb || 0) / (latest.total_member_contributions_kcb || 1);
         let riskLevel = 'Low';
         let recommendations = '';
         let riskFactors = [];
@@ -1452,10 +1452,14 @@ function calculateTrends(monthlyReports, availableMonths) {
             const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]] || {};
 
             // Calculate assets growth
+            const latestAssets = (latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0);
+            const prevAssets1 = (prev1.total_balance || 0) + (prev1.total_loan_disbursements_kcb || 0) + (prev1.total_loan_disbursements_lofty || 0);
+            const prevAssets2 = (prev2.total_balance || 0) + (prev2.total_loan_disbursements_kcb || 0) + (prev2.total_loan_disbursements_lofty || 0);
+            const prevAssets3 = (prev3.total_balance || 0) + (prev3.total_loan_disbursements_kcb || 0) + (prev3.total_loan_disbursements_lofty || 0);
             assetsGrowth = (
-                ((latest.total_assets || latest.total_balance || 0) - (prev1.total_assets || prev1.total_balance || 0)) / (prev1.total_assets || prev1.total_balance || 1) +
-                ((prev1.total_assets || prev1.total_balance || 0) - (prev2.total_assets || prev2.total_balance || 0)) / (prev2.total_assets || prev2.total_balance || 1) +
-                ((prev2.total_assets || prev2.total_balance || 0) - (prev3.total_assets || prev3.total_balance || 0)) / (prev3.total_assets || prev3.total_balance || 1)
+                (latestAssets - prevAssets1) / (prevAssets1 || 1) +
+                (prevAssets1 - prevAssets2) / (prevAssets2 || 1) +
+                (prevAssets2 - prevAssets3) / (prevAssets3 || 1)
             ) / 3 * 100;
 
             contributionGrowth = (
@@ -1469,12 +1473,9 @@ function calculateTrends(monthlyReports, availableMonths) {
                 ((prev1.total_loan_disbursements_kcb || 0) - (prev2.total_loan_disbursements_kcb || 0)) / (prev2.total_loan_disbursements_kcb || 1) +
                 ((prev2.total_loan_disbursements_kcb || 0) - (prev3.total_loan_disbursements_kcb || 0)) / (prev3.total_loan_disbursements_kcb || 1)
             ) / 3 * 100;
+        } else {
+            riskFactors.push(`Insufficient data (${availableMonths.length} months available). At least 4 months required for growth analysis.`);
         }
-
-        liquidityRatio = (latest.total_balance || latest.total_assets || 0) / (latest.total_loan_disbursements_kcb || 1);
-        netIncomeRatio = ((latest.total_inflows || 0) - (latest.total_outflows || 0)) / (latest.total_inflows || 1) * 100;
-        expenseRatio = (latest.total_outflows || 0) / (latest.total_inflows || 1) * 100;
-        loanToContributionRatio = (latest.total_loan_disbursements_kcb || 0) / (latest.total_member_contributions_kcb || 1);
 
         // Risk level and recommendations
         if (liquidityRatio < 0.5 || netIncomeRatio < -10 || loanToContributionRatio > 5) {
@@ -1520,8 +1521,8 @@ function calculateTrends(monthlyReports, availableMonths) {
             expenseRatio: 0,
             loanToContributionRatio: 0,
             riskLevel: 'Unknown',
-            recommendations: 'Error in analysis',
-            riskFactors: []
+            recommendations: 'Error in analysis: ' + error.message,
+            riskFactors: ['Error occurred during trend calculation']
         };
     }
 }
@@ -1575,10 +1576,12 @@ function generateFutureProjections(monthlyReports, availableMonths) {
             incomeGrowthRate = Math.min(Math.max((incomeRate1 + incomeRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
 
             // Assets growth
-            const assetsDiff1 = (latest.total_assets || 0) - (prev1.total_assets || 0);
-            const assetsDiff2 = (prev1.total_assets || 0) - (prev2.total_assets || 0);
-            const assetsRate1 = prev1.total_assets ? assetsDiff1 / prev1.total_assets : 0;
-            const assetsRate2 = prev2.total_assets ? assetsDiff2 / prev2.total_assets : 0;
+            const prevAssets1 = (prev1.total_balance || 0) + (prev1.total_loan_disbursements_kcb || 0) + (prev1.total_loan_disbursements_lofty || 0);
+            const prevAssets2 = (prev2.total_balance || 0) + (prev2.total_loan_disbursements_kcb || 0) + (prev2.total_loan_disbursements_lofty || 0);
+            const assetsDiff1 = ((latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0)) - prevAssets1;
+            const assetsDiff2 = prevAssets1 - prevAssets2;
+            const assetsRate1 = prevAssets1 ? assetsDiff1 / prevAssets1 : 0;
+            const assetsRate2 = prevAssets2 ? assetsDiff2 / prevAssets2 : 0;
             assetsGrowthRate = Math.min(Math.max((assetsRate1 + assetsRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
 
             console.log('Calculated growth rates:', {
@@ -1600,8 +1603,8 @@ function generateFutureProjections(monthlyReports, availableMonths) {
         let projectedMembers = currentMembers;
         const totalNewMembersCap = 1; // Max 1 new member over 12 months
 
-        const projections = [];
-        let currentAssets = latest.total_assets || latest.total_balance || 0; // Fallback to total_balance if total_assets is missing
+        // Initialize currentAssets using the same formula as Page 4
+        let currentAssets = (latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0);
         let currentContributions = latest.total_member_contributions_kcb || 0;
         let currentLoans = latest.total_loan_disbursements_kcb || 0;
         let currentIncome = latest.total_inflows || 0;
@@ -1614,19 +1617,20 @@ function generateFutureProjections(monthlyReports, availableMonths) {
             currentMembers
         });
 
+        const projections = [];
         for (let i = 1; i <= 12; i++) {
             currentAssets = currentAssets * (1 + assetsGrowthRate);
             currentContributions = currentContributions * (1 + contributionGrowthRate);
             currentLoans = currentLoans * (1 + loanGrowthRate);
             currentIncome = currentIncome * (1 + incomeGrowthRate);
 
-            // Cap new members to 1 over 12 months (e.g., add 1 in month 12)
+            // Cap new members to 1 in month 12
             const newMembersThisMonth = i === 12 ? 1 : 0;
             projectedMembers = currentMembers + newMembersThisMonth;
 
             projections.push({
                 month: i,
-                projectedAssets: currentAssets.toFixed(2), // Changed from projectedBalance
+                projectedAssets: currentAssets.toFixed(2),
                 projectedContributions: currentContributions.toFixed(2),
                 projectedLoans: currentLoans.toFixed(2),
                 projectedIncome: currentIncome.toFixed(2),
