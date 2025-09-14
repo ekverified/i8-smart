@@ -489,15 +489,9 @@ function getPeriodData(data, period, availableMonths) {
     // Define flow-based fields to aggregate
     const flowFields = [
         'total_member_contributions_kcb',
-        'membership_fee_kcb',
-        'agm_payments_kcb',
-        'penalties_charged_kcb',
         'total_loan_repayments_kcb',
-        'interest_on_loans_kcb',
-        'membership_fee_lofty',
-        'agm_payments_lofty',
-        'penalties_charged_lofty',
         'total_loan_repayments_lofty',
+        'interest_on_loans_kcb',
         'interest_on_deposits_lofty',
         'other_income_kcb',
         'other_income_lofty',
@@ -512,27 +506,7 @@ function getPeriodData(data, period, availableMonths) {
         'welfare_kitty_utilized_kcb',
         'welfare_kitty_utilized_lofty',
         'other_expenses',
-        'custom_income_1_kcb',
-        'custom_income_2_kcb',
-        'custom_income_3_kcb',
-        'custom_income_4_kcb',
-        'custom_income_5_kcb',
-        'custom_income_1_lofty',
-        'custom_income_2_lofty',
-        'custom_income_3_lofty',
-        'custom_income_4_lofty',
-        'custom_income_5_lofty',
-        'custom_outflow_1_kcb',
-        'custom_outflow_2_kcb',
-        'custom_outflow_3_kcb',
-        'custom_outflow_4_kcb',
-        'custom_outflow_5_kcb',
-        'custom_outflow_1_lofty',
-        'custom_outflow_2_lofty',
-        'custom_outflow_3_lofty',
-        'custom_outflow_4_lofty',
-        'custom_outflow_5_lofty',
-        'internal_transfer_amount'
+        'total_inflows'
     ];
 
     let periodValue = '';
@@ -561,19 +535,6 @@ function getPeriodData(data, period, availableMonths) {
         flowFields.forEach(field => {
             acc[field] = (acc[field] || 0) + (curr[field] || 0);
         });
-        // Copy custom field names (non-numeric)
-        for (let i = 1; i <= 5; i++) {
-            ['kcb', 'lofty'].forEach(account => {
-                const incomeNameField = `custom_income_${i}_${account}_name`;
-                if (curr[incomeNameField]) acc[incomeNameField] = curr[incomeNameField];
-            });
-            const outflowNameField = `custom_outflow_${i}_name`;
-            if (curr[outflowNameField]) acc[outflowNameField] = curr[outflowNameField];
-        }
-        // Copy internal transfer direction
-        if (curr.internal_transfer_direction) {
-            acc.internal_transfer_direction = curr.internal_transfer_direction;
-        }
         return acc;
     }, {});
 
@@ -593,44 +554,7 @@ function getPeriodData(data, period, availableMonths) {
         (aggregatedData.agm_facilitation_lofty || 0) +
         (aggregatedData.welfare_kitty_utilized_kcb || 0) +
         (aggregatedData.welfare_kitty_utilized_lofty || 0) +
-        (aggregatedData.other_expenses || 0) +
-        (aggregatedData.custom_outflow_1_kcb || 0) +
-        (aggregatedData.custom_outflow_2_kcb || 0) +
-        (aggregatedData.custom_outflow_3_kcb || 0) +
-        (aggregatedData.custom_outflow_4_kcb || 0) +
-        (aggregatedData.custom_outflow_5_kcb || 0) +
-        (aggregatedData.custom_outflow_1_lofty || 0) +
-        (aggregatedData.custom_outflow_2_lofty || 0) +
-        (aggregatedData.custom_outflow_3_lofty || 0) +
-        (aggregatedData.custom_outflow_4_lofty || 0) +
-        (aggregatedData.custom_outflow_5_lofty || 0)
-    );
-
-    // Calculate total_inflows
-    aggregatedData.total_inflows = (
-        (aggregatedData.total_member_contributions_kcb || 0) +
-        (aggregatedData.membership_fee_kcb || 0) +
-        (aggregatedData.agm_payments_kcb || 0) +
-        (aggregatedData.penalties_charged_kcb || 0) +
-        (aggregatedData.total_loan_repayments_kcb || 0) +
-        (aggregatedData.interest_on_loans_kcb || 0) +
-        (aggregatedData.membership_fee_lofty || 0) +
-        (aggregatedData.agm_payments_lofty || 0) +
-        (aggregatedData.penalties_charged_lofty || 0) +
-        (aggregatedData.total_loan_repayments_lofty || 0) +
-        (aggregatedData.interest_on_deposits_lofty || 0) +
-        (aggregatedData.other_income_kcb || 0) +
-        (aggregatedData.other_income_lofty || 0) +
-        (aggregatedData.custom_income_1_kcb || 0) +
-        (aggregatedData.custom_income_2_kcb || 0) +
-        (aggregatedData.custom_income_3_kcb || 0) +
-        (aggregatedData.custom_income_4_kcb || 0) +
-        (aggregatedData.custom_income_5_kcb || 0) +
-        (aggregatedData.custom_income_1_lofty || 0) +
-        (aggregatedData.custom_income_2_lofty || 0) +
-        (aggregatedData.custom_income_3_lofty || 0) +
-        (aggregatedData.custom_income_4_lofty || 0) +
-        (aggregatedData.custom_income_5_lofty || 0)
+        (aggregatedData.other_expenses || 0)
     );
 
     // Calculate total_balance using latest month's balances plus aggregated loan disbursements
@@ -642,7 +566,7 @@ function getPeriodData(data, period, availableMonths) {
     );
 
     return { periodValue, data: aggregatedData };
-}}
+}
 
 function showError(element, message) {
     element.textContent = message;
@@ -926,7 +850,7 @@ function updateFinancialData() {
                 document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">No financial data available. Please check admin updates or server connection.</td></tr>`;
             }
             if (currentMainPage === 3) {
-                document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="6">No member data available. Please check admin updates or server connection.</td></tr>`;
+                document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">No member data available. Please check admin updates or server connection.</td></tr>`;
             }
             hideSpinner(elements.spinners.balanceSheet);
             hideSpinner(elements.spinners.members);
@@ -953,45 +877,19 @@ function updateFinancialData() {
         if (currentMainPage === 2) {
             const balanceSheetBody = document.getElementById('balanceSheetBody');
             const periodDisplay = periodValue ? ` - ${periodValue}` : '';
-            let tableHTML = `
+            balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? `
                 <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff; font-weight: bold;">
                     <td colspan="2" style="text-align: center; padding: 0.5rem;">Balance Sheet${periodDisplay}</td>
                 </tr>
                 <tr><td>Opening KCB Balance</td><td>KES ${(monthlyData.opening_kcb_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Opening Lofty Balance</td><td>KES ${(monthlyData.opening_lofty_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Members Contributions (KCB)</td><td>KES ${(monthlyData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Membership Fee (KCB)</td><td>KES ${(monthlyData.membership_fee_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>AGM Payments (KCB)</td><td>KES ${(monthlyData.agm_payments_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Penalties Charged (KCB)</td><td>KES ${(monthlyData.penalties_charged_kcb || 0).toFixed(2)}</td></tr>
                 <tr><td>Loan Repayments (KCB)</td><td>KES ${(monthlyData.total_loan_repayments_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Interest on Loans (KCB)</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
-                <tr><td>Membership Fee (Lofty)</td><td>KES ${(monthlyData.membership_fee_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>AGM Payments (Lofty)</td><td>KES ${(monthlyData.agm_payments_lofty || 0).toFixed(2)}</td></tr>
-                <tr><td>Penalties Charged (Lofty)</td><td>KES ${(monthlyData.penalties_charged_lofty || 0).toFixed(2)}</td></tr>
                 <tr><td>Loan Repayments (Lofty)</td><td>KES ${(monthlyData.total_loan_repayments_lofty || 0).toFixed(2)}</td></tr>
+                <tr><td>Interest on Loans (KCB)</td><td>KES ${(monthlyData.interest_on_loans_kcb || 0).toFixed(2)}</td></tr>
                 <tr><td>Interest on Deposits (Lofty)</td><td>KES ${(monthlyData.interest_on_deposits_lofty || 0).toFixed(2)}</td></tr>
                 <tr><td>Other Income (KCB)</td><td>KES ${(monthlyData.other_income_kcb || 0).toFixed(2)}</td></tr>
                 <tr><td>Other Income (Lofty)</td><td>KES ${(monthlyData.other_income_lofty || 0).toFixed(2)}</td></tr>
-            `;
-
-            // Add custom income fields for KCB
-            for (let i = 1; i <= 5; i++) {
-                const nameField = `custom_income_${i}_kcb_name`;
-                const amountField = `custom_income_${i}_kcb`;
-                if (monthlyData[nameField] && monthlyData[amountField] != null) {
-                    tableHTML += `<tr><td>${sanitizeInput(monthlyData[nameField])}</td><td>KES ${(monthlyData[amountField] || 0).toFixed(2)}</td></tr>`;
-                }
-            }
-            // Add custom income fields for Lofty
-            for (let i = 1; i <= 5; i++) {
-                const nameField = `custom_income_${i}_lofty_name`;
-                const amountField = `custom_income_${i}_lofty`;
-                if (monthlyData[nameField] && monthlyData[amountField] != null) {
-                    tableHTML += `<tr><td>${sanitizeInput(monthlyData[nameField])}</td><td>KES ${(monthlyData[amountField] || 0).toFixed(2)}</td></tr>`;
-                }
-            }
-
-            tableHTML += `
                 <tr><td>Loan Disbursements (KCB)</td><td>KES ${(monthlyData.total_loan_disbursements_kcb || 0).toFixed(2)}</td></tr>
                 <tr><td>Loan Disbursements (Lofty)</td><td>KES ${(monthlyData.total_loan_disbursements_lofty || 0).toFixed(2)}</td></tr>
                 <tr><td>Bank Charges (KCB)</td><td>KES ${(monthlyData.bank_charges_kcb || 0).toFixed(2)}</td></tr>
@@ -1003,39 +901,12 @@ function updateFinancialData() {
                 <tr><td>Welfare Kitty Utilized (KCB)</td><td>KES ${(monthlyData.welfare_kitty_utilized_kcb || 0).toFixed(2)}</td></tr>
                 <tr><td>Welfare Kitty Utilized (Lofty)</td><td>KES ${(monthlyData.welfare_kitty_utilized_lofty || 0).toFixed(2)}</td></tr>
                 <tr><td>Other Expenses</td><td>KES ${(monthlyData.other_expenses || 0).toFixed(2)}</td></tr>
-            `;
-
-            // Add custom outflow fields for KCB
-            for (let i = 1; i <= 5; i++) {
-                const nameField = `custom_outflow_${i}_name`;
-                const kcbAmountField = `custom_outflow_${i}_kcb`;
-                if (monthlyData[nameField] && monthlyData[kcbAmountField] != null) {
-                    tableHTML += `<tr><td>${sanitizeInput(monthlyData[nameField])} (KCB)</td><td>KES ${(monthlyData[kcbAmountField] || 0).toFixed(2)}</td></tr>`;
-                }
-            }
-            // Add custom outflow fields for Lofty
-            for (let i = 1; i <= 5; i++) {
-                const nameField = `custom_outflow_${i}_name`;
-                const loftyAmountField = `custom_outflow_${i}_lofty`;
-                if (monthlyData[nameField] && monthlyData[loftyAmountField] != null) {
-                    tableHTML += `<tr><td>${sanitizeInput(monthlyData[nameField])} (Lofty)</td><td>KES ${(monthlyData[loftyAmountField] || 0).toFixed(2)}</td></tr>`;
-                }
-            }
-
-            // Add internal transfer if present
-            if (monthlyData.internal_transfer_amount != null && monthlyData.internal_transfer_direction) {
-                tableHTML += `<tr><td>Internal Transfer (${monthlyData.internal_transfer_direction === 'kcb_to_lofty' ? 'KCB to Lofty' : 'Lofty to KCB'})</td><td>KES ${(monthlyData.internal_transfer_amount || 0).toFixed(2)}</td></tr>`;
-            }
-
-            tableHTML += `
                 <tr><td>Total Inflows</td><td>KES ${(monthlyData.total_inflows || 0).toFixed(2)}</td></tr>
                 <tr><td>Total Outflows</td><td>KES ${(monthlyData.total_outflows || 0).toFixed(2)}</td></tr>
                 <tr><td>KCB Balance</td><td>KES ${(monthlyData.kcb_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Lofty Balance</td><td>KES ${(monthlyData.lofty_balance || 0).toFixed(2)}</td></tr>
                 <tr><td>Total Balance</td><td>KES ${(monthlyData.total_balance || 0).toFixed(2)}</td></tr>
-            `;
-
-            balanceSheetBody.innerHTML = monthlyData && Object.keys(monthlyData).length > 0 ? tableHTML : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
+            ` : '<tr><td colspan="2">No financial data available for the selected period.</td></tr>';
         }
 
         hideSpinner(elements.spinners.balanceSheet);
@@ -1047,7 +918,7 @@ function updateFinancialData() {
             document.getElementById('balanceSheetBody').innerHTML = `<tr><td colspan="2">${errorMessage}</td></tr>`;
         }
         if (currentMainPage === 3) {
-            document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="6">${errorMessage}</td></tr>`;
+            document.getElementById('memberTableBody').innerHTML = `<tr><td colspan="5">${errorMessage}</td></tr>`;
         }
         hideSpinner(elements.spinners.balanceSheet);
         hideSpinner(elements.spinners.members);
