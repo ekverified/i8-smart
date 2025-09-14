@@ -74,6 +74,21 @@
                             <span id="membersContributionKcbError" class="error"></span>
                         </div>
                         <div class="form-group">
+                            <label for="membership_fee_kcb" class="tooltip" title="Fees paid by new joining members to the KCB account for the month (KES).">Membership Fee KCB (KES):</label>
+                            <input type="number" id="membership_fee_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Membership fee KCB in KES">
+                            <span id="membershipFeeKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="agm_payments_kcb" class="tooltip" title="Payments by members to facilitate AGM to the KCB account for the month (KES).">AGM Payments KCB (KES):</label>
+                            <input type="number" id="agm_payments_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM payments KCB in KES">
+                            <span id="agmPaymentsKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="penalties_charged_kcb" class="tooltip" title="Penalties charged to members for various offences to the KCB account for the month (KES).">Penalties Charged KCB (KES):</label>
+                            <input type="number" id="penalties_charged_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Penalties charged KCB in KES">
+                            <span id="penaltiesChargedKcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
                             <label for="total_loan_repayments_kcb" class="tooltip" title="Total loan repayments received in the KCB account for the month (KES).">Members Loan Repayment KCB (KES):</label>
                             <input type="number" id="total_loan_repayments_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment KCB in KES">
                             <span id="membersLoanRepaymentKcbError" class="error"></span>
@@ -82,6 +97,37 @@
                             <label for="interest_on_loans_kcb" class="tooltip" title="Interest earned on loans issued from the KCB account for the month (KES).">Interest on Loans KCB (KES):</label>
                             <input type="number" id="interest_on_loans_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on loans KCB in KES">
                             <span id="interestOnLoansKcbError" class="error"></span>
+                        </div>
+                        <!-- Custom Income Fields for KCB -->
+                        <div class="form-group">
+                            <label for="custom_income_1_kcb_name" class="tooltip" title="Name for custom income 1 in the KCB account (e.g., Sundry Income).">Custom Income 1 Name:</label>
+                            <input type="text" id="custom_income_1_kcb_name" class="input-field" placeholder="Enter name (e.g., Sundry Income)" aria-label="Custom income 1 name for KCB">
+                            <input type="number" id="custom_income_1_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 1 amount for KCB in KES">
+                            <span id="customIncome1KcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_2_kcb_name" class="tooltip" title="Name for custom income 2 in the KCB account.">Custom Income 2 Name:</label>
+                            <input type="text" id="custom_income_2_kcb_name" class="input-field" placeholder="Enter name" aria-label="Custom income 2 name for KCB">
+                            <input type="number" id="custom_income_2_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 2 amount for KCB in KES">
+                            <span id="customIncome2KcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_3_kcb_name" class="tooltip" title="Name for custom income 3 in the KCB account.">Custom Income 3 Name:</label>
+                            <input type="text" id="custom_income_3_kcb_name" class="input-field" placeholder="Enter name" aria-label="Custom income 3 name for KCB">
+                            <input type="number" id="custom_income_3_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 3 amount for KCB in KES">
+                            <span id="customIncome3KcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_4_kcb_name" class="tooltip" title="Name for custom income 4 in the KCB account.">Custom Income 4 Name:</label>
+                            <input type="text" id="custom_income_4_kcb_name" class="input-field" placeholder="Enter name" aria-label="Custom income 4 name for KCB">
+                            <input type="number" id="custom_income_4_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 4 amount for KCB in KES">
+                            <span id="customIncome4KcbError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_5_kcb_name" class="tooltip" title="Name for custom income 5 in the KCB account.">Custom Income 5 Name:</label>
+                            <input type="text" id="custom_income_5_kcb_name" class="input-field" placeholder="Enter name" aria-label="Custom income 5 name for KCB">
+                            <input type="number" id="custom_income_5_kcb" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 5 amount for KCB in KES">
+                            <span id="customIncome5KcbError" class="error"></span>
                         </div>
                     </details>
 
@@ -93,14 +139,60 @@
                             <span id="openingLoftyError" class="error"></span>
                         </div>
                         <div class="form-group">
+                            <label for="membership_fee_lofty" class="tooltip" title="Fees paid by new joining members to the Lofty account for the month (KES).">Membership Fee Lofty (KES):</label>
+                            <input type="number" id="membership_fee_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Membership fee Lofty in KES">
+                            <span id="membershipFeeLoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="agm_payments_lofty" class="tooltip" title="Payments by members to facilitate AGM to the Lofty account for the month (KES).">AGM Payments Lofty (KES):</label>
+                            <input type="number" id="agm_payments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="AGM payments Lofty in KES">
+                            <span id="agmPaymentsLoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="penalties_charged_lofty" class="tooltip" title="Penalties charged to members for various offences to the Lofty account for the month (KES).">Penalties Charged Lofty (KES):</label>
+                            <input type="number" id="penalties_charged_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Penalties charged Lofty in KES">
+                            <span id="penaltiesChargedLoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
                             <label for="total_loan_repayments_lofty" class="tooltip" title="Total loan repayments received in the Lofty account for the month (KES).">Members Loan Repayment Lofty (KES):</label>
                             <input type="number" id="total_loan_repayments_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Members loan repayment Lofty in KES">
-                            <span id="membersmoderate_loan_repayments_loftyError" class="error"></span>
+                            <span id="membersLoanRepaymentLoftyError" class="error"></span>
                         </div>
                         <div class="form-group">
                             <label for="interest_on_deposits_lofty" class="tooltip" title="Interest earned on deposits held in the Lofty account for the month (KES).">Interest on Deposits Lofty (KES):</label>
                             <input type="number" id="interest_on_deposits_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Interest on deposits Lofty in KES">
                             <span id="interestOnDepositsLoftyError" class="error"></span>
+                        </div>
+                        <!-- Custom Income Fields for Lofty -->
+                        <div class="form-group">
+                            <label for="custom_income_1_lofty_name" class="tooltip" title="Name for custom income 1 in the Lofty account (e.g., Sundry Income).">Custom Income 1 Name:</label>
+                            <input type="text" id="custom_income_1_lofty_name" class="input-field" placeholder="Enter name (e.g., Sundry Income)" aria-label="Custom income 1 name for Lofty">
+                            <input type="number" id="custom_income_1_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 1 amount for Lofty in KES">
+                            <span id="customIncome1LoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_2_lofty_name" class="tooltip" title="Name for custom income 2 in the Lofty account.">Custom Income 2 Name:</label>
+                            <input type="text" id="custom_income_2_lofty_name" class="input-field" placeholder="Enter name" aria-label="Custom income 2 name for Lofty">
+                            <input type="number" id="custom_income_2_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 2 amount for Lofty in KES">
+                            <span id="customIncome2LoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_3_lofty_name" class="tooltip" title="Name for custom income 3 in the Lofty account.">Custom Income 3 Name:</label>
+                            <input type="text" id="custom_income_3_lofty_name" class="input-field" placeholder="Enter name" aria-label="Custom income 3 name for Lofty">
+                            <input type="number" id="custom_income_3_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 3 amount for Lofty in KES">
+                            <span id="customIncome3LoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_4_lofty_name" class="tooltip" title="Name for custom income 4 in the Lofty account.">Custom Income 4 Name:</label>
+                            <input type="text" id="custom_income_4_lofty_name" class="input-field" placeholder="Enter name" aria-label="Custom income 4 name for Lofty">
+                            <input type="number" id="custom_income_4_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 4 amount for Lofty in KES">
+                            <span id="customIncome4LoftyError" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_income_5_lofty_name" class="tooltip" title="Name for custom income 5 in the Lofty account.">Custom Income 5 Name:</label>
+                            <input type="text" id="custom_income_5_lofty_name" class="input-field" placeholder="Enter name" aria-label="Custom income 5 name for Lofty">
+                            <input type="number" id="custom_income_5_lofty" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom income 5 amount for Lofty in KES">
+                            <span id="customIncome5LoftyError" class="error"></span>
                         </div>
                     </details>
 
@@ -421,17 +513,33 @@
                 { id: 'opening_kcb_balance', errorId: 'openingKcbError', message: 'Please enter a valid KCB balance.' },
                 { id: 'opening_lofty_balance', errorId: 'openingLoftyError', message: 'Please enter a valid Lofty balance.' },
                 { id: 'total_member_contributions_kcb', errorId: 'membersContributionKcbError', message: 'Please enter a valid contribution amount.' },
-                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount.' },
-                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount.' },
-                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount.' },
-                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount.' },
+                { id: 'membership_fee_kcb', errorId: 'membershipFeeKcbError', message: 'Please enter a valid membership fee for KCB.' },
+                { id: 'membership_fee_lofty', errorId: 'membershipFeeLoftyError', message: 'Please enter a valid membership fee for Lofty.' },
+                { id: 'agm_payments_kcb', errorId: 'agmPaymentsKcbError', message: 'Please enter a valid AGM payments for KCB.' },
+                { id: 'agm_payments_lofty', errorId: 'agmPaymentsLoftyError', message: 'Please enter a valid AGM payments for Lofty.' },
+                { id: 'penalties_charged_kcb', errorId: 'penaltiesChargedKcbError', message: 'Please enter a valid penalties charged for KCB.' },
+                { id: 'penalties_charged_lofty', errorId: 'penaltiesChargedLoftyError', message: 'Please enter a valid penalties charged for Lofty.' },
+                { id: 'total_loan_repayments_kcb', errorId: 'membersLoanRepaymentKcbError', message: 'Please enter a valid repayment amount for KCB.' },
+                { id: 'total_loan_repayments_lofty', errorId: 'membersLoanRepaymentLoftyError', message: 'Please enter a valid repayment amount for Lofty.' },
+                { id: 'interest_on_loans_kcb', errorId: 'interestOnLoansKcbError', message: 'Please enter a valid interest amount for KCB.' },
+                { id: 'interest_on_deposits_lofty', errorId: 'interestOnDepositsLoftyError', message: 'Please enter a valid interest amount for Lofty.' },
                 { id: 'other_income', errorId: 'otherIncomeError', message: 'Please enter a valid other income amount.' },
                 { id: 'total_loan_disbursements', errorId: 'loansAdvancedError', message: 'Please enter a valid loans advanced amount.' },
                 { id: 'bank_charges', errorId: 'bankChargesError', message: 'Please enter a valid bank charges amount.' },
                 { id: 'petty_cash_utilized', errorId: 'pettyCashUtilizedError', message: 'Please enter a valid petty cash amount.' },
                 { id: 'agm_facilitation', errorId: 'agmFacilitationError', message: 'Please enter a valid AGM facilitation amount.' },
                 { id: 'welfare_kitty_utilized', errorId: 'welfareKittyUtilizedError', message: 'Please enter a valid welfare kitty amount.' },
-                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' }
+                { id: 'other_expenses', errorId: 'otherExpensesError', message: 'Please enter a valid other expenses amount.' },
+                { id: 'custom_income_1_kcb', errorId: 'customIncome1KcbError', message: 'Please enter a valid amount for Custom Income 1 (KCB) or ensure the name is filled.' },
+                { id: 'custom_income_2_kcb', errorId: 'customIncome2KcbError', message: 'Please enter a valid amount for Custom Income 2 (KCB) or ensure the name is filled.' },
+                { id: 'custom_income_3_kcb', errorId: 'customIncome3KcbError', message: 'Please enter a valid amount for Custom Income 3 (KCB) or ensure the name is filled.' },
+                { id: 'custom_income_4_kcb', errorId: 'customIncome4KcbError', message: 'Please enter a valid amount for Custom Income 4 (KCB) or ensure the name is filled.' },
+                { id: 'custom_income_5_kcb', errorId: 'customIncome5KcbError', message: 'Please enter a valid amount for Custom Income 5 (KCB) or ensure the name is filled.' },
+                { id: 'custom_income_1_lofty', errorId: 'customIncome1LoftyError', message: 'Please enter a valid amount for Custom Income 1 (Lofty) or ensure the name is filled.' },
+                { id: 'custom_income_2_lofty', errorId: 'customIncome2LoftyError', message: 'Please enter a valid amount for Custom Income 2 (Lofty) or ensure the name is filled.' },
+                { id: 'custom_income_3_lofty', errorId: 'customIncome3LoftyError', message: 'Please enter a valid amount for Custom Income 3 (Lofty) or ensure the name is filled.' },
+                { id: 'custom_income_4_lofty', errorId: 'customIncome4LoftyError', message: 'Please enter a valid amount for Custom Income 4 (Lofty) or ensure the name is filled.' },
+                { id: 'custom_income_5_lofty', errorId: 'customIncome5LoftyError', message: 'Please enter a valid amount for Custom Income 5 (Lofty) or ensure the name is filled.' }
             ];
 
             inputs.forEach(input => {
@@ -444,6 +552,14 @@
                 errorElement.style.display = 'none';
                 if (input.id === 'balanceYear' || input.id === 'balanceMonth') {
                     if (!element.value) {
+                        errorElement.textContent = input.message;
+                        errorElement.style.display = 'block';
+                        errors.push(input.message);
+                    }
+                } else if (input.id.includes('custom_income')) {
+                    const nameElement = document.getElementById(`${input.id}_name`);
+                    const value = parseFloat(element.value);
+                    if ((element.value.trim() || nameElement.value.trim()) && (!isValidNumber(value) || value < 0 || !nameElement.value.trim())) {
                         errorElement.textContent = input.message;
                         errorElement.style.display = 'block';
                         errors.push(input.message);
@@ -551,12 +667,28 @@
                 <h4>KCB Accounts</h4>
                 <p>Opening KCB Balance: KES ${data.opening_kcb_balance.toFixed(2)}</p>
                 <p>Members Contribution KCB: KES ${data.total_member_contributions_kcb.toFixed(2)}</p>
+                <p>Membership Fee KCB: KES ${data.membership_fee_kcb.toFixed(2)}</p>
+                <p>AGM Payments KCB: KES ${data.agm_payments_kcb.toFixed(2)}</p>
+                <p>Penalties Charged KCB: KES ${data.penalties_charged_kcb.toFixed(2)}</p>
                 <p>Loan Repayments KCB: KES ${data.total_loan_repayments_kcb.toFixed(2)}</p>
                 <p>Interest on Loans KCB: KES ${data.interest_on_loans_kcb.toFixed(2)}</p>
+                <p>${data.custom_income_1_kcb_name || 'Custom Income 1'}: KES ${data.custom_income_1_kcb.toFixed(2)}</p>
+                <p>${data.custom_income_2_kcb_name || 'Custom Income 2'}: KES ${data.custom_income_2_kcb.toFixed(2)}</p>
+                <p>${data.custom_income_3_kcb_name || 'Custom Income 3'}: KES ${data.custom_income_3_kcb.toFixed(2)}</p>
+                <p>${data.custom_income_4_kcb_name || 'Custom Income 4'}: KES ${data.custom_income_4_kcb.toFixed(2)}</p>
+                <p>${data.custom_income_5_kcb_name || 'Custom Income 5'}: KES ${data.custom_income_5_kcb.toFixed(2)}</p>
                 <h4>Lofty Accounts</h4>
                 <p>Opening Lofty Balance: KES ${data.opening_lofty_balance.toFixed(2)}</p>
+                <p>Membership Fee Lofty: KES ${data.membership_fee_lofty.toFixed(2)}</p>
+                <p>AGM Payments Lofty: KES ${data.agm_payments_lofty.toFixed(2)}</p>
+                <p>Penalties Charged Lofty: KES ${data.penalties_charged_lofty.toFixed(2)}</p>
                 <p>Loan Repayments Lofty: KES ${data.total_loan_repayments_lofty.toFixed(2)}</p>
                 <p>Interest on Deposits Lofty: KES ${data.interest_on_deposits_lofty.toFixed(2)}</p>
+                <p>${data.custom_income_1_lofty_name || 'Custom Income 1'}: KES ${data.custom_income_1_lofty.toFixed(2)}</p>
+                <p>${data.custom_income_2_lofty_name || 'Custom Income 2'}: KES ${data.custom_income_2_lofty.toFixed(2)}</p>
+                <p>${data.custom_income_3_lofty_name || 'Custom Income 3'}: KES ${data.custom_income_3_lofty.toFixed(2)}</p>
+                <p>${data.custom_income_4_lofty_name || 'Custom Income 4'}: KES ${data.custom_income_4_lofty.toFixed(2)}</p>
+                <p>${data.custom_income_5_lofty_name || 'Custom Income 5'}: KES ${data.custom_income_5_lofty.toFixed(2)}</p>
                 <h4>Other Inflows</h4>
                 <p>Other Income (${data.other_income_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_income_kcb + data.other_income_lofty).toFixed(2)}</p>
                 <h4>Outflows</h4>
@@ -694,11 +826,37 @@
                 document.getElementById('balanceMonth').value = month;
                 document.getElementById('opening_kcb_balance').value = data.opening_kcb_balance || '';
                 document.getElementById('total_member_contributions_kcb').value = data.total_member_contributions_kcb || '';
+                document.getElementById('membership_fee_kcb').value = data.membership_fee_kcb || '';
+                document.getElementById('agm_payments_kcb').value = data.agm_payments_kcb || '';
+                document.getElementById('penalties_charged_kcb').value = data.penalties_charged_kcb || '';
                 document.getElementById('total_loan_repayments_kcb').value = data.total_loan_repayments_kcb || '';
                 document.getElementById('interest_on_loans_kcb').value = data.interest_on_loans_kcb || '';
+                document.getElementById('custom_income_1_kcb_name').value = data.custom_income_1_kcb_name || '';
+                document.getElementById('custom_income_1_kcb').value = data.custom_income_1_kcb || '';
+                document.getElementById('custom_income_2_kcb_name').value = data.custom_income_2_kcb_name || '';
+                document.getElementById('custom_income_2_kcb').value = data.custom_income_2_kcb || '';
+                document.getElementById('custom_income_3_kcb_name').value = data.custom_income_3_kcb_name || '';
+                document.getElementById('custom_income_3_kcb').value = data.custom_income_3_kcb || '';
+                document.getElementById('custom_income_4_kcb_name').value = data.custom_income_4_kcb_name || '';
+                document.getElementById('custom_income_4_kcb').value = data.custom_income_4_kcb || '';
+                document.getElementById('custom_income_5_kcb_name').value = data.custom_income_5_kcb_name || '';
+                document.getElementById('custom_income_5_kcb').value = data.custom_income_5_kcb || '';
                 document.getElementById('opening_lofty_balance').value = data.opening_lofty_balance || '';
+                document.getElementById('membership_fee_lofty').value = data.membership_fee_lofty || '';
+                document.getElementById('agm_payments_lofty').value = data.agm_payments_lofty || '';
+                document.getElementById('penalties_charged_lofty').value = data.penalties_charged_lofty || '';
                 document.getElementById('total_loan_repayments_lofty').value = data.total_loan_repayments_lofty || '';
                 document.getElementById('interest_on_deposits_lofty').value = data.interest_on_deposits_lofty || '';
+                document.getElementById('custom_income_1_lofty_name').value = data.custom_income_1_lofty_name || '';
+                document.getElementById('custom_income_1_lofty').value = data.custom_income_1_lofty || '';
+                document.getElementById('custom_income_2_lofty_name').value = data.custom_income_2_lofty_name || '';
+                document.getElementById('custom_income_2_lofty').value = data.custom_income_2_lofty || '';
+                document.getElementById('custom_income_3_lofty_name').value = data.custom_income_3_lofty_name || '';
+                document.getElementById('custom_income_3_lofty').value = data.custom_income_3_lofty || '';
+                document.getElementById('custom_income_4_lofty_name').value = data.custom_income_4_lofty_name || '';
+                document.getElementById('custom_income_4_lofty').value = data.custom_income_4_lofty || '';
+                document.getElementById('custom_income_5_lofty_name').value = data.custom_income_5_lofty_name || '';
+                document.getElementById('custom_income_5_lofty').value = data.custom_income_5_lofty || '';
                 document.getElementById('other_income').value = data.other_income_kcb || data.other_income_lofty || '';
                 document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
                 document.getElementById('total_loan_disbursements').value = data.total_loan_disbursements_kcb || data.total_loan_disbursements_lofty || '';
@@ -818,11 +976,37 @@
                 month: month,
                 opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
                 total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
+                membership_fee_kcb: parseFloat(document.getElementById('membership_fee_kcb').value) || 0,
+                agm_payments_kcb: parseFloat(document.getElementById('agm_payments_kcb').value) || 0,
+                penalties_charged_kcb: parseFloat(document.getElementById('penalties_charged_kcb').value) || 0,
                 total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
                 interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value) || 0,
+                custom_income_1_kcb_name: sanitizeInput(document.getElementById('custom_income_1_kcb_name').value) || '',
+                custom_income_1_kcb: parseFloat(document.getElementById('custom_income_1_kcb').value) || 0,
+                custom_income_2_kcb_name: sanitizeInput(document.getElementById('custom_income_2_kcb_name').value) || '',
+                custom_income_2_kcb: parseFloat(document.getElementById('custom_income_2_kcb').value) || 0,
+                custom_income_3_kcb_name: sanitizeInput(document.getElementById('custom_income_3_kcb_name').value) || '',
+                custom_income_3_kcb: parseFloat(document.getElementById('custom_income_3_kcb').value) || 0,
+                custom_income_4_kcb_name: sanitizeInput(document.getElementById('custom_income_4_kcb_name').value) || '',
+                custom_income_4_kcb: parseFloat(document.getElementById('custom_income_4_kcb').value) || 0,
+                custom_income_5_kcb_name: sanitizeInput(document.getElementById('custom_income_5_kcb_name').value) || '',
+                custom_income_5_kcb: parseFloat(document.getElementById('custom_income_5_kcb').value) || 0,
                 opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value) || 0,
+                membership_fee_lofty: parseFloat(document.getElementById('membership_fee_lofty').value) || 0,
+                agm_payments_lofty: parseFloat(document.getElementById('agm_payments_lofty').value) || 0,
+                penalties_charged_lofty: parseFloat(document.getElementById('penalties_charged_lofty').value) || 0,
                 total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value) || 0,
                 interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value) || 0,
+                custom_income_1_lofty_name: sanitizeInput(document.getElementById('custom_income_1_lofty_name').value) || '',
+                custom_income_1_lofty: parseFloat(document.getElementById('custom_income_1_lofty').value) || 0,
+                custom_income_2_lofty_name: sanitizeInput(document.getElementById('custom_income_2_lofty_name').value) || '',
+                custom_income_2_lofty: parseFloat(document.getElementById('custom_income_2_lofty').value) || 0,
+                custom_income_3_lofty_name: sanitizeInput(document.getElementById('custom_income_3_lofty_name').value) || '',
+                custom_income_3_lofty: parseFloat(document.getElementById('custom_income_3_lofty').value) || 0,
+                custom_income_4_lofty_name: sanitizeInput(document.getElementById('custom_income_4_lofty_name').value) || '',
+                custom_income_4_lofty: parseFloat(document.getElementById('custom_income_4_lofty').value) || 0,
+                custom_income_5_lofty_name: sanitizeInput(document.getElementById('custom_income_5_lofty_name').value) || '',
+                custom_income_5_lofty: parseFloat(document.getElementById('custom_income_5_lofty').value) || 0,
                 other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
                 other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
                 total_loan_disbursements_kcb: document.getElementById('total_loan_disbursements_account').value === 'kcb' ? parseFloat(document.getElementById('total_loan_disbursements').value) || 0 : 0,
@@ -843,20 +1027,81 @@
                 lofty_balance: 0,
                 total_balance: 0
             };
-            data.total_inflows = data.total_member_contributions_kcb + data.total_loan_repayments_kcb + data.interest_on_loans_kcb +
-                                 data.total_loan_repayments_lofty + data.interest_on_deposits_lofty + data.other_income_kcb + data.other_income_lofty;
-            data.total_outflows = data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty + data.bank_charges_kcb +
-                                  data.bank_charges_lofty + data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty +
-                                  data.agm_facilitation_kcb + data.agm_facilitation_lofty + data.welfare_kitty_utilized_kcb +
-                                  data.welfare_kitty_utilized_lofty + data.other_expenses_kcb + data.other_expenses_lofty;
-            data.kcb_balance = data.opening_kcb_balance + data.total_member_contributions_kcb + data.total_loan_repayments_kcb +
-                               data.interest_on_loans_kcb + data.other_income_kcb - (data.total_loan_disbursements_kcb +
-                               data.bank_charges_kcb + data.petty_cash_utilized_kcb + data.agm_facilitation_kcb +
-                               data.welfare_kitty_utilized_kcb + data.other_expenses_kcb);
-            data.lofty_balance = data.opening_lofty_balance + data.total_loan_repayments_lofty + data.interest_on_deposits_lofty +
-                                 data.other_income_lofty - (data.total_loan_disbursements_lofty + data.bank_charges_lofty +
-                                 data.petty_cash_utilized_lofty + data.agm_facilitation_lofty + data.welfare_kitty_utilized_lofty +
-                                 data.other_expenses_lofty);
+            // Calculate total inflows including new fields
+            data.total_inflows = data.total_member_contributions_kcb + 
+                                 data.membership_fee_kcb + 
+                                 data.agm_payments_kcb + 
+                                 data.penalties_charged_kcb + 
+                                 data.total_loan_repayments_kcb + 
+                                 data.interest_on_loans_kcb + 
+                                 data.custom_income_1_kcb + 
+                                 data.custom_income_2_kcb + 
+                                 data.custom_income_3_kcb + 
+                                 data.custom_income_4_kcb + 
+                                 data.custom_income_5_kcb + 
+                                 data.total_loan_repayments_lofty + 
+                                 data.membership_fee_lofty + 
+                                 data.agm_payments_lofty + 
+                                 data.penalties_charged_lofty + 
+                                 data.interest_on_deposits_lofty + 
+                                 data.custom_income_1_lofty + 
+                                 data.custom_income_2_lofty + 
+                                 data.custom_income_3_lofty + 
+                                 data.custom_income_4_lofty + 
+                                 data.custom_income_5_lofty + 
+                                 data.other_income_kcb + 
+                                 data.other_income_lofty;
+            // Calculate total outflows
+            data.total_outflows = data.total_loan_disbursements_kcb + 
+                                  data.total_loan_disbursements_lofty + 
+                                  data.bank_charges_kcb + 
+                                  data.bank_charges_lofty + 
+                                  data.petty_cash_utilized_kcb + 
+                                  data.petty_cash_utilized_lofty + 
+                                  data.agm_facilitation_kcb + 
+                                  data.agm_facilitation_lofty + 
+                                  data.welfare_kitty_utilized_kcb + 
+                                  data.welfare_kitty_utilized_lofty + 
+                                  data.other_expenses_kcb + 
+                                  data.other_expenses_lofty;
+            // Calculate balances
+            data.kcb_balance = data.opening_kcb_balance + 
+                               data.total_member_contributions_kcb + 
+                               data.membership_fee_kcb + 
+                               data.agm_payments_kcb + 
+                               data.penalties_charged_kcb + 
+                               data.total_loan_repayments_kcb + 
+                               data.interest_on_loans_kcb + 
+                               data.custom_income_1_kcb + 
+                               data.custom_income_2_kcb + 
+                               data.custom_income_3_kcb + 
+                               data.custom_income_4_kcb + 
+                               data.custom_income_5_kcb + 
+                               data.other_income_kcb - 
+                               (data.total_loan_disbursements_kcb + 
+                                data.bank_charges_kcb + 
+                                data.petty_cash_utilized_kcb + 
+                                data.agm_facilitation_kcb + 
+                                data.welfare_kitty_utilized_kcb + 
+                                data.other_expenses_kcb);
+            data.lofty_balance = data.opening_lofty_balance + 
+                                 data.membership_fee_lofty + 
+                                 data.agm_payments_lofty + 
+                                 data.penalties_charged_lofty + 
+                                 data.total_loan_repayments_lofty + 
+                                 data.interest_on_deposits_lofty + 
+                                 data.custom_income_1_lofty + 
+                                 data.custom_income_2_lofty + 
+                                 data.custom_income_3_lofty + 
+                                 data.custom_income_4_lofty + 
+                                 data.custom_income_5_lofty + 
+                                 data.other_income_lofty - 
+                                 (data.total_loan_disbursements_lofty + 
+                                  data.bank_charges_lofty + 
+                                  data.petty_cash_utilized_lofty + 
+                                  data.agm_facilitation_lofty + 
+                                  data.welfare_kitty_utilized_lofty + 
+                                  data.other_expenses_lofty);
             data.total_balance = data.kcb_balance + data.lofty_balance;
             showConfirmationModal(data, data.month, async () => {
                 try {
