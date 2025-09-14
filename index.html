@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -492,8 +493,27 @@ function getPeriodData(data, period, availableMonths) {
             'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
             'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
             'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
-            'total_inflows', 'total_outflows', 'kcb_balance', 'lofty_balance', 'total_balance'
+            'total_inflows', 'kcb_balance', 'lofty_balance', 'total_balance'
         ]);
+        // Recalculate total_outflows to exclude loan disbursements
+        aggregatedData.total_outflows = (
+            (aggregatedData.bank_charges_kcb || 0) +
+            (aggregatedData.bank_charges_lofty || 0) +
+            (aggregatedData.petty_cash_utilized_kcb || 0) +
+            (aggregatedData.petty_cash_utilized_lofty || 0) +
+            (aggregatedData.agm_facilitation_kcb || 0) +
+            (aggregatedData.agm_facilitation_lofty || 0) +
+            (aggregatedData.welfare_kitty_utilized_kcb || 0) +
+            (aggregatedData.welfare_kitty_utilized_lofty || 0) +
+            (aggregatedData.other_expenses || 0)
+        );
+        // Include loan disbursements as part of total_balance (assets)
+        aggregatedData.total_balance = (
+            (aggregatedData.kcb_balance || 0) +
+            (aggregatedData.lofty_balance || 0) +
+            (aggregatedData.total_loan_disbursements_kcb || 0) +
+            (aggregatedData.total_loan_disbursements_lofty || 0)
+        );
         return { periodValue: `${year}-Q${quarter}`, data: aggregatedData };
     }
 
@@ -506,8 +526,27 @@ function getPeriodData(data, period, availableMonths) {
             'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
             'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
             'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
-            'total_inflows', 'total_outflows', 'kcb_balance', 'lofty_balance', 'total_balance'
+            'total_inflows', 'kcb_balance', 'lofty_balance', 'total_balance'
         ]);
+        // Recalculate total_outflows to exclude loan disbursements
+        aggregatedData.total_outflows = (
+            (aggregatedData.bank_charges_kcb || 0) +
+            (aggregatedData.bank_charges_lofty || 0) +
+            (aggregatedData.petty_cash_utilized_kcb || 0) +
+            (aggregatedData.petty_cash_utilized_lofty || 0) +
+            (aggregatedData.agm_facilitation_kcb || 0) +
+            (aggregatedData.agm_facilitation_lofty || 0) +
+            (aggregatedData.welfare_kitty_utilized_kcb || 0) +
+            (aggregatedData.welfare_kitty_utilized_lofty || 0) +
+            (aggregatedData.other_expenses || 0)
+        );
+        // Include loan disbursements as part of total_balance (assets)
+        aggregatedData.total_balance = (
+            (aggregatedData.kcb_balance || 0) +
+            (aggregatedData.lofty_balance || 0) +
+            (aggregatedData.total_loan_disbursements_kcb || 0) +
+            (aggregatedData.total_loan_disbursements_lofty || 0)
+        );
         return { periodValue, data: aggregatedData };
     }
 
@@ -895,10 +934,24 @@ function updateBehaviorReport() {
         const { periodValue, data: reportData } = getPeriodData(data, period, availableMonths);
 
         const behaviorReportBody = document.getElementById('behaviorReportBody');
-        const totalAssets = (reportData.total_balance || 0) + (reportData.total_loan_disbursements_kcb || 0) + (reportData.total_loan_disbursements_lofty || 0);
+        // Calculate net income excluding loan disbursements
+        const netIncome = (reportData.total_inflows || 0) - (
+            (reportData.bank_charges_kcb || 0) +
+            (reportData.bank_charges_lofty || 0) +
+            (reportData.petty_cash_utilized_kcb || 0) +
+            (reportData.petty_cash_utilized_lofty || 0) +
+            (reportData.agm_facilitation_kcb || 0) +
+            (reportData.agm_facilitation_lofty || 0) +
+            (reportData.welfare_kitty_utilized_kcb || 0) +
+            (reportData.welfare_kitty_utilized_lofty || 0) +
+            (reportData.other_expenses || 0)
+        );
+        const totalAssets = (
+            (reportData.total_balance || 0) +
+            (reportData.total_loan_disbursements_kcb || 0) +
+            (reportData.total_loan_disbursements_lofty || 0)
+        );
         const periodDisplay = periodValue ? ` - ${periodValue}` : '';
-
-        const netIncome = (reportData.total_inflows || 0) - (reportData.total_outflows || 0);
         const contributionRatio = reportData.total_inflows ? ((reportData.total_member_contributions_kcb || 0) / reportData.total_inflows * 100) : 0;
         const loanToContributionRatio = reportData.total_member_contributions_kcb ? ((reportData.total_loan_disbursements_kcb || 0) / reportData.total_member_contributions_kcb) : 0;
 
@@ -907,7 +960,7 @@ function updateBehaviorReport() {
                 <td colspan="2" style="text-align: center; padding: 0.5rem;">Company Behavior Report${periodDisplay}</td>
             </tr>
             <tr><td>Total Inflows</td><td>KES ${(reportData.total_inflows || 0).toFixed(2)}</td></tr>
-            <tr><td>Total Outflows</td><td>KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
+            <tr><td>Total Outflows (Excl. Loans)</td><td>KES ${(reportData.total_outflows || 0).toFixed(2)}</td></tr>
             <tr><td>Net Income</td><td>KES ${netIncome.toFixed(2)}</td></tr>
             <tr><td>Total Balance</td><td>KES ${(reportData.total_balance || 0).toFixed(2)}</td></tr>
             <tr><td>Members Contributions (KCB)</td><td>KES ${(reportData.total_member_contributions_kcb || 0).toFixed(2)}</td></tr>
@@ -1438,9 +1491,27 @@ function calculateTrends(monthlyReports, availableMonths) {
         let assetsGrowth = 0;
         let contributionGrowth = 0;
         let loanActivity = 0;
-        let liquidityRatio = (latest.total_balance || 0) / (latest.total_loan_disbursements_kcb || 1);
-        let netIncomeRatio = ((latest.total_inflows || 0) - (latest.total_outflows || 0)) / (latest.total_inflows || 1) * 100;
-        let expenseRatio = (latest.total_outflows || 0) / (latest.total_inflows || 1) * 100;
+        // Calculate total assets including loan disbursements
+        const totalAssets = (
+            (latest.total_balance || 0) +
+            (latest.total_loan_disbursements_kcb || 0) +
+            (latest.total_loan_disbursements_lofty || 0)
+        );
+        // Calculate outflows excluding loan disbursements
+        const totalOutflows = (
+            (latest.bank_charges_kcb || 0) +
+            (latest.bank_charges_lofty || 0) +
+            (latest.petty_cash_utilized_kcb || 0) +
+            (latest.petty_cash_utilized_lofty || 0) +
+            (latest.agm_facilitation_kcb || 0) +
+            (latest.agm_facilitation_lofty || 0) +
+            (latest.welfare_kitty_utilized_kcb || 0) +
+            (latest.welfare_kitty_utilized_lofty || 0) +
+            (latest.other_expenses || 0)
+        );
+        let liquidityRatio = (latest.total_balance || 0) / (totalAssets || 1);
+        let netIncomeRatio = ((latest.total_inflows || 0) - totalOutflows) / (latest.total_inflows || 1) * 100;
+        let expenseRatio = totalOutflows / (latest.total_inflows || 1) * 100;
         let loanToContributionRatio = (latest.total_loan_disbursements_kcb || 0) / (latest.total_member_contributions_kcb || 1);
         let riskLevel = 'Low';
         let recommendations = '';
@@ -1452,7 +1523,7 @@ function calculateTrends(monthlyReports, availableMonths) {
             const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]] || {};
 
             // Calculate assets growth
-            const latestAssets = (latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0);
+            const latestAssets = totalAssets;
             const prevAssets1 = (prev1.total_balance || 0) + (prev1.total_loan_disbursements_kcb || 0) + (prev1.total_loan_disbursements_lofty || 0);
             const prevAssets2 = (prev2.total_balance || 0) + (prev2.total_loan_disbursements_kcb || 0) + (prev2.total_loan_disbursements_lofty || 0);
             const prevAssets3 = (prev3.total_balance || 0) + (prev3.total_loan_disbursements_kcb || 0) + (prev3.total_loan_disbursements_lofty || 0);
@@ -1480,22 +1551,22 @@ function calculateTrends(monthlyReports, availableMonths) {
         // Risk level and recommendations
         if (liquidityRatio < 0.5 || netIncomeRatio < -10 || loanToContributionRatio > 5) {
             riskLevel = 'High';
-            recommendations = 'Immediate action required: Reduce loan disbursements, increase member contributions, and cut discretionary expenses.';
+            recommendations = 'Immediate action required: Increase member contributions, monitor loan repayment rates, and reduce discretionary expenses.';
             riskFactors.push(
-                liquidityRatio < 0.5 ? 'Low liquidity ratio indicates insufficient cash reserves.' : 'Moderate liquidity ratio suggests limited cash reserves.',
+                liquidityRatio < 0.5 ? 'Low liquidity ratio indicates insufficient cash reserves relative to assets.' : 'Moderate liquidity ratio suggests limited cash reserves.',
                 loanToContributionRatio > 5 ? 'High loan-to-contribution ratio indicates heavy reliance on loans.' : '',
-                netIncomeRatio < 0 ? 'Negative net income indicates losses.' : ''
+                netIncomeRatio < 0 ? 'Negative net income indicates operational losses.' : ''
             );
         } else if (liquidityRatio < 1 || netIncomeRatio < 0) {
             riskLevel = 'Moderate';
-            recommendations = 'Monitor closely: Increase contributions and review expense allocation.';
+            recommendations = 'Monitor closely: Increase contributions, ensure timely loan repayments, and review expense allocation.';
             riskFactors.push(
-                liquidityRatio < 1 ? 'Liquidity ratio below 1 suggests potential cash flow issues.' : '',
-                netIncomeRatio < 0 ? 'Negative net income indicates losses.' : ''
+                liquidityRatio < 1 ? 'Liquidity ratio below 1 suggests potential cash flow constraints.' : '',
+                netIncomeRatio < 0 ? 'Negative net income indicates operational losses.' : ''
             );
         } else {
             riskLevel = 'Low';
-            recommendations = 'Maintain current strategy with periodic reviews.';
+            recommendations = 'Maintain current strategy with periodic reviews to ensure loan repayments remain timely.';
         }
 
         return {
@@ -1603,7 +1674,7 @@ function generateFutureProjections(monthlyReports, availableMonths) {
         let projectedMembers = currentMembers;
         const totalNewMembersCap = 1; // Max 1 new member over 12 months
 
-        // Initialize currentAssets using the same formula as Page 4
+        // Initialize currentAssets including loan disbursements
         let currentAssets = (latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0);
         let currentContributions = latest.total_member_contributions_kcb || 0;
         let currentLoans = latest.total_loan_disbursements_kcb || 0;
