@@ -279,6 +279,82 @@
                             </div>
                             <span id="otherExpensesError" class="error"></span>
                         </div>
+                        <!-- Custom Outflow Fields for KCB and Lofty -->
+                        <div class="form-group">
+                            <label for="custom_outflow_1_name" class="tooltip" title="Name for custom outflow 1 (e.g., Operational Expense).">Custom Outflow 1 Name:</label>
+                            <div class="input-group">
+                                <select id="custom_outflow_1_account" class="input-field" aria-label="Select account for custom outflow 1">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="text" id="custom_outflow_1_name" class="input-field" placeholder="Enter name (e.g., Operational Expense)" aria-label="Custom outflow 1 name">
+                                <input type="number" id="custom_outflow_1" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom outflow 1 amount in KES">
+                            </div>
+                            <span id="customOutflow1Error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_outflow_2_name" class="tooltip" title="Name for custom outflow 2.">Custom Outflow 2 Name:</label>
+                            <div class="input-group">
+                                <select id="custom_outflow_2_account" class="input-field" aria-label="Select account for custom outflow 2">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="text" id="custom_outflow_2_name" class="input-field" placeholder="Enter name" aria-label="Custom outflow 2 name">
+                                <input type="number" id="custom_outflow_2" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom outflow 2 amount in KES">
+                            </div>
+                            <span id="customOutflow2Error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_outflow_3_name" class="tooltip" title="Name for custom outflow 3.">Custom Outflow 3 Name:</label>
+                            <div class="input-group">
+                                <select id="custom_outflow_3_account" class="input-field" aria-label="Select account for custom outflow 3">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="text" id="custom_outflow_3_name" class="input-field" placeholder="Enter name" aria-label="Custom outflow 3 name">
+                                <input type="number" id="custom_outflow_3" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom outflow 3 amount in KES">
+                            </div>
+                            <span id="customOutflow3Error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_outflow_4_name" class="tooltip" title="Name for custom outflow 4.">Custom Outflow 4 Name:</label>
+                            <div class="input-group">
+                                <select id="custom_outflow_4_account" class="input-field" aria-label="Select account for custom outflow 4">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="text" id="custom_outflow_4_name" class="input-field" placeholder="Enter name" aria-label="Custom outflow 4 name">
+                                <input type="number" id="custom_outflow_4" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom outflow 4 amount in KES">
+                            </div>
+                            <span id="customOutflow4Error" class="error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_outflow_5_name" class="tooltip" title="Name for custom outflow 5.">Custom Outflow 5 Name:</label>
+                            <div class="input-group">
+                                <select id="custom_outflow_5_account" class="input-field" aria-label="Select account for custom outflow 5">
+                                    <option value="kcb">KCB</option>
+                                    <option value="lofty">Lofty</option>
+                                </select>
+                                <input type="text" id="custom_outflow_5_name" class="input-field" placeholder="Enter name" aria-label="Custom outflow 5 name">
+                                <input type="number" id="custom_outflow_5" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Custom outflow 5 amount in KES">
+                            </div>
+                            <span id="customOutflow5Error" class="error"></span>
+                        </div>
+                    </details>
+
+                    <details class="collapsible-section">
+                        <summary>Internal Account Transfers</summary>
+                        <div class="form-group">
+                            <label for="internal_transfer_amount" class="tooltip" title="Amount transferred between KCB and Lofty accounts (KES). Select direction of transfer.">Internal Account Transfer (KES):</label>
+                            <div class="input-group">
+                                <select id="internal_transfer_direction" class="input-field" aria-label="Select direction for internal account transfer">
+                                    <option value="kcb_to_lofty">KCB to Lofty</option>
+                                    <option value="lofty_to_kcb">Lofty to KCB</option>
+                                </select>
+                                <input type="number" id="internal_transfer_amount" class="input-field" min="0" step="0.01" placeholder="Enter amount" aria-label="Internal account transfer amount in KES">
+                            </div>
+                            <span id="internalTransferError" class="error"></span>
+                        </div>
                     </details>
 
                     <div class="button-container">
@@ -539,7 +615,13 @@
                 { id: 'custom_income_2_lofty', errorId: 'customIncome2LoftyError', message: 'Please enter a valid amount for Custom Income 2 (Lofty) or ensure the name is filled.' },
                 { id: 'custom_income_3_lofty', errorId: 'customIncome3LoftyError', message: 'Please enter a valid amount for Custom Income 3 (Lofty) or ensure the name is filled.' },
                 { id: 'custom_income_4_lofty', errorId: 'customIncome4LoftyError', message: 'Please enter a valid amount for Custom Income 4 (Lofty) or ensure the name is filled.' },
-                { id: 'custom_income_5_lofty', errorId: 'customIncome5LoftyError', message: 'Please enter a valid amount for Custom Income 5 (Lofty) or ensure the name is filled.' }
+                { id: 'custom_income_5_lofty', errorId: 'customIncome5LoftyError', message: 'Please enter a valid amount for Custom Income 5 (Lofty) or ensure the name is filled.' },
+                { id: 'custom_outflow_1', errorId: 'customOutflow1Error', message: 'Please enter a valid amount for Custom Outflow 1 or ensure the name is filled.' },
+                { id: 'custom_outflow_2', errorId: 'customOutflow2Error', message: 'Please enter a valid amount for Custom Outflow 2 or ensure the name is filled.' },
+                { id: 'custom_outflow_3', errorId: 'customOutflow3Error', message: 'Please enter a valid amount for Custom Outflow 3 or ensure the name is filled.' },
+                { id: 'custom_outflow_4', errorId: 'customOutflow4Error', message: 'Please enter a valid amount for Custom Outflow 4 or ensure the name is filled.' },
+                { id: 'custom_outflow_5', errorId: 'customOutflow5Error', message: 'Please enter a valid amount for Custom Outflow 5 or ensure the name is filled.' },
+                { id: 'internal_transfer_amount', errorId: 'internalTransferError', message: 'Please enter a valid internal transfer amount.' }
             ];
 
             inputs.forEach(input => {
@@ -556,7 +638,7 @@
                         errorElement.style.display = 'block';
                         errors.push(input.message);
                     }
-                } else if (input.id.includes('custom_income')) {
+                } else if (input.id.includes('custom_income') || input.id.includes('custom_outflow')) {
                     const nameElement = document.getElementById(`${input.id}_name`);
                     const value = parseFloat(element.value);
                     if ((element.value.trim() || nameElement.value.trim()) && (!isValidNumber(value) || value < 0 || !nameElement.value.trim())) {
@@ -566,7 +648,7 @@
                     }
                 } else {
                     const value = parseFloat(element.value);
-                    if (!element.value.trim() || isNaN(value) || value < 0) {
+                    if (element.value.trim() && (!isValidNumber(value) || value < 0)) {
                         errorElement.textContent = input.message;
                         errorElement.style.display = 'block';
                         errors.push(input.message);
@@ -662,42 +744,54 @@
         function showConfirmationModal(data, month, onConfirm) {
             const modal = document.getElementById('confirmationModal');
             const modalSummary = document.getElementById('modalSummary');
-            modalSummary.innerHTML = `
+            let summaryHTML = `
                 <p><strong>Month:</strong> ${month}</p>
                 <h4>KCB Accounts</h4>
-                <p>Opening KCB Balance: KES ${data.opening_kcb_balance.toFixed(2)}</p>
-                <p>Members Contribution KCB: KES ${data.total_member_contributions_kcb.toFixed(2)}</p>
-                <p>Membership Fee KCB: KES ${data.membership_fee_kcb.toFixed(2)}</p>
-                <p>AGM Payments KCB: KES ${data.agm_payments_kcb.toFixed(2)}</p>
-                <p>Penalties Charged KCB: KES ${data.penalties_charged_kcb.toFixed(2)}</p>
-                <p>Loan Repayments KCB: KES ${data.total_loan_repayments_kcb.toFixed(2)}</p>
-                <p>Interest on Loans KCB: KES ${data.interest_on_loans_kcb.toFixed(2)}</p>
-                <p>${data.custom_income_1_kcb_name || 'Custom Income 1'}: KES ${data.custom_income_1_kcb.toFixed(2)}</p>
-                <p>${data.custom_income_2_kcb_name || 'Custom Income 2'}: KES ${data.custom_income_2_kcb.toFixed(2)}</p>
-                <p>${data.custom_income_3_kcb_name || 'Custom Income 3'}: KES ${data.custom_income_3_kcb.toFixed(2)}</p>
-                <p>${data.custom_income_4_kcb_name || 'Custom Income 4'}: KES ${data.custom_income_4_kcb.toFixed(2)}</p>
-                <p>${data.custom_income_5_kcb_name || 'Custom Income 5'}: KES ${data.custom_income_5_kcb.toFixed(2)}</p>
+                ${data.opening_kcb_balance > 0 ? `<p>Opening KCB Balance: KES ${data.opening_kcb_balance.toFixed(2)}</p>` : ''}
+                ${data.total_member_contributions_kcb > 0 ? `<p>Members Contribution KCB: KES ${data.total_member_contributions_kcb.toFixed(2)}</p>` : ''}
+                ${data.membership_fee_kcb > 0 ? `<p>Membership Fee KCB: KES ${data.membership_fee_kcb.toFixed(2)}</p>` : ''}
+                ${data.agm_payments_kcb > 0 ? `<p>AGM Payments KCB: KES ${data.agm_payments_kcb.toFixed(2)}</p>` : ''}
+                ${data.penalties_charged_kcb > 0 ? `<p>Penalties Charged KCB: KES ${data.penalties_charged_kcb.toFixed(2)}</p>` : ''}
+                ${data.total_loan_repayments_kcb > 0 ? `<p>Loan Repayments KCB: KES ${data.total_loan_repayments_kcb.toFixed(2)}</p>` : ''}
+                ${data.interest_on_loans_kcb > 0 ? `<p>Interest on Loans KCB: KES ${data.interest_on_loans_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_income_1_kcb > 0 && data.custom_income_1_kcb_name ? `<p>${data.custom_income_1_kcb_name}: KES ${data.custom_income_1_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_income_2_kcb > 0 && data.custom_income_2_kcb_name ? `<p>${data.custom_income_2_kcb_name}: KES ${data.custom_income_2_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_income_3_kcb > 0 && data.custom_income_3_kcb_name ? `<p>${data.custom_income_3_kcb_name}: KES ${data.custom_income_3_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_income_4_kcb > 0 && data.custom_income_4_kcb_name ? `<p>${data.custom_income_4_kcb_name}: KES ${data.custom_income_4_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_income_5_kcb > 0 && data.custom_income_5_kcb_name ? `<p>${data.custom_income_5_kcb_name}: KES ${data.custom_income_5_kcb.toFixed(2)}</p>` : ''}
                 <h4>Lofty Accounts</h4>
-                <p>Opening Lofty Balance: KES ${data.opening_lofty_balance.toFixed(2)}</p>
-                <p>Membership Fee Lofty: KES ${data.membership_fee_lofty.toFixed(2)}</p>
-                <p>AGM Payments Lofty: KES ${data.agm_payments_lofty.toFixed(2)}</p>
-                <p>Penalties Charged Lofty: KES ${data.penalties_charged_lofty.toFixed(2)}</p>
-                <p>Loan Repayments Lofty: KES ${data.total_loan_repayments_lofty.toFixed(2)}</p>
-                <p>Interest on Deposits Lofty: KES ${data.interest_on_deposits_lofty.toFixed(2)}</p>
-                <p>${data.custom_income_1_lofty_name || 'Custom Income 1'}: KES ${data.custom_income_1_lofty.toFixed(2)}</p>
-                <p>${data.custom_income_2_lofty_name || 'Custom Income 2'}: KES ${data.custom_income_2_lofty.toFixed(2)}</p>
-                <p>${data.custom_income_3_lofty_name || 'Custom Income 3'}: KES ${data.custom_income_3_lofty.toFixed(2)}</p>
-                <p>${data.custom_income_4_lofty_name || 'Custom Income 4'}: KES ${data.custom_income_4_lofty.toFixed(2)}</p>
-                <p>${data.custom_income_5_lofty_name || 'Custom Income 5'}: KES ${data.custom_income_5_lofty.toFixed(2)}</p>
+                ${data.opening_lofty_balance > 0 ? `<p>Opening Lofty Balance: KES ${data.opening_lofty_balance.toFixed(2)}</p>` : ''}
+                ${data.membership_fee_lofty > 0 ? `<p>Membership Fee Lofty: KES ${data.membership_fee_lofty.toFixed(2)}</p>` : ''}
+                ${data.agm_payments_lofty > 0 ? `<p>AGM Payments Lofty: KES ${data.agm_payments_lofty.toFixed(2)}</p>` : ''}
+                ${data.penalties_charged_lofty > 0 ? `<p>Penalties Charged Lofty: KES ${data.penalties_charged_lofty.toFixed(2)}</p>` : ''}
+                ${data.total_loan_repayments_lofty > 0 ? `<p>Loan Repayments Lofty: KES ${data.total_loan_repayments_lofty.toFixed(2)}</p>` : ''}
+                ${data.interest_on_deposits_lofty > 0 ? `<p>Interest on Deposits Lofty: KES ${data.interest_on_deposits_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_income_1_lofty > 0 && data.custom_income_1_lofty_name ? `<p>${data.custom_income_1_lofty_name}: KES ${data.custom_income_1_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_income_2_lofty > 0 && data.custom_income_2_lofty_name ? `<p>${data.custom_income_2_lofty_name}: KES ${data.custom_income_2_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_income_3_lofty > 0 && data.custom_income_3_lofty_name ? `<p>${data.custom_income_3_lofty_name}: KES ${data.custom_income_3_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_income_4_lofty > 0 && data.custom_income_4_lofty_name ? `<p>${data.custom_income_4_lofty_name}: KES ${data.custom_income_4_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_income_5_lofty > 0 && data.custom_income_5_lofty_name ? `<p>${data.custom_income_5_lofty_name}: KES ${data.custom_income_5_lofty.toFixed(2)}</p>` : ''}
                 <h4>Other Inflows</h4>
-                <p>Other Income (${data.other_income_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_income_kcb + data.other_income_lofty).toFixed(2)}</p>
+                ${(data.other_income_kcb > 0 || data.other_income_lofty > 0) ? `<p>Other Income (${data.other_income_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_income_kcb + data.other_income_lofty).toFixed(2)}</p>` : ''}
                 <h4>Outflows</h4>
-                <p>Loan Disbursements (${data.total_loan_disbursements_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty).toFixed(2)}</p>
-                <p>Bank Charges (${data.bank_charges_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.bank_charges_kcb + data.bank_charges_lofty).toFixed(2)}</p>
-                <p>Petty Cash Utilized (${data.petty_cash_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty).toFixed(2)}</p>
-                <p>AGM Facilitation (${data.agm_facilitation_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.agm_facilitation_kcb + data.agm_facilitation_lofty).toFixed(2)}</p>
-                <p>Welfare Kitty Utilized (${data.welfare_kitty_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty).toFixed(2)}</p>
-                <p>Other Expenses (${data.other_expenses_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_expenses_kcb + data.other_expenses_lofty).toFixed(2)}</p>
+                ${(data.total_loan_disbursements_kcb > 0 || data.total_loan_disbursements_lofty > 0) ? `<p>Loan Disbursements (${data.total_loan_disbursements_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.total_loan_disbursements_kcb + data.total_loan_disbursements_lofty).toFixed(2)}</p>` : ''}
+                ${(data.bank_charges_kcb > 0 || data.bank_charges_lofty > 0) ? `<p>Bank Charges (${data.bank_charges_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.bank_charges_kcb + data.bank_charges_lofty).toFixed(2)}</p>` : ''}
+                ${(data.petty_cash_utilized_kcb > 0 || data.petty_cash_utilized_lofty > 0) ? `<p>Petty Cash Utilized (${data.petty_cash_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.petty_cash_utilized_kcb + data.petty_cash_utilized_lofty).toFixed(2)}</p>` : ''}
+                ${(data.agm_facilitation_kcb > 0 || data.agm_facilitation_lofty > 0) ? `<p>AGM Facilitation (${data.agm_facilitation_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.agm_facilitation_kcb + data.agm_facilitation_lofty).toFixed(2)}</p>` : ''}
+                ${(data.welfare_kitty_utilized_kcb > 0 || data.welfare_kitty_utilized_lofty > 0) ? `<p>Welfare Kitty Utilized (${data.welfare_kitty_utilized_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.welfare_kitty_utilized_kcb + data.welfare_kitty_utilized_lofty).toFixed(2)}</p>` : ''}
+                ${(data.other_expenses_kcb > 0 || data.other_expenses_lofty > 0) ? `<p>Other Expenses (${data.other_expenses_kcb > 0 ? 'KCB' : 'Lofty'}): KES ${(data.other_expenses_kcb + data.other_expenses_lofty).toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_1_kcb > 0 && data.custom_outflow_1_name ? `<p>${data.custom_outflow_1_name} (KCB): KES ${data.custom_outflow_1_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_1_lofty > 0 && data.custom_outflow_1_name ? `<p>${data.custom_outflow_1_name} (Lofty): KES ${data.custom_outflow_1_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_2_kcb > 0 && data.custom_outflow_2_name ? `<p>${data.custom_outflow_2_name} (KCB): KES ${data.custom_outflow_2_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_2_lofty > 0 && data.custom_outflow_2_name ? `<p>${data.custom_outflow_2_name} (Lofty): KES ${data.custom_outflow_2_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_3_kcb > 0 && data.custom_outflow_3_name ? `<p>${data.custom_outflow_3_name} (KCB): KES ${data.custom_outflow_3_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_3_lofty > 0 && data.custom_outflow_3_name ? `<p>${data.custom_outflow_3_name} (Lofty): KES ${data.custom_outflow_3_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_4_kcb > 0 && data.custom_outflow_4_name ? `<p>${data.custom_outflow_4_name} (KCB): KES ${data.custom_outflow_4_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_4_lofty > 0 && data.custom_outflow_4_name ? `<p>${data.custom_outflow_4_name} (Lofty): KES ${data.custom_outflow_4_lofty.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_5_kcb > 0 && data.custom_outflow_5_name ? `<p>${data.custom_outflow_5_name} (KCB): KES ${data.custom_outflow_5_kcb.toFixed(2)}</p>` : ''}
+                ${data.custom_outflow_5_lofty > 0 && data.custom_outflow_5_name ? `<p>${data.custom_outflow_5_name} (Lofty): KES ${data.custom_outflow_5_lofty.toFixed(2)}</p>` : ''}
+                <h4>Internal Account Transfers</h4>
+                ${data.internal_transfer_amount > 0 ? `<p>Internal Transfer (${data.internal_transfer_direction === 'kcb_to_lofty' ? 'KCB to Lofty' : 'Lofty to KCB'}): KES ${data.internal_transfer_amount.toFixed(2)}</p>` : ''}
                 <h4>Summary</h4>
                 <p>Total Inflows: KES ${data.total_inflows.toFixed(2)}</p>
                 <p>Total Outflows: KES ${data.total_outflows.toFixed(2)}</p>
@@ -705,6 +799,7 @@
                 <p>Lofty Balance: KES ${data.lofty_balance.toFixed(2)}</p>
                 <p>Total Balance: KES ${data.total_balance.toFixed(2)}</p>
             `;
+            modalSummary.innerHTML = summaryHTML;
             modal.style.display = 'block';
             document.getElementById('confirmSubmit').onclick = () => {
                 setButtonLoading(document.getElementById('confirmSubmit'), true);
@@ -820,7 +915,7 @@
                     hideLoadingSpinner();
                     return;
                 }
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 document.getElementById('balanceYear').value = year;
                 document.getElementById('balanceMonth').value = month;
@@ -857,22 +952,43 @@
                 document.getElementById('custom_income_4_lofty').value = data.custom_income_4_lofty || '';
                 document.getElementById('custom_income_5_lofty_name').value = data.custom_income_5_lofty_name || '';
                 document.getElementById('custom_income_5_lofty').value = data.custom_income_5_lofty || '';
-                document.getElementById('other_income').value = data.other_income_kcb || data.other_income_lofty || '';
-                document.getElementById('other_income_account').value = data.other_income_kcb > 0 ? 'kcb' : 'lofty';
+                // Populate Outflow fields
+                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_account || 'kcb';
                 document.getElementById('total_loan_disbursements').value = data.total_loan_disbursements_kcb || data.total_loan_disbursements_lofty || '';
-                document.getElementById('total_loan_disbursements_account').value = data.total_loan_disbursements_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('bank_charges_account').value = data.bank_charges_account || 'kcb';
                 document.getElementById('bank_charges').value = data.bank_charges_kcb || data.bank_charges_lofty || '';
-                document.getElementById('bank_charges_account').value = data.bank_charges_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_account || 'kcb';
                 document.getElementById('petty_cash_utilized').value = data.petty_cash_utilized_kcb || data.petty_cash_utilized_lofty || '';
-                document.getElementById('petty_cash_utilized_account').value = data.petty_cash_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_account || 'kcb';
                 document.getElementById('agm_facilitation').value = data.agm_facilitation_kcb || data.agm_facilitation_lofty || '';
-                document.getElementById('agm_facilitation_account').value = data.agm_facilitation_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_account || 'kcb';
                 document.getElementById('welfare_kitty_utilized').value = data.welfare_kitty_utilized_kcb || data.welfare_kitty_utilized_lofty || '';
-                document.getElementById('welfare_kitty_utilized_account').value = data.welfare_kitty_utilized_kcb > 0 ? 'kcb' : 'lofty';
+                document.getElementById('other_expenses_account').value = data.other_expenses_account || 'kcb';
                 document.getElementById('other_expenses').value = data.other_expenses_kcb || data.other_expenses_lofty || '';
-                document.getElementById('other_expenses_account').value = data.other_expenses_kcb > 0 ? 'kcb' : 'lofty';
+                // Populate Custom Outflow fields
+                document.getElementById('custom_outflow_1_account').value = data.custom_outflow_1_account || 'kcb';
+                document.getElementById('custom_outflow_1_name').value = data.custom_outflow_1_name || '';
+                document.getElementById('custom_outflow_1').value = data.custom_outflow_1_kcb || data.custom_outflow_1_lofty || '';
+                document.getElementById('custom_outflow_2_account').value = data.custom_outflow_2_account || 'kcb';
+                document.getElementById('custom_outflow_2_name').value = data.custom_outflow_2_name || '';
+                document.getElementById('custom_outflow_2').value = data.custom_outflow_2_kcb || data.custom_outflow_2_lofty || '';
+                document.getElementById('custom_outflow_3_account').value = data.custom_outflow_3_account || 'kcb';
+                document.getElementById('custom_outflow_3_name').value = data.custom_outflow_3_name || '';
+                document.getElementById('custom_outflow_3').value = data.custom_outflow_3_kcb || data.custom_outflow_3_lofty || '';
+                document.getElementById('custom_outflow_4_account').value = data.custom_outflow_4_account || 'kcb';
+                document.getElementById('custom_outflow_4_name').value = data.custom_outflow_4_name || '';
+                document.getElementById('custom_outflow_4').value = data.custom_outflow_4_kcb || data.custom_outflow_4_lofty || '';
+                document.getElementById('custom_outflow_5_account').value = data.custom_outflow_5_account || 'kcb';
+                document.getElementById('custom_outflow_5_name').value = data.custom_outflow_5_name || '';
+                document.getElementById('custom_outflow_5').value = data.custom_outflow_5_kcb || data.custom_outflow_5_lofty || '';
+                // Populate Internal Account Transfer field
+                document.getElementById('internal_transfer_direction').value = data.internal_transfer_direction || 'kcb_to_lofty';
+                document.getElementById('internal_transfer_amount').value = data.internal_transfer_amount || '';
+                document.getElementById('other_income_account').value = data.other_income_account || 'kcb';
+                document.getElementById('other_income').value = data.other_income_kcb || data.other_income_lofty || '';
+                // Log the action for audit trail
+                logAction('Load Balance Sheet', `Loaded balance sheet data for ${month}`);
                 document.getElementById('result').innerHTML = `<span style="color: #34c759;">Balance sheet data loaded for ${month}.</span>`;
-                logAction('Load Balance Sheet', `Loaded data for ${month}`);
                 hideLoadingSpinner();
                 setButtonLoading(button, false);
             } catch (error) {
@@ -883,50 +999,34 @@
             }
         }
 
-        async function checkExistingContribution(member, month) {
-            try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(member)}/${month}`, {
-                    method: 'GET',
-                    headers: { 'x-api-key': CONFIG.API_KEY },
-                    timeout: CONFIG.FETCH_TIMEOUT
-                });
-                if (response.status === 404) return false;
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                return !!data; // Returns true if data exists
-            } catch (error) {
-                console.error('Error checking existing contribution:', error);
-                return false;
-            }
-        }
-
         async function loadContributionData() {
             const button = document.querySelector('#memberContributionForm .action-button');
             setButtonLoading(button, true);
-            const member = document.getElementById('editMember').value;
+            const member = sanitizeInput(document.getElementById('editMember').value);
             const year = document.getElementById('editContributionYear').value;
             const month = document.getElementById('editContributionMonth').value;
             if (!member || !year || !month) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please enter a member name, year, and month to load contribution.</span>`;
+                document.getElementById('editMemberError').textContent = 'Please enter a member name and select a year and month.';
+                document.getElementById('editMemberError').style.display = 'block';
                 setButtonLoading(button, false);
                 return;
             }
             const matchedMember = fuzzyMatch(member, MEMBERS);
             if (!matchedMember) {
-                document.getElementById('editMemberError').textContent = 'Invalid member name.';
+                document.getElementById('editMemberError').textContent = 'Invalid member name. Please enter a valid name.';
                 document.getElementById('editMemberError').style.display = 'block';
                 setButtonLoading(button, false);
                 return;
             }
             try {
                 showLoadingSpinner();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions/${encodeURIComponent(matchedMember)}/${month}`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions?member=${encodeURIComponent(matchedMember)}&month=${month}`, {
                     method: 'GET',
                     headers: { 'x-api-key': CONFIG.API_KEY },
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (response.status === 404) {
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${month}. Please enter new data.</span>`;
+                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No contribution data found for ${matchedMember} in ${month}.</span>`;
                     setButtonLoading(button, false);
                     hideLoadingSpinner();
                     return;
@@ -937,8 +1037,8 @@
                 document.getElementById('contributionYear').value = year;
                 document.getElementById('contributionMonth').value = month;
                 document.getElementById('contributionAmount').value = data.amount || '';
+                logAction('Load Contribution', `Loaded contribution data for ${matchedMember} in ${month}`);
                 document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution data loaded for ${matchedMember} in ${month}.</span>`;
-                logAction('Load Contribution', `Loaded contribution for ${matchedMember} in ${month}`);
                 hideLoadingSpinner();
                 setButtonLoading(button, false);
             } catch (error) {
@@ -949,31 +1049,110 @@
             }
         }
 
-        async function submitFinancialForm(event) {
-            event.preventDefault();
+        async function submitFinancialData(data, month) {
+            try {
+                showLoadingSpinner();
+                const method = await checkExistingBalanceSheet(month) ? 'PUT' : 'POST';
+                const response = await fetch(`${CONFIG.API_BASE_URL}/data`, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': CONFIG.API_KEY
+                    },
+                    body: JSON.stringify({ month, ...data }),
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                logAction('Submit Financial Data', `Submitted financial data for ${month}`);
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data ${method === 'PUT' ? 'updated' : 'submitted'} successfully for ${month}.</span>`;
+                hideLoadingSpinner();
+                refreshForm();
+            } catch (error) {
+                console.error('Error submitting financial data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit financial data (${error.message}).</span>`;
+                hideLoadingSpinner();
+            }
+        }
+
+        function calculateBalances(data) {
+            // KCB Inflows
+            const kcb_inflows = (parseFloat(data.total_member_contributions_kcb) || 0) +
+                                (parseFloat(data.membership_fee_kcb) || 0) +
+                                (parseFloat(data.agm_payments_kcb) || 0) +
+                                (parseFloat(data.penalties_charged_kcb) || 0) +
+                                (parseFloat(data.total_loan_repayments_kcb) || 0) +
+                                (parseFloat(data.interest_on_loans_kcb) || 0) +
+                                (parseFloat(data.custom_income_1_kcb) || 0) +
+                                (parseFloat(data.custom_income_2_kcb) || 0) +
+                                (parseFloat(data.custom_income_3_kcb) || 0) +
+                                (parseFloat(data.custom_income_4_kcb) || 0) +
+                                (parseFloat(data.custom_income_5_kcb) || 0) +
+                                (parseFloat(data.other_income_kcb) || 0);
+            // Lofty Inflows
+            const lofty_inflows = (parseFloat(data.membership_fee_lofty) || 0) +
+                                 (parseFloat(data.agm_payments_lofty) || 0) +
+                                 (parseFloat(data.penalties_charged_lofty) || 0) +
+                                 (parseFloat(data.total_loan_repayments_lofty) || 0) +
+                                 (parseFloat(data.interest_on_deposits_lofty) || 0) +
+                                 (parseFloat(data.custom_income_1_lofty) || 0) +
+                                 (parseFloat(data.custom_income_2_lofty) || 0) +
+                                 (parseFloat(data.custom_income_3_lofty) || 0) +
+                                 (parseFloat(data.custom_income_4_lofty) || 0) +
+                                 (parseFloat(data.custom_income_5_lofty) || 0) +
+                                 (parseFloat(data.other_income_lofty) || 0);
+            // KCB Outflows
+            const kcb_outflows = (parseFloat(data.total_loan_disbursements_kcb) || 0) +
+                                (parseFloat(data.bank_charges_kcb) || 0) +
+                                (parseFloat(data.petty_cash_utilized_kcb) || 0) +
+                                (parseFloat(data.agm_facilitation_kcb) || 0) +
+                                (parseFloat(data.welfare_kitty_utilized_kcb) || 0) +
+                                (parseFloat(data.other_expenses_kcb) || 0) +
+                                (parseFloat(data.custom_outflow_1_kcb) || 0) +
+                                (parseFloat(data.custom_outflow_2_kcb) || 0) +
+                                (parseFloat(data.custom_outflow_3_kcb) || 0) +
+                                (parseFloat(data.custom_outflow_4_kcb) || 0) +
+                                (parseFloat(data.custom_outflow_5_kcb) || 0);
+            // Lofty Outflows
+            const lofty_outflows = (parseFloat(data.total_loan_disbursements_lofty) || 0) +
+                                  (parseFloat(data.bank_charges_lofty) || 0) +
+                                  (parseFloat(data.petty_cash_utilized_lofty) || 0) +
+                                  (parseFloat(data.agm_facilitation_lofty) || 0) +
+                                  (parseFloat(data.welfare_kitty_utilized_lofty) || 0) +
+                                  (parseFloat(data.other_expenses_lofty) || 0) +
+                                  (parseFloat(data.custom_outflow_1_lofty) || 0) +
+                                  (parseFloat(data.custom_outflow_2_lofty) || 0) +
+                                  (parseFloat(data.custom_outflow_3_lofty) || 0) +
+                                  (parseFloat(data.custom_outflow_4_lofty) || 0) +
+                                  (parseFloat(data.custom_outflow_5_lofty) || 0);
+            // Internal Transfers
+            const transfer_amount = parseFloat(data.internal_transfer_amount) || 0;
+            const kcb_transfer = data.internal_transfer_direction === 'kcb_to_lofty' ? -transfer_amount : transfer_amount;
+            const lofty_transfer = data.internal_transfer_direction === 'kcb_to_lofty' ? transfer_amount : -transfer_amount;
+            // Calculate Balances
+            const kcb_balance = (parseFloat(data.opening_kcb_balance) || 0) + kcb_inflows - kcb_outflows + kcb_transfer;
+            const lofty_balance = (parseFloat(data.opening_lofty_balance) || 0) + lofty_inflows - lofty_outflows + lofty_transfer;
+            return {
+                total_inflows: kcb_inflows + lofty_inflows,
+                total_outflows: kcb_outflows + lofty_outflows,
+                kcb_balance,
+                lofty_balance,
+                total_balance: kcb_balance + lofty_balance
+            };
+        }
+
+        document.getElementById('adminForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
             const button = document.getElementById('submitFinancialButton');
             setButtonLoading(button, true);
-            const errors = validateFinancialInputs();
-            if (errors) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+            const validationError = validateFinancialInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation error: ${validationError}</span>`;
                 setButtonLoading(button, false);
                 return;
             }
-            const year = document.getElementById('balanceYear').value;
             const month = document.getElementById('balanceMonth').value;
-            if (!year || !month) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Please select a year and month.</span>`;
-                setButtonLoading(button, false);
-                return;
-            }
-            const exists = await checkExistingBalanceSheet(month);
-            if (exists) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A balance sheet for ${month} already exists. Please load it to edit.</span>`;
-                setButtonLoading(button, false);
-                return;
-            }
             const data = {
-                month: month,
                 opening_kcb_balance: parseFloat(document.getElementById('opening_kcb_balance').value) || 0,
                 total_member_contributions_kcb: parseFloat(document.getElementById('total_member_contributions_kcb').value) || 0,
                 membership_fee_kcb: parseFloat(document.getElementById('membership_fee_kcb').value) || 0,
@@ -981,15 +1160,15 @@
                 penalties_charged_kcb: parseFloat(document.getElementById('penalties_charged_kcb').value) || 0,
                 total_loan_repayments_kcb: parseFloat(document.getElementById('total_loan_repayments_kcb').value) || 0,
                 interest_on_loans_kcb: parseFloat(document.getElementById('interest_on_loans_kcb').value) || 0,
-                custom_income_1_kcb_name: sanitizeInput(document.getElementById('custom_income_1_kcb_name').value) || '',
+                custom_income_1_kcb_name: sanitizeInput(document.getElementById('custom_income_1_kcb_name').value),
                 custom_income_1_kcb: parseFloat(document.getElementById('custom_income_1_kcb').value) || 0,
-                custom_income_2_kcb_name: sanitizeInput(document.getElementById('custom_income_2_kcb_name').value) || '',
+                custom_income_2_kcb_name: sanitizeInput(document.getElementById('custom_income_2_kcb_name').value),
                 custom_income_2_kcb: parseFloat(document.getElementById('custom_income_2_kcb').value) || 0,
-                custom_income_3_kcb_name: sanitizeInput(document.getElementById('custom_income_3_kcb_name').value) || '',
+                custom_income_3_kcb_name: sanitizeInput(document.getElementById('custom_income_3_kcb_name').value),
                 custom_income_3_kcb: parseFloat(document.getElementById('custom_income_3_kcb').value) || 0,
-                custom_income_4_kcb_name: sanitizeInput(document.getElementById('custom_income_4_kcb_name').value) || '',
+                custom_income_4_kcb_name: sanitizeInput(document.getElementById('custom_income_4_kcb_name').value),
                 custom_income_4_kcb: parseFloat(document.getElementById('custom_income_4_kcb').value) || 0,
-                custom_income_5_kcb_name: sanitizeInput(document.getElementById('custom_income_5_kcb_name').value) || '',
+                custom_income_5_kcb_name: sanitizeInput(document.getElementById('custom_income_5_kcb_name').value),
                 custom_income_5_kcb: parseFloat(document.getElementById('custom_income_5_kcb').value) || 0,
                 opening_lofty_balance: parseFloat(document.getElementById('opening_lofty_balance').value) || 0,
                 membership_fee_lofty: parseFloat(document.getElementById('membership_fee_lofty').value) || 0,
@@ -997,15 +1176,15 @@
                 penalties_charged_lofty: parseFloat(document.getElementById('penalties_charged_lofty').value) || 0,
                 total_loan_repayments_lofty: parseFloat(document.getElementById('total_loan_repayments_lofty').value) || 0,
                 interest_on_deposits_lofty: parseFloat(document.getElementById('interest_on_deposits_lofty').value) || 0,
-                custom_income_1_lofty_name: sanitizeInput(document.getElementById('custom_income_1_lofty_name').value) || '',
+                custom_income_1_lofty_name: sanitizeInput(document.getElementById('custom_income_1_lofty_name').value),
                 custom_income_1_lofty: parseFloat(document.getElementById('custom_income_1_lofty').value) || 0,
-                custom_income_2_lofty_name: sanitizeInput(document.getElementById('custom_income_2_lofty_name').value) || '',
+                custom_income_2_lofty_name: sanitizeInput(document.getElementById('custom_income_2_lofty_name').value),
                 custom_income_2_lofty: parseFloat(document.getElementById('custom_income_2_lofty').value) || 0,
-                custom_income_3_lofty_name: sanitizeInput(document.getElementById('custom_income_3_lofty_name').value) || '',
+                custom_income_3_lofty_name: sanitizeInput(document.getElementById('custom_income_3_lofty_name').value),
                 custom_income_3_lofty: parseFloat(document.getElementById('custom_income_3_lofty').value) || 0,
-                custom_income_4_lofty_name: sanitizeInput(document.getElementById('custom_income_4_lofty_name').value) || '',
+                custom_income_4_lofty_name: sanitizeInput(document.getElementById('custom_income_4_lofty_name').value),
                 custom_income_4_lofty: parseFloat(document.getElementById('custom_income_4_lofty').value) || 0,
-                custom_income_5_lofty_name: sanitizeInput(document.getElementById('custom_income_5_lofty_name').value) || '',
+                custom_income_5_lofty_name: sanitizeInput(document.getElementById('custom_income_5_lofty_name').value),
                 custom_income_5_lofty: parseFloat(document.getElementById('custom_income_5_lofty').value) || 0,
                 other_income_kcb: document.getElementById('other_income_account').value === 'kcb' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
                 other_income_lofty: document.getElementById('other_income_account').value === 'lofty' ? parseFloat(document.getElementById('other_income').value) || 0 : 0,
@@ -1021,208 +1200,136 @@
                 welfare_kitty_utilized_lofty: document.getElementById('welfare_kitty_utilized_account').value === 'lofty' ? parseFloat(document.getElementById('welfare_kitty_utilized').value) || 0 : 0,
                 other_expenses_kcb: document.getElementById('other_expenses_account').value === 'kcb' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
                 other_expenses_lofty: document.getElementById('other_expenses_account').value === 'lofty' ? parseFloat(document.getElementById('other_expenses').value) || 0 : 0,
-                total_inflows: 0,
-                total_outflows: 0,
-                kcb_balance: 0,
-                lofty_balance: 0,
-                total_balance: 0
+                custom_outflow_1_name: sanitizeInput(document.getElementById('custom_outflow_1_name').value),
+                custom_outflow_1_kcb: document.getElementById('custom_outflow_1_account').value === 'kcb' ? parseFloat(document.getElementById('custom_outflow_1').value) || 0 : 0,
+                custom_outflow_1_lofty: document.getElementById('custom_outflow_1_account').value === 'lofty' ? parseFloat(document.getElementById('custom_outflow_1').value) || 0 : 0,
+                custom_outflow_2_name: sanitizeInput(document.getElementById('custom_outflow_2_name').value),
+                custom_outflow_2_kcb: document.getElementById('custom_outflow_2_account').value === 'kcb' ? parseFloat(document.getElementById('custom_outflow_2').value) || 0 : 0,
+                custom_outflow_2_lofty: document.getElementById('custom_outflow_2_account').value === 'lofty' ? parseFloat(document.getElementById('custom_outflow_2').value) || 0 : 0,
+                custom_outflow_3_name: sanitizeInput(document.getElementById('custom_outflow_3_name').value),
+                custom_outflow_3_kcb: document.getElementById('custom_outflow_3_account').value === 'kcb' ? parseFloat(document.getElementById('custom_outflow_3').value) || 0 : 0,
+                custom_outflow_3_lofty: document.getElementById('custom_outflow_3_account').value === 'lofty' ? parseFloat(document.getElementById('custom_outflow_3').value) || 0 : 0,
+                custom_outflow_4_name: sanitizeInput(document.getElementById('custom_outflow_4_name').value),
+                custom_outflow_4_kcb: document.getElementById('custom_outflow_4_account').value === 'kcb' ? parseFloat(document.getElementById('custom_outflow_4').value) || 0 : 0,
+                custom_outflow_4_lofty: document.getElementById('custom_outflow_4_account').value === 'lofty' ? parseFloat(document.getElementById('custom_outflow_4').value) || 0 : 0,
+                custom_outflow_5_name: sanitizeInput(document.getElementById('custom_outflow_5_name').value),
+                custom_outflow_5_kcb: document.getElementById('custom_outflow_5_account').value === 'kcb' ? parseFloat(document.getElementById('custom_outflow_5').value) || 0 : 0,
+                custom_outflow_5_lofty: document.getElementById('custom_outflow_5_account').value === 'lofty' ? parseFloat(document.getElementById('custom_outflow_5').value) || 0 : 0,
+                internal_transfer_direction: document.getElementById('internal_transfer_direction').value,
+                internal_transfer_amount: parseFloat(document.getElementById('internal_transfer_amount').value) || 0
             };
-            // Calculate total inflows including new fields
-            data.total_inflows = data.total_member_contributions_kcb + 
-                                 data.membership_fee_kcb + 
-                                 data.agm_payments_kcb + 
-                                 data.penalties_charged_kcb + 
-                                 data.total_loan_repayments_kcb + 
-                                 data.interest_on_loans_kcb + 
-                                 data.custom_income_1_kcb + 
-                                 data.custom_income_2_kcb + 
-                                 data.custom_income_3_kcb + 
-                                 data.custom_income_4_kcb + 
-                                 data.custom_income_5_kcb + 
-                                 data.total_loan_repayments_lofty + 
-                                 data.membership_fee_lofty + 
-                                 data.agm_payments_lofty + 
-                                 data.penalties_charged_lofty + 
-                                 data.interest_on_deposits_lofty + 
-                                 data.custom_income_1_lofty + 
-                                 data.custom_income_2_lofty + 
-                                 data.custom_income_3_lofty + 
-                                 data.custom_income_4_lofty + 
-                                 data.custom_income_5_lofty + 
-                                 data.other_income_kcb + 
-                                 data.other_income_lofty;
-            // Calculate total outflows
-            data.total_outflows = data.total_loan_disbursements_kcb + 
-                                  data.total_loan_disbursements_lofty + 
-                                  data.bank_charges_kcb + 
-                                  data.bank_charges_lofty + 
-                                  data.petty_cash_utilized_kcb + 
-                                  data.petty_cash_utilized_lofty + 
-                                  data.agm_facilitation_kcb + 
-                                  data.agm_facilitation_lofty + 
-                                  data.welfare_kitty_utilized_kcb + 
-                                  data.welfare_kitty_utilized_lofty + 
-                                  data.other_expenses_kcb + 
-                                  data.other_expenses_lofty;
             // Calculate balances
-            data.kcb_balance = data.opening_kcb_balance + 
-                               data.total_member_contributions_kcb + 
-                               data.membership_fee_kcb + 
-                               data.agm_payments_kcb + 
-                               data.penalties_charged_kcb + 
-                               data.total_loan_repayments_kcb + 
-                               data.interest_on_loans_kcb + 
-                               data.custom_income_1_kcb + 
-                               data.custom_income_2_kcb + 
-                               data.custom_income_3_kcb + 
-                               data.custom_income_4_kcb + 
-                               data.custom_income_5_kcb + 
-                               data.other_income_kcb - 
-                               (data.total_loan_disbursements_kcb + 
-                                data.bank_charges_kcb + 
-                                data.petty_cash_utilized_kcb + 
-                                data.agm_facilitation_kcb + 
-                                data.welfare_kitty_utilized_kcb + 
-                                data.other_expenses_kcb);
-            data.lofty_balance = data.opening_lofty_balance + 
-                                 data.membership_fee_lofty + 
-                                 data.agm_payments_lofty + 
-                                 data.penalties_charged_lofty + 
-                                 data.total_loan_repayments_lofty + 
-                                 data.interest_on_deposits_lofty + 
-                                 data.custom_income_1_lofty + 
-                                 data.custom_income_2_lofty + 
-                                 data.custom_income_3_lofty + 
-                                 data.custom_income_4_lofty + 
-                                 data.custom_income_5_lofty + 
-                                 data.other_income_lofty - 
-                                 (data.total_loan_disbursements_lofty + 
-                                  data.bank_charges_lofty + 
-                                  data.petty_cash_utilized_lofty + 
-                                  data.agm_facilitation_lofty + 
-                                  data.welfare_kitty_utilized_lofty + 
-                                  data.other_expenses_lofty);
-            data.total_balance = data.kcb_balance + data.lofty_balance;
-            showConfirmationModal(data, data.month, async () => {
-                try {
-                    showLoadingSpinner();
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/update-balance-sheet`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': CONFIG.API_KEY
-                        },
-                        body: JSON.stringify({ action: 'updateBalanceSheet', month: data.month, data }),
-                        timeout: CONFIG.FETCH_TIMEOUT
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    document.getElementById('result').innerHTML = `<span style="color: #34c759;">Financial data submitted successfully for ${data.month}.</span>`;
-                    logAction('Submit Financial Data', `Submitted financial data for ${data.month}`);
-                    document.getElementById('adminForm').reset();
-                    document.getElementById('balanceYear').value = '';
-                    document.getElementById('balanceMonth').value = '';
-                    fetchData();
-                    hideLoadingSpinner();
-                    setButtonLoading(button, false);
-                } catch (error) {
-                    console.error('Error submitting financial data:', error);
-                    document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit financial data (${error.message}).</span>`;
-                    hideLoadingSpinner();
-                    setButtonLoading(button, false);
-                }
-            });
-        }
+            const balances = calculateBalances(data);
+            data.total_inflows = balances.total_inflows;
+            data.total_outflows = balances.total_outflows;
+            data.kcb_balance = balances.kcb_balance;
+            data.lofty_balance = balances.lofty_balance;
+            data.total_balance = balances.total_balance;
+            // Audit check: Ensure balances are non-negative
+            if (data.kcb_balance < 0 || data.lofty_balance < 0) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Negative balance detected (KCB: ${data.kcb_balance.toFixed(2)}, Lofty: ${data.lofty_balance.toFixed(2)}). Please review inputs.</span>`;
+                setButtonLoading(button, false);
+                return;
+            }
+            showConfirmationModal(data, month, () => submitFinancialData(data, month));
+        });
 
-        async function submitContributionForm(event) {
-            event.preventDefault();
+        document.getElementById('memberContributionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
             const button = document.getElementById('submitContributionButton');
             setButtonLoading(button, true);
-            const errors = validateContributionInputs();
-            if (errors) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation failed: ${errors}</span>`;
+            const validationError = validateContributionInputs();
+            if (validationError) {
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Validation error: ${validationError}</span>`;
                 setButtonLoading(button, false);
                 return;
             }
-            const member = fuzzyMatch(document.getElementById('memberSelect').value, MEMBERS);
-            const year = document.getElementById('contributionYear').value;
+            const member = sanitizeInput(document.getElementById('memberSelect').value);
+            const matchedMember = fuzzyMatch(member, MEMBERS);
+            if (!matchedMember) {
+                document.getElementById('memberSelectError').textContent = 'Invalid member name. Please enter a valid name.';
+                document.getElementById('memberSelectError').style.display = 'block';
+                setButtonLoading(button, false);
+                return;
+            }
             const month = document.getElementById('contributionMonth').value;
-            const exists = await checkExistingContribution(member, month);
-            if (exists) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">A contribution for ${member} in ${month} already exists. Please load it to edit.</span>`;
-                setButtonLoading(button, false);
-                return;
-            }
-            const data = {
-                member,
-                month,
+            const contributionData = {
+                member: matchedMember,
+                month: month,
                 amount: parseFloat(document.getElementById('contributionAmount').value)
             };
             try {
                 showLoadingSpinner();
+                const method = await checkExistingContribution(matchedMember, month) ? 'PUT' : 'POST';
                 const response = await fetch(`${CONFIG.API_BASE_URL}/contributions`, {
-                    method: 'POST',
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'x-api-key': CONFIG.API_KEY
                     },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify(contributionData),
                     timeout: CONFIG.FETCH_TIMEOUT
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution submitted successfully for ${member} in ${month}.</span>`;
-                logAction('Submit Contribution', `Submitted contribution for ${member} in ${month}`);
-                document.getElementById('memberContributionForm').reset();
-                document.getElementById('contributionYear').value = '';
-                document.getElementById('contributionMonth').value = '';
-                fetchData();
+                logAction('Submit Contribution', `Submitted contribution for ${matchedMember} in ${month}`);
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Contribution ${method === 'PUT' ? 'updated' : 'submitted'} successfully for ${matchedMember} in ${month}.</span>`;
                 hideLoadingSpinner();
                 setButtonLoading(button, false);
+                refreshForm();
             } catch (error) {
                 console.error('Error submitting contribution:', error);
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to submit contribution (${error.message}).</span>`;
                 hideLoadingSpinner();
                 setButtonLoading(button, false);
             }
+        });
+
+        async function checkExistingContribution(member, month) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/contributions?member=${encodeURIComponent(member)}&month=${month}`, {
+                    method: 'GET',
+                    headers: { 'x-api-key': CONFIG.API_KEY },
+                    timeout: CONFIG.FETCH_TIMEOUT
+                });
+                if (response.status === 404) return false;
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return true;
+            } catch (error) {
+                console.error('Error checking existing contribution:', error);
+                return false;
+            }
         }
 
         function downloadData() {
-            if (!dataCache) {
-                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">No data available to download.</span>`;
-                return;
+            try {
+                const data = JSON.parse(localStorage.getItem('financialData') || '{}');
+                const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+                const exportData = { financialData: data, adminLogs: logs };
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `i8-smart-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                logAction('Download Data', 'Downloaded backup of financial data and logs');
+                document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data backup downloaded successfully.</span>`;
+            } catch (error) {
+                console.error('Error downloading data:', error);
+                document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download data (${error.message}).</span>`;
             }
-            const dataStr = JSON.stringify(dataCache, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `financial_data_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            logAction('Download Data', 'Downloaded financial data backup');
-            document.getElementById('result').innerHTML = `<span style="color: #34c759;">Data downloaded successfully.</span>`;
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', () => {
             populateYears('balanceYear');
             populateYears('editBalanceYear');
             populateYears('contributionYear');
             populateYears('editContributionYear');
-            document.getElementById('balanceYear').addEventListener('change', (e) => {
-                populateMonths('balanceMonth', e.target.value);
-            });
-            document.getElementById('editBalanceYear').addEventListener('change', (e) => {
-                populateMonths('editBalanceMonth', e.target.value);
-            });
-            document.getElementById('contributionYear').addEventListener('change', (e) => {
-                populateMonths('contributionMonth', e.target.value);
-            });
-            document.getElementById('editContributionYear').addEventListener('change', (e) => {
-                populateMonths('editContributionMonth', e.target.value);
-            });
-            document.getElementById('adminForm').addEventListener('submit', submitFinancialForm);
-            document.getElementById('memberContributionForm').addEventListener('submit', submitContributionForm);
+            document.getElementById('balanceYear').addEventListener('change', (e) => populateMonths('balanceMonth', e.target.value));
+            document.getElementById('editBalanceYear').addEventListener('change', (e) => populateMonths('editBalanceMonth', e.target.value));
+            document.getElementById('contributionYear').addEventListener('change', (e) => populateMonths('contributionMonth', e.target.value));
+            document.getElementById('editContributionYear').addEventListener('change', (e) => populateMonths('editContributionMonth', e.target.value));
             fetchData();
             displayLogs();
         });
