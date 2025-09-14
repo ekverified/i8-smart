@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -187,22 +186,26 @@
 
         <!-- Page 5: Company Analysis & Future Simulation -->
         <div class="main-page" id="page5" style="display: none;">
-            <div class="financial-section">
-                <h2>Company Analysis & Future Simulation</h2>
-                <div class="analysis-section">
-                    <h3>Performance Analysis</h3>
-                    <div id="performanceAnalysis">
-                        <div class="loading-spinner" id="analysisSpinner" style="display: none;">
-                            <i class="fas fa-spinner fa-spin"></i> Analyzing...
-                        </div>
-                        <div id="analysisResults"></div>
+             <div class="financial-section">
+                  <h2>Company Analysis & Future Simulation</h2>
+                  <form id="performancePeriodForm">
+                      <label for="performancePeriod">Select Period:</label>
+                      <select id="performancePeriod" aria-label="Select report period" onchange="runPerformanceAnalysis()">
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                          <option value="yearly">Yearly</option>
+                        </select>
+                    </form>
+                    <div class="loading-spinner" id="analysisSpinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Analyzing...
                     </div>
-                </div>
-                <div class="simulation-section">
-                    <h3>Future Simulation (12 Months)</h3>
-                    <div id="simulationResults"></div>
-                </div>
-            </div>
+                    <div class="analysis-section">
+                    <div id="analysisResults"></div>
+             </div>
+             <div class="simulation-section">
+            <div id="simulationResults"></div>
+           </div>
+         </div>
         </div>
 
         <div class="pagination-controls">
@@ -1732,92 +1735,110 @@ function runPerformanceAnalysis() {
 
     try {
         showSpinner(analysisSpinner);
-        // Check if dataCache is populated; if not, attempt to load from storage
-        if (!dataCache) {
-            dataCache = loadDataFromStorage();
-        }
-        if (!dataCache || !dataCache.monthly_reports) {
-            console.log('No data available for analysis');
-            analysisResults.innerHTML = 'No data available for performance analysis. Please check data source or try again later.';
-            simulationResults.innerHTML = 'No data available for future simulation. Please check data source or try again later.';
-            hideSpinner(analysisSpinner);
-            return;
-        }
+        analysisResults.innerHTML = ''; // Clear existing content
+        simulationResults.innerHTML = ''; // Clear existing content
 
-        const availableMonths = Object.keys(dataCache.monthly_reports).sort();
-        if (availableMonths.length === 0) {
-            console.log('Empty monthly_reports');
-            analysisResults.innerHTML = 'No monthly report data available. Please contact admin to update financial data.';
-            simulationResults.innerHTML = 'No projection data available. Please contact admin to update financial data.';
-            hideSpinner(analysisSpinner);
-            return;
-        }
+        // Fetch fresh data if needed
+        fetchDataIfStale(true).then(() => {
+            const data = dataCache || loadDataFromStorage();
+            if (!data || !data.monthly_reports) {
+                console.log('No data available for analysis');
+                analysisResults.innerHTML = 'No data available for performance analysis. Please check data source or try again later.';
+                simulationResults.innerHTML = 'No data available for future simulation. Please check data source or try again later.';
+                hideSpinner(analysisSpinner);
+                return;
+            }
 
-        const trends = calculateTrends(dataCache.monthly_reports, availableMonths);
-        const { projections, newMembers } = generateFutureProjections(dataCache.monthly_reports, availableMonths);
+            const period = document.getElementById('performancePeriod')?.value || 'monthly';
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1;
 
-        let analysisHTML = `
-            <h3>Performance Analysis</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
-                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Metric</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
-                </tr>
-                <tr><td>Assets Growth (%)</td><td>${trends.assetsGrowth.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity.toFixed(2)}% ${availableMonths.length < 4 ? '(Insufficient data)' : ''}</td></tr>
-                <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio.toFixed(2)}:1</td></tr>
-                <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio.toFixed(2)}%</td></tr>
-                <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio.toFixed(2)}%</td></tr>
-                <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio.toFixed(2)}:1</td></tr>
-                <tr><td>Risk Level</td><td>${trends.riskLevel}</td></tr>
-            </table>
-            <p><strong>Recommendations:</strong> ${trends.recommendations}</p>
-            <p><strong>Risk Factors:</strong></p>
-            <ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('') || '<li>None</li>'}</ul>
-        `;
+            const availableMonths = Object.keys(data.monthly_reports).filter(m => {
+                const [year, month] = m.split('-').map(Number);
+                return year <= currentYear && (year < currentYear || month <= currentMonth);
+            }).sort();
 
-        let simulationHTML = `
-            <h3>Future Simulation (12 Months)</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
-                <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Month</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Total Assets (KES)</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Contributions (KES)</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Loan Uptake (KES)</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Income (KES)</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Growth Rate (%)</th>
-                    <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected New Members</th>
-                </tr>
-        `;
-        if (projections.length === 0) {
-            simulationHTML += `<tr><td colspan="7">No projection data available. Please ensure at least one month of financial data is available.</td></tr>`;
-        } else {
-            projections.forEach(proj => {
-                simulationHTML += `
-                    <tr>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.month}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedAssets}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedContributions}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedLoans}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedIncome}</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}%</td>
-                        <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedNewMembers}</td>
+            if (availableMonths.length === 0) {
+                console.log('Empty monthly_reports');
+                analysisResults.innerHTML = 'No monthly report data available. Please contact admin to update financial data.';
+                simulationResults.innerHTML = 'No projection data available. Please contact admin to update financial data.';
+                hideSpinner(analysisSpinner);
+                return;
+            }
+
+            // Get period-specific data
+            const { periodValue, data: periodData } = getPeriodData(data, period, availableMonths);
+            const trends = calculateTrends(data.monthly_reports, availableMonths);
+            const { projections, newMembers } = generateFutureProjections(data.monthly_reports, availableMonths);
+
+            // Render Performance Analysis
+            let analysisHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Metric</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
                     </tr>
-                `;
-            });
-        }
-        simulationHTML += `</table>
-            <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
-        `;
+                    <tr><td>Assets Growth (%)</td><td>${trends.assetsGrowth.toFixed(2)}%${trends.assetsGrowth === 0 ? ' (Insufficient data)' : ''}</td></tr>
+                    <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth.toFixed(2)}%${trends.contributionGrowth === 0 ? ' (Insufficient data)' : ''}</td></tr>
+                    <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity.toFixed(2)}%${trends.loanActivity === 0 ? ' (Insufficient data)' : ''}</td></tr>
+                    <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio.toFixed(2)}:1</td></tr>
+                    <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio.toFixed(2)}%</td></tr>
+                    <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio.toFixed(2)}%</td></tr>
+                    <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio.toFixed(2)}:1</td></tr>
+                    <tr><td>Risk Level</td><td>${trends.riskLevel}</td></tr>
+                    <tr><td>Recommendations</td><td>${trends.recommendations}</td></tr>
+                    <tr><td>Risk Factors</td><td><ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('') || '<li>None</li>'}</td></tr>
+                </table>
+            `;
 
-        analysisResults.innerHTML = analysisHTML;
-        simulationResults.innerHTML = simulationHTML;
+            // Render Future Simulation
+            let simulationHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Month</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Total Assets (KES)</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Contributions (KES)</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Loan Uptake (KES)</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Income (KES)</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Growth Rate (%)</th>
+                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected New Members</th>
+                    </tr>
+            `;
+            if (projections.length === 0) {
+                simulationHTML += `<tr><td colspan="7">No projection data available. Please ensure at least one month of financial data is available.</td></tr>`;
+            } else {
+                projections.forEach(proj => {
+                    simulationHTML += `
+                        <tr>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.month}</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedAssets}</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedContributions}</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedLoans}</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedIncome}</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}%</td>
+                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedNewMembers}</td>
+                        </tr>
+                    `;
+                });
+            }
+            simulationHTML += `</table>
+                <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
+            `;
+
+            analysisResults.innerHTML = analysisHTML;
+            simulationResults.innerHTML = simulationHTML;
+            hideSpinner(analysisSpinner);
+        }).catch(error => {
+            console.error('Error in runPerformanceAnalysis:', error);
+            analysisResults.innerHTML = `Failed to load performance analysis: ${error.message}. Please try again or contact support.`;
+            simulationResults.innerHTML = `Failed to load future simulation: ${error.message}. Please try again or contact support.`;
+            hideSpinner(analysisSpinner);
+        });
     } catch (error) {
         console.error('Error in runPerformanceAnalysis:', error);
         analysisResults.innerHTML = `Failed to load performance analysis: ${error.message}. Please try again or contact support.`;
         simulationResults.innerHTML = `Failed to load future simulation: ${error.message}. Please try again or contact support.`;
-    } finally {
         hideSpinner(analysisSpinner);
     }
 }
@@ -1835,10 +1856,14 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('change', updateButtonState);
         }
     });
-    if (currentMainPage === 2) updateFinancialData();
-    if (currentMainPage === 3) updateFinancialData();
-    if (currentMainPage === 4) updateBehaviorReport();
-    if (currentMainPage === 5) runPerformanceAnalysis();
+    // Call page-specific initialization based on currentMainPage
+    if (currentMainPage === 2 || currentMainPage === 3) {
+        updateFinancialData();
+    } else if (currentMainPage === 4) {
+        updateBehaviorReport();
+    } else if (currentMainPage === 5) {
+        runPerformanceAnalysis();
+    }
 });
 
 </script>
