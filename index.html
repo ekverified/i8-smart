@@ -279,7 +279,8 @@ const elements = {
     spinners: {
         balanceSheet: document.getElementById('balanceSheetSpinner'),
         members: document.getElementById('membersSpinner'),
-        behavior: document.getElementById('behaviorSpinner')
+        behavior: document.getElementById('behaviorSpinner'),
+        analysis: document.getElementById('analysisSpinner')
     }
 };
 
@@ -473,87 +474,98 @@ function getPeriodData(data, period, availableMonths) {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
 
-    if (period === 'monthly' && availableMonths.length > 0) {
-        return { periodValue: availableMonths[availableMonths.length - 1], data: data.monthly_reports[availableMonths[availableMonths.length - 1]] || {} };
+    if (!availableMonths || availableMonths.length === 0) {
+        return { periodValue: '', data: {} };
     }
 
-    if (period === 'quarterly' && availableMonths.length > 0) {
-        const latestMonth = availableMonths[availableMonths.length - 1];
+    // Always use the latest month's data for balance-based fields
+    const latestMonth = availableMonths[availableMonths.length - 1];
+    const latestData = data.monthly_reports[latestMonth] || {};
+
+    if (period === 'monthly') {
+        return { periodValue: latestMonth, data: { ...latestData } };
+    }
+
+    // Define flow-based fields to aggregate
+    const flowFields = [
+        'total_member_contributions_kcb',
+        'total_loan_repayments_kcb',
+        'total_loan_repayments_lofty',
+        'interest_on_loans_kcb',
+        'interest_on_deposits_lofty',
+        'other_income_kcb',
+        'other_income_lofty',
+        'total_loan_disbursements_kcb',
+        'total_loan_disbursements_lofty',
+        'bank_charges_kcb',
+        'bank_charges_lofty',
+        'petty_cash_utilized_kcb',
+        'petty_cash_utilized_lofty',
+        'agm_facilitation_kcb',
+        'agm_facilitation_lofty',
+        'welfare_kitty_utilized_kcb',
+        'welfare_kitty_utilized_lofty',
+        'other_expenses',
+        'total_inflows'
+    ];
+
+    let periodValue = '';
+    let monthsToAggregate = [];
+
+    if (period === 'quarterly') {
         const [year, month] = latestMonth.split('-').map(Number);
         const quarter = Math.ceil(month / 3);
         const endMonth = quarter * 3;
         const startMonth = endMonth - 2;
-        const quarterMonths = [];
+        periodValue = `${year}-Q${quarter}`;
         for (let m = startMonth; m <= endMonth && m <= 12; m++) {
             const monthKey = `${year}-${m.toString().padStart(2, '0')}`;
             if (data.monthly_reports[monthKey]) {
-                quarterMonths.push(monthKey);
+                monthsToAggregate.push(monthKey);
             }
         }
-        const aggregatedData = aggregateMonthlyData(quarterMonths, data, [
-            'opening_kcb_balance', 'opening_lofty_balance', 'total_member_contributions_kcb', 'total_loan_repayments_kcb',
-            'total_loan_repayments_lofty', 'interest_on_loans_kcb', 'interest_on_deposits_lofty', 'other_income_kcb',
-            'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
-            'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
-            'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
-            'total_inflows', 'kcb_balance', 'lofty_balance', 'total_balance'
-        ]);
-        // Recalculate total_outflows to exclude loan disbursements
-        aggregatedData.total_outflows = (
-            (aggregatedData.bank_charges_kcb || 0) +
-            (aggregatedData.bank_charges_lofty || 0) +
-            (aggregatedData.petty_cash_utilized_kcb || 0) +
-            (aggregatedData.petty_cash_utilized_lofty || 0) +
-            (aggregatedData.agm_facilitation_kcb || 0) +
-            (aggregatedData.agm_facilitation_lofty || 0) +
-            (aggregatedData.welfare_kitty_utilized_kcb || 0) +
-            (aggregatedData.welfare_kitty_utilized_lofty || 0) +
-            (aggregatedData.other_expenses || 0)
-        );
-        // Include loan disbursements as part of total_balance (assets)
-        aggregatedData.total_balance = (
-            (aggregatedData.kcb_balance || 0) +
-            (aggregatedData.lofty_balance || 0) +
-            (aggregatedData.total_loan_disbursements_kcb || 0) +
-            (aggregatedData.total_loan_disbursements_lofty || 0)
-        );
-        return { periodValue: `${year}-Q${quarter}`, data: aggregatedData };
+    } else if (period === 'yearly') {
+        periodValue = latestMonth.split('-')[0];
+        monthsToAggregate = availableMonths.filter(m => m.startsWith(periodValue));
     }
 
-    if (period === 'yearly' && availableMonths.length > 0) {
-        const periodValue = availableMonths[availableMonths.length - 1].split('-')[0];
-        const yearMonths = availableMonths.filter(m => m.startsWith(periodValue));
-        const aggregatedData = aggregateMonthlyData(yearMonths, data, [
-            'opening_kcb_balance', 'opening_lofty_balance', 'total_member_contributions_kcb', 'total_loan_repayments_kcb',
-            'total_loan_repayments_lofty', 'interest_on_loans_kcb', 'interest_on_deposits_lofty', 'other_income_kcb',
-            'other_income_lofty', 'total_loan_disbursements_kcb', 'total_loan_disbursements_lofty', 'bank_charges_kcb',
-            'bank_charges_lofty', 'petty_cash_utilized_kcb', 'petty_cash_utilized_lofty', 'agm_facilitation_kcb',
-            'agm_facilitation_lofty', 'welfare_kitty_utilized_kcb', 'welfare_kitty_utilized_lofty', 'other_expenses',
-            'total_inflows', 'kcb_balance', 'lofty_balance', 'total_balance'
-        ]);
-        // Recalculate total_outflows to exclude loan disbursements
-        aggregatedData.total_outflows = (
-            (aggregatedData.bank_charges_kcb || 0) +
-            (aggregatedData.bank_charges_lofty || 0) +
-            (aggregatedData.petty_cash_utilized_kcb || 0) +
-            (aggregatedData.petty_cash_utilized_lofty || 0) +
-            (aggregatedData.agm_facilitation_kcb || 0) +
-            (aggregatedData.agm_facilitation_lofty || 0) +
-            (aggregatedData.welfare_kitty_utilized_kcb || 0) +
-            (aggregatedData.welfare_kitty_utilized_lofty || 0) +
-            (aggregatedData.other_expenses || 0)
-        );
-        // Include loan disbursements as part of total_balance (assets)
-        aggregatedData.total_balance = (
-            (aggregatedData.kcb_balance || 0) +
-            (aggregatedData.lofty_balance || 0) +
-            (aggregatedData.total_loan_disbursements_kcb || 0) +
-            (aggregatedData.total_loan_disbursements_lofty || 0)
-        );
-        return { periodValue, data: aggregatedData };
-    }
+    // Aggregate flow-based fields
+    const aggregatedData = monthsToAggregate.reduce((acc, month) => {
+        const curr = data.monthly_reports[month] || {};
+        flowFields.forEach(field => {
+            acc[field] = (acc[field] || 0) + (curr[field] || 0);
+        });
+        return acc;
+    }, {});
 
-    return { periodValue: '', data: {} };
+    // Use latest month's data for balance-based fields
+    aggregatedData.opening_kcb_balance = latestData.opening_kcb_balance || 0;
+    aggregatedData.opening_lofty_balance = latestData.opening_lofty_balance || 0;
+    aggregatedData.kcb_balance = latestData.kcb_balance || 0;
+    aggregatedData.lofty_balance = latestData.lofty_balance || 0;
+
+    // Recalculate total_outflows (excluding loan disbursements)
+    aggregatedData.total_outflows = (
+        (aggregatedData.bank_charges_kcb || 0) +
+        (aggregatedData.bank_charges_lofty || 0) +
+        (aggregatedData.petty_cash_utilized_kcb || 0) +
+        (aggregatedData.petty_cash_utilized_lofty || 0) +
+        (aggregatedData.agm_facilitation_kcb || 0) +
+        (aggregatedData.agm_facilitation_lofty || 0) +
+        (aggregatedData.welfare_kitty_utilized_kcb || 0) +
+        (aggregatedData.welfare_kitty_utilized_lofty || 0) +
+        (aggregatedData.other_expenses || 0)
+    );
+
+    // Calculate total_balance using latest month's balances plus aggregated loan disbursements
+    aggregatedData.total_balance = (
+        (aggregatedData.kcb_balance || 0) +
+        (aggregatedData.lofty_balance || 0) +
+        (aggregatedData.total_loan_disbursements_kcb || 0) +
+        (aggregatedData.total_loan_disbursements_lofty || 0)
+    );
+
+    return { periodValue, data: aggregatedData };
 }
 
 function showError(element, message) {
