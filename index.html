@@ -184,35 +184,11 @@
             </div>
         </div>
 
-        <!-- Page 5: Company Analysis & Future Simulation -->
-        <div class="main-page" id="page5" style="display: none;">
-             <div class="financial-section">
-                  <h2>Company Analysis & Future Simulation</h2>
-                  <form id="performancePeriodForm">
-                      <label for="performancePeriod">Select Period:</label>
-                      <select id="performancePeriod" aria-label="Select report period" onchange="runPerformanceAnalysis()">
-                          <option value="monthly">Monthly</option>
-                          <option value="quarterly">Quarterly</option>
-                          <option value="yearly">Yearly</option>
-                        </select>
-                    </form>
-                    <div class="loading-spinner" id="analysisSpinner" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i> Analyzing...
-                    </div>
-                    <div class="analysis-section">
-                    <div id="analysisResults"></div>
-             </div>
-             <div class="simulation-section">
-            <div id="simulationResults"></div>
-           </div>
-         </div>
-        </div>
-
         <div class="pagination-controls">
             <button id="prevMainPage" onclick="changeMainPage(-1)" disabled aria-label="Previous page">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <span id="mainPageInfo">Page 1 of 5</span>
+            <span id="mainPageInfo">Page 1 of 4</span>
             <button id="nextMainPage" onclick="changeMainPage(1)" aria-label="Next page">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -279,8 +255,7 @@ const elements = {
     spinners: {
         balanceSheet: document.getElementById('balanceSheetSpinner'),
         members: document.getElementById('membersSpinner'),
-        behavior: document.getElementById('behaviorSpinner'),
-        analysis: document.getElementById('analysisSpinner')
+        behavior: document.getElementById('behaviorSpinner')
     }
 };
 
@@ -665,7 +640,7 @@ function validateLoanAmount(amount, loanType) {
     return amount >= min ? null : `Amount for ${loanType.charAt(0).toUpperCase() + loanType.slice(1)} Term loan must be at least ${min} KES.`;
 }
 
-function validateDateFields(dueDate, checkDate, month, year) {
+function validateDateFields(dueDate, checkDate, month = '', year = '') {
     const errors = [];
     if (isNaN(dueDate.getTime())) {
         showError(elements.errors.dueDate, 'Invalid due date.');
@@ -675,9 +650,25 @@ function validateDateFields(dueDate, checkDate, month, year) {
         showError(elements.errors.checkDate, 'Invalid check date.');
         errors.push('Invalid check date');
     }
-    if (month && year && dueDate.getMonth() + 1 !== parseInt(month.split('-')[1]) || dueDate.getFullYear() !== parseInt(year)) {
-        showError(elements.errors.dueDate, 'Due date must match selected month and year.');
-        errors.push('Due date mismatch');
+    if (month && year) {
+        const contribYear = parseInt(year);
+        const contribMonth = parseInt(month.split('-')[1]);
+        let expectedMonth = contribMonth + 1;
+        let expectedYear = contribYear;
+        if (expectedMonth > 12) {
+            expectedMonth = 1;
+            expectedYear++;
+        }
+        const dueMonth = dueDate.getMonth() + 1;
+        const dueYear = dueDate.getFullYear();
+        if (dueMonth !== expectedMonth || dueYear !== expectedYear) {
+            showError(elements.errors.dueDate, 'Due date must be the 10th of the month following the selected contribution month and year.');
+            errors.push('Due date mismatch');
+        }
+        if (dueDate.getDate() !== 10) {
+            showError(elements.errors.dueDate, 'Due date must be on the 10th.');
+            errors.push('Due date not 10th');
+        }
     }
     return errors;
 }
@@ -1512,17 +1503,16 @@ function closeResultModal() {
 function changeMainPage(direction) {
     currentMainPage += direction;
     if (currentMainPage < 1) currentMainPage = 1;
-    if (currentMainPage > 5) currentMainPage = 5;
-    for (let i = 1; i <= 5; i++) {
+    if (currentMainPage > 4) currentMainPage = 4;
+    for (let i = 1; i <= 4; i++) {
         document.getElementById(`page${i}`).style.display = i === currentMainPage ? 'block' : 'none';
     }
-    document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 5`;
+    document.getElementById('mainPageInfo').textContent = `Page ${currentMainPage} of 4`;
     document.getElementById('prevMainPage').disabled = currentMainPage === 1;
-    document.getElementById('nextMainPage').disabled = currentMainPage === 5;
+    document.getElementById('nextMainPage').disabled = currentMainPage === 4;
     if (currentMainPage === 2) updateFinancialData();
     if (currentMainPage === 3) updateFinancialData();
     if (currentMainPage === 4) updateBehaviorReport();
-    if (currentMainPage === 5) runPerformanceAnalysis();
     document.getElementById(`page${currentMainPage}`).focus();
 }
 
@@ -1599,377 +1589,6 @@ function displayMembers(members) {
         memberTableBody.innerHTML = combinedMembers.map(generateMemberRow).join('');
     }
 }
-
-function calculateTrends(monthlyReports, availableMonths) {
-    try {
-        if (!monthlyReports || availableMonths.length < 1) {
-            console.log('No data for trends:', { monthlyReports, availableMonths });
-            return {
-                assetsGrowth: 0,
-                contributionGrowth: 0,
-                loanActivity: 0,
-                liquidityRatio: 0,
-                netIncomeRatio: 0,
-                expenseRatio: 0,
-                loanToContributionRatio: 0,
-                riskLevel: 'Unknown',
-                recommendations: 'No data available for analysis. Please ensure at least one month of financial data is available.',
-                riskFactors: ['No monthly data available']
-            };
-        }
-
-        const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-        let assetsGrowth = 0;
-        let contributionGrowth = 0;
-        let loanActivity = 0;
-        // Calculate total assets including loan disbursements
-        const totalAssets = (
-            (latest.total_balance || 0) +
-            (latest.total_loan_disbursements_kcb || 0) +
-            (latest.total_loan_disbursements_lofty || 0)
-        );
-        // Calculate outflows excluding loan disbursements
-        const totalOutflows = (
-            (latest.bank_charges_kcb || 0) +
-            (latest.bank_charges_lofty || 0) +
-            (latest.petty_cash_utilized_kcb || 0) +
-            (latest.petty_cash_utilized_lofty || 0) +
-            (latest.agm_facilitation_kcb || 0) +
-            (latest.agm_facilitation_lofty || 0) +
-            (latest.welfare_kitty_utilized_kcb || 0) +
-            (latest.welfare_kitty_utilized_lofty || 0) +
-            (latest.other_expenses || 0)
-        );
-        let liquidityRatio = (latest.total_balance || 0) / (totalAssets || 1);
-        let netIncomeRatio = ((latest.total_inflows || 0) - totalOutflows) / (latest.total_inflows || 1) * 100;
-        let expenseRatio = totalOutflows / (latest.total_inflows || 1) * 100;
-        let loanToContributionRatio = (latest.total_loan_disbursements_kcb || 0) / (latest.total_member_contributions_kcb || 1);
-        let riskLevel = 'Low';
-        let recommendations = '';
-        let riskFactors = [];
-
-        if (availableMonths.length >= 4) {
-            const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]] || {};
-            const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]] || {};
-            const prev3 = monthlyReports[availableMonths[availableMonths.length - 4]] || {};
-
-            // Calculate assets growth
-            const latestAssets = totalAssets;
-            const prevAssets1 = (prev1.total_balance || 0) + (prev1.total_loan_disbursements_kcb || 0) + (prev1.total_loan_disbursements_lofty || 0);
-            const prevAssets2 = (prev2.total_balance || 0) + (prev2.total_loan_disbursements_kcb || 0) + (prev2.total_loan_disbursements_lofty || 0);
-            const prevAssets3 = (prev3.total_balance || 0) + (prev3.total_loan_disbursements_kcb || 0) + (prev3.total_loan_disbursements_lofty || 0);
-            assetsGrowth = (
-                (latestAssets - prevAssets1) / (prevAssets1 || 1) +
-                (prevAssets1 - prevAssets2) / (prevAssets2 || 1) +
-                (prevAssets2 - prevAssets3) / (prevAssets3 || 1)
-            ) / 3 * 100;
-
-            contributionGrowth = (
-                ((latest.total_member_contributions_kcb || 0) - (prev1.total_member_contributions_kcb || 0)) / (prev1.total_member_contributions_kcb || 1) +
-                ((prev1.total_member_contributions_kcb || 0) - (prev2.total_member_contributions_kcb || 0)) / (prev2.total_member_contributions_kcb || 1) +
-                ((prev2.total_member_contributions_kcb || 0) - (prev3.total_member_contributions_kcb || 0)) / (prev3.total_member_contributions_kcb || 1)
-            ) / 3 * 100;
-
-            loanActivity = (
-                ((latest.total_loan_disbursements_kcb || 0) - (prev1.total_loan_disbursements_kcb || 0)) / (prev1.total_loan_disbursements_kcb || 1) +
-                ((prev1.total_loan_disbursements_kcb || 0) - (prev2.total_loan_disbursements_kcb || 0)) / (prev2.total_loan_disbursements_kcb || 1) +
-                ((prev2.total_loan_disbursements_kcb || 0) - (prev3.total_loan_disbursements_kcb || 0)) / (prev3.total_loan_disbursements_kcb || 1)
-            ) / 3 * 100;
-        } else {
-            riskFactors.push(`Insufficient data (${availableMonths.length} months available). At least 4 months required for growth analysis.`);
-        }
-
-        // Risk level and recommendations
-        if (liquidityRatio < 0.5 || netIncomeRatio < -10 || loanToContributionRatio > 5) {
-            riskLevel = 'High';
-            recommendations = 'Immediate action required: Increase member contributions, monitor loan repayment rates, and reduce discretionary expenses.';
-            riskFactors.push(
-                liquidityRatio < 0.5 ? 'Low liquidity ratio indicates insufficient cash reserves relative to assets.' : 'Moderate liquidity ratio suggests limited cash reserves.',
-                loanToContributionRatio > 5 ? 'High loan-to-contribution ratio indicates heavy reliance on loans.' : '',
-                netIncomeRatio < 0 ? 'Negative net income indicates operational losses.' : ''
-            );
-        } else if (liquidityRatio < 1 || netIncomeRatio < 0) {
-            riskLevel = 'Moderate';
-            recommendations = 'Monitor closely: Increase contributions, ensure timely loan repayments, and review expense allocation.';
-            riskFactors.push(
-                liquidityRatio < 1 ? 'Liquidity ratio below 1 suggests potential cash flow constraints.' : '',
-                netIncomeRatio < 0 ? 'Negative net income indicates operational losses.' : ''
-            );
-        } else {
-            riskLevel = 'Low';
-            recommendations = 'Maintain current strategy with periodic reviews to ensure loan repayments remain timely.';
-        }
-
-        return {
-            assetsGrowth,
-            contributionGrowth,
-            loanActivity,
-            liquidityRatio,
-            netIncomeRatio,
-            expenseRatio,
-            loanToContributionRatio,
-            riskLevel,
-            recommendations,
-            riskFactors: riskFactors.filter(factor => factor)
-        };
-    } catch (error) {
-        console.error('Error in calculateTrends:', error);
-        return {
-            assetsGrowth: 0,
-            contributionGrowth: 0,
-            loanActivity: 0,
-            liquidityRatio: 0,
-            netIncomeRatio: 0,
-            expenseRatio: 0,
-            loanToContributionRatio: 0,
-            riskLevel: 'Unknown',
-            recommendations: 'Error in analysis: ' + error.message,
-            riskFactors: ['Error occurred during trend calculation']
-        };
-    }
-}
-
-function generateFutureProjections(monthlyReports, availableMonths) {
-    try {
-        if (!monthlyReports || availableMonths.length < 1) {
-            console.log('No data for projections:', { monthlyReports, availableMonths });
-            return {
-                projections: [],
-                newMembers: 0
-            };
-        }
-
-        const latest = monthlyReports[availableMonths[availableMonths.length - 1]] || {};
-        console.log('Latest data:', latest);
-
-        // Default growth rates (non-negative)
-        let contributionGrowthRate = 0.02; // 2%
-        let loanGrowthRate = 0.015; // 1.5%
-        let incomeGrowthRate = 0.01; // 1%
-        let assetsGrowthRate = 0.01; // 1% for assets
-
-        // Cap growth rates to prevent unrealistic values
-        const MAX_GROWTH_RATE = 0.05; // 5% max per month
-
-        // Calculate growth rates if at least 3 months are available
-        if (availableMonths.length >= 3) {
-            const prev1 = monthlyReports[availableMonths[availableMonths.length - 2]] || {};
-            const prev2 = monthlyReports[availableMonths[availableMonths.length - 3]] || {};
-
-            // Contribution growth
-            const contribDiff1 = (latest.total_member_contributions_kcb || 0) - (prev1.total_member_contributions_kcb || 0);
-            const contribDiff2 = (prev1.total_member_contributions_kcb || 0) - (prev2.total_member_contributions_kcb || 0);
-            const contribRate1 = prev1.total_member_contributions_kcb ? contribDiff1 / prev1.total_member_contributions_kcb : 0;
-            const contribRate2 = prev2.total_member_contributions_kcb ? contribDiff2 / prev2.total_member_contributions_kcb : 0;
-            contributionGrowthRate = Math.min(Math.max((contribRate1 + contribRate2) / 2, 0), MAX_GROWTH_RATE) || 0.02;
-
-            // Loan growth
-            const loanDiff1 = (latest.total_loan_disbursements_kcb || 0) - (prev1.total_loan_disbursements_kcb || 0);
-            const loanDiff2 = (prev1.total_loan_disbursements_kcb || 0) - (prev2.total_loan_disbursements_kcb || 0);
-            const loanRate1 = prev1.total_loan_disbursements_kcb ? loanDiff1 / prev1.total_loan_disbursements_kcb : 0;
-            const loanRate2 = prev2.total_loan_disbursements_kcb ? loanDiff2 / prev2.total_loan_disbursements_kcb : 0;
-            loanGrowthRate = Math.min(Math.max((loanRate1 + loanRate2) / 2, 0), MAX_GROWTH_RATE) || 0.015;
-
-            // Income growth
-            const incomeDiff1 = (latest.total_inflows || 0) - (prev1.total_inflows || 0);
-            const incomeDiff2 = (prev1.total_inflows || 0) - (prev2.total_inflows || 0);
-            const incomeRate1 = prev1.total_inflows ? incomeDiff1 / prev1.total_inflows : 0;
-            const incomeRate2 = prev2.total_inflows ? incomeDiff2 / prev2.total_inflows : 0;
-            incomeGrowthRate = Math.min(Math.max((incomeRate1 + incomeRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
-
-            // Assets growth
-            const prevAssets1 = (prev1.total_balance || 0) + (prev1.total_loan_disbursements_kcb || 0) + (prev1.total_loan_disbursements_lofty || 0);
-            const prevAssets2 = (prev2.total_balance || 0) + (prev2.total_loan_disbursements_kcb || 0) + (prev2.total_loan_disbursements_lofty || 0);
-            const assetsDiff1 = ((latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0)) - prevAssets1;
-            const assetsDiff2 = prevAssets1 - prevAssets2;
-            const assetsRate1 = prevAssets1 ? assetsDiff1 / prevAssets1 : 0;
-            const assetsRate2 = prevAssets2 ? assetsDiff2 / prevAssets2 : 0;
-            assetsGrowthRate = Math.min(Math.max((assetsRate1 + assetsRate2) / 2, 0), MAX_GROWTH_RATE) || 0.01;
-
-            console.log('Calculated growth rates:', {
-                contributionGrowthRate,
-                loanGrowthRate,
-                incomeGrowthRate,
-                assetsGrowthRate
-            });
-        } else {
-            console.log('Using default growth rates:', {
-                contributionGrowthRate,
-                loanGrowthRate,
-                incomeGrowthRate,
-                assetsGrowthRate
-            });
-        }
-
-        const currentMembers = latest.member_count || 10;
-        let projectedMembers = currentMembers;
-        const totalNewMembersCap = 1; // Max 1 new member over 12 months
-
-        // Initialize currentAssets including loan disbursements
-        let currentAssets = (latest.total_balance || 0) + (latest.total_loan_disbursements_kcb || 0) + (latest.total_loan_disbursements_lofty || 0);
-        let currentContributions = latest.total_member_contributions_kcb || 0;
-        let currentLoans = latest.total_loan_disbursements_kcb || 0;
-        let currentIncome = latest.total_inflows || 0;
-
-        console.log('Initial values:', {
-            currentAssets,
-            currentContributions,
-            currentLoans,
-            currentIncome,
-            currentMembers
-        });
-
-        const projections = [];
-        for (let i = 1; i <= 12; i++) {
-            currentAssets = currentAssets * (1 + assetsGrowthRate);
-            currentContributions = currentContributions * (1 + contributionGrowthRate);
-            currentLoans = currentLoans * (1 + loanGrowthRate);
-            currentIncome = currentIncome * (1 + incomeGrowthRate);
-
-            // Cap new members to 1 in month 12
-            const newMembersThisMonth = i === 12 ? 1 : 0;
-            projectedMembers = currentMembers + newMembersThisMonth;
-
-            projections.push({
-                month: i,
-                projectedAssets: currentAssets.toFixed(2),
-                projectedContributions: currentContributions.toFixed(2),
-                projectedLoans: currentLoans.toFixed(2),
-                projectedIncome: currentIncome.toFixed(2),
-                projectedGrowthRate: ((contributionGrowthRate + loanGrowthRate + incomeGrowthRate + assetsGrowthRate) / 4 * 100).toFixed(2),
-                projectedNewMembers: newMembersThisMonth
-            });
-        }
-
-        console.log('Projections:', projections);
-
-        return {
-            projections,
-            newMembers: totalNewMembersCap
-        };
-    } catch (error) {
-        console.error('Error in generateFutureProjections:', error);
-        return {
-            projections: [],
-            newMembers: 0
-        };
-    }
-}
-
-function runPerformanceAnalysis() {
-    const analysisResults = document.getElementById('analysisResults');
-    const simulationResults = document.getElementById('simulationResults');
-    const analysisSpinner = document.getElementById('analysisSpinner');
-
-    try {
-        showSpinner(analysisSpinner);
-        analysisResults.innerHTML = ''; // Clear existing content
-        simulationResults.innerHTML = ''; // Clear existing content
-
-        // Fetch fresh data if needed
-        fetchDataIfStale(true).then(() => {
-            const data = dataCache || loadDataFromStorage();
-            if (!data || !data.monthly_reports) {
-                console.log('No data available for analysis');
-                analysisResults.innerHTML = 'No data available for performance analysis. Please check data source or try again later.';
-                simulationResults.innerHTML = 'No data available for future simulation. Please check data source or try again later.';
-                hideSpinner(analysisSpinner);
-                return;
-            }
-
-            const period = document.getElementById('performancePeriod')?.value || 'monthly';
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-            const currentMonth = currentDate.getMonth() + 1;
-
-            const availableMonths = Object.keys(data.monthly_reports).filter(m => {
-                const [year, month] = m.split('-').map(Number);
-                return year <= currentYear && (year < currentYear || month <= currentMonth);
-            }).sort();
-
-            if (availableMonths.length === 0) {
-                console.log('Empty monthly_reports');
-                analysisResults.innerHTML = 'No monthly report data available. Please contact admin to update financial data.';
-                simulationResults.innerHTML = 'No projection data available. Please contact admin to update financial data.';
-                hideSpinner(analysisSpinner);
-                return;
-            }
-
-            // Get period-specific data
-            const { periodValue, data: periodData } = getPeriodData(data, period, availableMonths);
-            const trends = calculateTrends(data.monthly_reports, availableMonths);
-            const { projections, newMembers } = generateFutureProjections(data.monthly_reports, availableMonths);
-
-            // Render Performance Analysis
-            let analysisHTML = `
-                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
-                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Metric</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Value</th>
-                    </tr>
-                    <tr><td>Assets Growth (%)</td><td>${trends.assetsGrowth.toFixed(2)}%${trends.assetsGrowth === 0 ? ' (Insufficient data)' : ''}</td></tr>
-                    <tr><td>Contribution Growth (%)</td><td>${trends.contributionGrowth.toFixed(2)}%${trends.contributionGrowth === 0 ? ' (Insufficient data)' : ''}</td></tr>
-                    <tr><td>Loan Activity Growth (%)</td><td>${trends.loanActivity.toFixed(2)}%${trends.loanActivity === 0 ? ' (Insufficient data)' : ''}</td></tr>
-                    <tr><td>Liquidity Ratio</td><td>${trends.liquidityRatio.toFixed(2)}:1</td></tr>
-                    <tr><td>Net Income Ratio (%)</td><td>${trends.netIncomeRatio.toFixed(2)}%</td></tr>
-                    <tr><td>Expense Ratio (%)</td><td>${trends.expenseRatio.toFixed(2)}%</td></tr>
-                    <tr><td>Loan-to-Contribution Ratio</td><td>${trends.loanToContributionRatio.toFixed(2)}:1</td></tr>
-                    <tr><td>Risk Level</td><td>${trends.riskLevel}</td></tr>
-                    <tr><td>Recommendations</td><td>${trends.recommendations}</td></tr>
-                    <tr><td>Risk Factors</td><td><ul>${trends.riskFactors.map(factor => `<li>${factor}</li>`).join('') || '<li>None</li>'}</td></tr>
-                </table>
-            `;
-
-            // Render Future Simulation
-            let simulationHTML = `
-                <table style="width: 100%; border-collapse: collapse; font-size: clamp(0.7rem, 2vw, 0.8rem);">
-                    <tr style="background: linear-gradient(135deg, #1a73e8, #4285f4); color: #fff;">
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Month</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Total Assets (KES)</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Contributions (KES)</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Loan Uptake (KES)</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Income (KES)</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected Growth Rate (%)</th>
-                        <th style="padding: 0.4rem; border: 1px solid #1a73e8;">Projected New Members</th>
-                    </tr>
-            `;
-            if (projections.length === 0) {
-                simulationHTML += `<tr><td colspan="7">No projection data available. Please ensure at least one month of financial data is available.</td></tr>`;
-            } else {
-                projections.forEach(proj => {
-                    simulationHTML += `
-                        <tr>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.month}</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedAssets}</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedContributions}</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedLoans}</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedIncome}</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedGrowthRate}%</td>
-                            <td style="padding: 0.4rem; border: 1px solid #1a73e8;">${proj.projectedNewMembers}</td>
-                        </tr>
-                    `;
-                });
-            }
-            simulationHTML += `</table>
-                <p style="margin-top: 1rem;">Total Projected New Members: ${newMembers}</p>
-            `;
-
-            analysisResults.innerHTML = analysisHTML;
-            simulationResults.innerHTML = simulationHTML;
-            hideSpinner(analysisSpinner);
-        }).catch(error => {
-            console.error('Error in runPerformanceAnalysis:', error);
-            analysisResults.innerHTML = `Failed to load performance analysis: ${error.message}. Please try again or contact support.`;
-            simulationResults.innerHTML = `Failed to load future simulation: ${error.message}. Please try again or contact support.`;
-            hideSpinner(analysisSpinner);
-        });
-    } catch (error) {
-        console.error('Error in runPerformanceAnalysis:', error);
-        analysisResults.innerHTML = `Failed to load performance analysis: ${error.message}. Please try again or contact support.`;
-        simulationResults.innerHTML = `Failed to load future simulation: ${error.message}. Please try again or contact support.`;
-        hideSpinner(analysisSpinner);
-    }
-}
 document.addEventListener('DOMContentLoaded', () => {
     toggleFields();
     populateYears();
@@ -1989,8 +1608,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFinancialData();
     } else if (currentMainPage === 4) {
         updateBehaviorReport();
-    } else if (currentMainPage === 5) {
-        runPerformanceAnalysis();
     }
 });
 
