@@ -178,7 +178,6 @@
         .log-table th {
             background: #f8f9fa;
         }
-
         /* Responsive adjustments */
         @media (max-width: 1024px) {
             .main-content {
@@ -1567,11 +1566,13 @@
             document.getElementById('editContributionYear').addEventListener('change', (e) => populateMonths('editContributionMonth', e.target.value));
             fetchData();
             displayLogs();
-            // Check for app install prompt
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            if (!isStandalone && !localStorage.getItem('installPromptShown')) {
-                showInstallModal();
-            }
+            // Check for app install prompt within 5 seconds
+            setTimeout(() => {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                if (!isStandalone && !localStorage.getItem('installPromptShown')) {
+                    showInstallModal();
+                }
+            }, 5000);
         });
     </script>
 </body>
