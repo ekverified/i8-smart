@@ -10,6 +10,257 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Responsive base styles */
+        :root {
+            --font-base: 16px;
+            --font-scale: 1;
+        }
+        html {
+            font-size: var(--font-base);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .input-field {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        .action-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            background: #1a73e8;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .action-button:hover {
+            background: #1557b0;
+        }
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .collapsible-section summary {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .spinner {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .spinner-icon {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1a73e8;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .log-table th, .log-table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .log-table th {
+            background: #f8f9fa;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
+        @media (max-width: 768px) {
+            :root {
+                --font-scale: 0.875;
+            }
+            html {
+                font-size: calc(var(--font-base) * var(--font-scale));
+            }
+            .app-container {
+                flex-direction: column;
+                overflow: auto;
+            }
+            .sidebar {
+                width: 100%;
+                order: 2;
+                padding: 1rem;
+            }
+            .main-content {
+                order: 1;
+                padding: 1rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .input-group {
+                flex-direction: column;
+            }
+            .input-field {
+                width: 100%;
+            }
+            .button-container {
+                justify-content: center;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+            .modal-buttons {
+                flex-direction: column;
+            }
+            .card {
+                padding: 1rem;
+            }
+        }
+        @media (max-width: 480px) {
+            :root {
+                --font-scale: 0.75;
+            }
+            html {
+                font-size: calc(var(--font-base) * var(--font-scale));
+            }
+            .sidebar {
+                padding: 0.5rem;
+            }
+            .main-content {
+                padding: 0.5rem;
+            }
+            .card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+        @media (max-width: 320px) {
+            .input-field {
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+            .action-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -60,7 +311,6 @@
                         </select>
                         <span id="balanceMonthError" class="error"></span>
                     </div>
-
                     <details class="collapsible-section">
                         <summary>KCB Accounts</summary>
                         <div class="form-group">
@@ -130,7 +380,6 @@
                             <span id="customIncome5KcbError" class="error"></span>
                         </div>
                     </details>
-
                     <details class="collapsible-section">
                         <summary>Lofty Accounts</summary>
                         <div class="form-group">
@@ -195,7 +444,6 @@
                             <span id="customIncome5LoftyError" class="error"></span>
                         </div>
                     </details>
-
                     <details class="collapsible-section">
                         <summary>Other Inflows</summary>
                         <div class="form-group">
@@ -210,7 +458,6 @@
                             <span id="otherIncomeError" class="error"></span>
                         </div>
                     </details>
-
                     <details class="collapsible-section">
                         <summary>Outflows</summary>
                         <div class="form-group">
@@ -341,7 +588,6 @@
                             <span id="customOutflow5Error" class="error"></span>
                         </div>
                     </details>
-
                     <details class="collapsible-section">
                         <summary>Internal Account Transfers</summary>
                         <div class="form-group">
@@ -356,7 +602,6 @@
                             <span id="internalTransferError" class="error"></span>
                         </div>
                     </details>
-
                     <div class="button-container">
                         <button type="submit" id="submitFinancialButton" class="action-button primary" aria-label="Submit financial data">
                             <i class="fas fa-save"></i> Submit Financial Data
@@ -365,7 +610,6 @@
                     </div>
                 </form>
             </div>
-
             <div class="card">
                 <h2>Update Member Contributions</h2>
                 <div class="edit-controls">
@@ -415,15 +659,12 @@
                     </div>
                 </form>
             </div>
-
             <div class="card">
                 <h2>Admin Logs</h2>
                 <div id="adminLogs" class="log-section"></div>
             </div>
-
             <div id="result" class="result"></div>
         </main>
-
         <!-- Confirmation Modal -->
         <div id="confirmationModal" class="modal">
             <div class="modal-content">
@@ -441,14 +682,27 @@
                 </div>
             </div>
         </div>
-
+        <!-- Install App Modal -->
+        <div id="installModal" class="modal">
+            <div class="modal-content">
+                <h3>Install i-8 SMART BOT App?</h3>
+                <p>For a better experience, install the app on your device. It works offline and provides quick access.</p>
+                <div class="modal-buttons">
+                    <button id="installYes" class="action-button primary" aria-label="Yes, install the app">
+                        <i class="fas fa-download"></i> Yes, Install
+                    </button>
+                    <button id="installNo" class="action-button secondary" aria-label="No, continue without installing">
+                        <i class="fas fa-times"></i> No, Thanks
+                    </button>
+                </div>
+            </div>
+        </div>
         <!-- Loading Spinner -->
         <div id="loadingSpinner" class="spinner">
             <div class="spinner-icon"></div>
             <p>Processing...</p>
         </div>
     </div>
-
     <script>
         const MEMBERS = [
             "Enoch Kamau Thumbi",
@@ -462,29 +716,24 @@
             "Isaac Thuku Maina",
             "Nephat Njeru Muthee"
         ];
-
         const CONFIG = {
             API_BASE_URL: 'https://i8-smart-backend.onrender.com/api',
             API_KEY: 'i8-smart-backend-2025',
             FETCH_TIMEOUT: 10000
         };
-
         // Input sanitization and validation utilities
         function sanitizeInput(input) {
             if (typeof input !== 'string') return '';
             return input.replace(/[<>\"'&]/g, '').trim();
         }
-
         function sanitizeNumericInput(input) {
             if (typeof input !== 'string') return '';
             return input.replace(/[^0-9.-]/g, '');
         }
-
         function isValidNumber(value) {
             const num = parseFloat(value);
             return !isNaN(num) && isFinite(num);
         }
-
         function safeGetElementById(id) {
             try {
                 const element = document.getElementById(id);
@@ -498,7 +747,6 @@
                 return null;
             }
         }
-
         function setButtonLoading(button, isLoading) {
             const spinner = button.querySelector('.spinner-icon');
             if (isLoading) {
@@ -511,7 +759,6 @@
                 button.style.opacity = '1';
             }
         }
-
         function populateYears(selectId) {
             try {
                 const yearSelect = document.getElementById(selectId);
@@ -534,7 +781,6 @@
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to populate years for ${selectId}. Please refresh the page.</span>`;
             }
         }
-
         function populateMonths(selectId, year) {
             try {
                 const monthSelect = document.getElementById(selectId);
@@ -562,7 +808,6 @@
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to populate months for ${selectId}. Please refresh the page.</span>`;
             }
         }
-
         function fuzzyMatch(input, members) {
             const cleanInput = input.trim().toLowerCase();
             if (!cleanInput) return null;
@@ -580,7 +825,6 @@
             }
             return null;
         }
-
         function validateFinancialInputs() {
             const errors = [];
             const inputs = [
@@ -623,7 +867,6 @@
                 { id: 'custom_outflow_5', errorId: 'customOutflow5Error', message: 'Please enter a valid amount for Custom Outflow 5 or ensure the name is filled.' },
                 { id: 'internal_transfer_amount', errorId: 'internalTransferError', message: 'Please enter a valid internal transfer amount.' }
             ];
-
             inputs.forEach(input => {
                 const element = document.getElementById(input.id);
                 const errorElement = document.getElementById(input.errorId);
@@ -657,7 +900,6 @@
             });
             return errors.length === 0 ? null : errors.join(', ');
         }
-
         function validateContributionInputs() {
             const errors = [];
             const inputs = [
@@ -666,7 +908,6 @@
                 { id: 'contributionMonth', errorId: 'contributionMonthError', message: 'Please select a month.' },
                 { id: 'contributionAmount', errorId: 'contributionAmountError', message: 'Please enter a valid contribution amount.' }
             ];
-
             inputs.forEach(input => {
                 const element = document.getElementById(input.id);
                 const errorElement = document.getElementById(input.errorId);
@@ -698,14 +939,12 @@
             });
             return errors.length === 0 ? null : errors.join(', ');
         }
-
         function logAction(action, details) {
             const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
             logs.push({ timestamp: new Date().toISOString(), action, details });
             localStorage.setItem('adminLogs', JSON.stringify(logs));
             displayLogs();
         }
-
         function displayLogs() {
             const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
             const logSection = document.getElementById('adminLogs');
@@ -730,17 +969,14 @@
                 </table>
             ` : '<p>No logs available.</p>';
         }
-
         function showLoadingSpinner() {
             const spinner = document.getElementById('loadingSpinner');
             if (spinner) spinner.style.display = 'flex';
         }
-
         function hideLoadingSpinner() {
             const spinner = document.getElementById('loadingSpinner');
             if (spinner) spinner.style.display = 'none';
         }
-
         function showConfirmationModal(data, month, onConfirm) {
             const modal = document.getElementById('confirmationModal');
             const modalSummary = document.getElementById('modalSummary');
@@ -811,7 +1047,19 @@
                 setButtonLoading(document.getElementById('submitFinancialButton'), false);
             };
         }
-
+        function showInstallModal() {
+            const modal = document.getElementById('installModal');
+            modal.style.display = 'block';
+            document.getElementById('installYes').onclick = () => {
+                alert('To install the app:\n- On Android: Tap the menu (⋮) in Chrome and select "Add to Home screen".\n- On iOS: Tap the share icon and select "Add to Home Screen".\nThis will create an app icon on your device for quick access.');
+                localStorage.setItem('installPromptShown', 'true');
+                modal.style.display = 'none';
+            };
+            document.getElementById('installNo').onclick = () => {
+                localStorage.setItem('installPromptShown', 'true');
+                modal.style.display = 'none';
+            };
+        }
         function logout() {
             logAction('Logout', 'User logged out of admin panel');
             document.getElementById('result').innerHTML = `<span style="color: #34c759;">Logged out successfully.</span>`;
@@ -819,7 +1067,6 @@
                 window.location.reload();
             }, 1000);
         }
-
         function refreshForm() {
             try {
                 document.getElementById('adminForm').reset();
@@ -853,9 +1100,7 @@
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to refresh form (${error.message}). Please try again.</span>`;
             }
         }
-
         let dataCache = null;
-
         async function fetchData() {
             try {
                 showLoadingSpinner();
@@ -874,7 +1119,6 @@
                 hideLoadingSpinner();
             }
         }
-
         async function checkExistingBalanceSheet(month) {
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/data?period=monthly&month=${month}`, {
@@ -891,7 +1135,6 @@
                 return false;
             }
         }
-
         async function loadBalanceSheetData() {
             const button = document.querySelector('#adminForm .action-button');
             setButtonLoading(button, true);
@@ -998,7 +1241,6 @@
                 setButtonLoading(button, false);
             }
         }
-
         async function loadContributionData() {
             const button = document.querySelector('#memberContributionForm .action-button');
             setButtonLoading(button, true);
@@ -1048,7 +1290,6 @@
                 setButtonLoading(button, false);
             }
         }
-
         async function submitFinancialData(data, month) {
             try {
                 showLoadingSpinner();
@@ -1074,7 +1315,6 @@
                 hideLoadingSpinner();
             }
         }
-
         function calculateBalances(data) {
             // KCB Inflows
             const kcb_inflows = (parseFloat(data.total_member_contributions_kcb) || 0) +
@@ -1140,7 +1380,6 @@
                 total_balance: kcb_balance + lofty_balance
             };
         }
-
         document.getElementById('adminForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const button = document.getElementById('submitFinancialButton');
@@ -1233,7 +1472,6 @@
             }
             showConfirmationModal(data, month, () => submitFinancialData(data, month));
         });
-
         document.getElementById('memberContributionForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const button = document.getElementById('submitContributionButton');
@@ -1283,7 +1521,6 @@
                 setButtonLoading(button, false);
             }
         });
-
         async function checkExistingContribution(member, month) {
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/contributions?member=${encodeURIComponent(member)}&month=${month}`, {
@@ -1299,7 +1536,6 @@
                 return false;
             }
         }
-
         function downloadData() {
             try {
                 const data = JSON.parse(localStorage.getItem('financialData') || '{}');
@@ -1319,7 +1555,6 @@
                 document.getElementById('result').innerHTML = `<span style="color: #e74c3c;">Error: Failed to download data (${error.message}).</span>`;
             }
         }
-
         // Initialize form
         document.addEventListener('DOMContentLoaded', () => {
             populateYears('balanceYear');
@@ -1332,6 +1567,11 @@
             document.getElementById('editContributionYear').addEventListener('change', (e) => populateMonths('editContributionMonth', e.target.value));
             fetchData();
             displayLogs();
+            // Check for app install prompt
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (!isStandalone && !localStorage.getItem('installPromptShown')) {
+                showInstallModal();
+            }
         });
     </script>
 </body>
